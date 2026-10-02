@@ -28,6 +28,9 @@ func NewResultStore(dataDir string) (*ResultStore, error) {
 	if err := os.MkdirAll(root, 0o700); err != nil {
 		return nil, fmt.Errorf("hasil: buat direktori: %w", err)
 	}
+	if err := ensureNoSymlinkPath(root, root); err != nil {
+		return nil, err
+	}
 	return &ResultStore{root: root}, nil
 }
 
@@ -36,14 +39,18 @@ func (s *ResultStore) Put(relPath string, r io.Reader) error {
 	if err != nil {
 		return err
 	}
-	if err := os.MkdirAll(filepath.Dir(path), 0o700); err != nil {
+	parent := filepath.Dir(path)
+	if err := ensureNoSymlinkPath(s.root, parent); err != nil {
+		return err
+	}
+	if err := os.MkdirAll(parent, 0o700); err != nil {
 		return fmt.Errorf("hasil: buat direktori: %w", err)
 	}
-	if err := ensureWithin(s.root, filepath.Dir(path)); err != nil {
+	if err := ensureNoSymlinkPath(s.root, parent); err != nil {
 		return err
 	}
 
-	temp, err := os.CreateTemp(filepath.Dir(path), ".klip-result-*")
+	temp, err := os.CreateTemp(parent, ".klip-result-*")
 	if err != nil {
 		return fmt.Errorf("hasil: buat berkas sementara: %w", err)
 	}
@@ -79,6 +86,9 @@ func (s *ResultStore) Put(relPath string, r io.Reader) error {
 func (s *ResultStore) Read(relPath string) ([]byte, error) {
 	path, err := s.resolve(relPath)
 	if err != nil {
+		return nil, err
+	}
+	if err := ensureNoSymlinkPath(s.root, filepath.Dir(path)); err != nil {
 		return nil, err
 	}
 	info, err := os.Lstat(path)
@@ -124,6 +134,48 @@ func ensureWithin(root, candidate string) error {
 	rel, err := filepath.Rel(root, candidate)
 	if err != nil || rel == ".." || strings.HasPrefix(rel, ".."+string(filepath.Separator)) {
 		return fmt.Errorf("hasil: path keluar dari direktori hasil: %w", ErrInvalid)
+	}
+	return nil
+}
+
+func ensureNoSymlinkPath(root, candidate string) error {
+	if err := ensureWithin(root, candidate); err != nil {
+		return err
+	}
+	rel, err := filepath.Rel(root, candidate)
+	if err != nil {
+		return fmt.Errorf("hasil: periksa direktori: %w", ErrInvalid)
+	}
+	current := root
+	if rel == "." {
+		return ensureDirectory(current)
+	}
+	for _, part := range strings.Split(rel, string(filepath.Separator)) {
+		current = filepath.Join(current, part)
+		info, err := os.Lstat(current)
+		if errors.Is(err, os.ErrNotExist) {
+			continue
+		}
+		if err != nil {
+			return fmt.Errorf("hasil: periksa direktori: %w", err)
+		}
+		if info.Mode()&os.ModeSymlink != 0 {
+			return fmt.Errorf("hasil: direktori tidak boleh berupa symlink: %w", ErrInvalid)
+		}
+		if !info.IsDir() {
+			return fmt.Errorf("hasil: path induk bukan direktori: %w", ErrInvalid)
+		}
+	}
+	return nil
+}
+
+func ensureDirectory(path string) error {
+	info, err := os.Lstat(path)
+	if err != nil {
+		return fmt.Errorf("hasil: periksa direktori: %w", err)
+	}
+	if info.Mode()&os.ModeSymlink != 0 || !info.IsDir() {
+		return fmt.Errorf("hasil: root hasil tidak valid: %w", ErrInvalid)
 	}
 	return nil
 }
