@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -20,7 +21,8 @@ type RunRepository interface {
 
 func (r *Repository) CreateRun(ctx context.Context, run domain.Run) error {
 	if strings.TrimSpace(string(run.ID)) == "" || strings.TrimSpace(string(run.PekerjaanID)) == "" ||
-		strings.TrimSpace(string(run.AgenID)) == "" || strings.TrimSpace(run.Program) == "" {
+		strings.TrimSpace(string(run.AgenID)) == "" || strings.TrimSpace(run.Program) == "" ||
+		run.Status != domain.StatusRunning {
 		return fmt.Errorf("run: %w", ErrInvalid)
 	}
 	arguments, err := json.Marshal(run.Arguments)
@@ -74,7 +76,7 @@ func (r *Repository) GetRun(ctx context.Context, id domain.ID) (domain.Run, erro
 		&run.Program, &arguments, &exitCode, &run.Stdout, &run.Stderr,
 		&started, &finished,
 	)
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		return domain.Run{}, ErrNotFound
 	}
 	if err != nil {
@@ -124,8 +126,18 @@ func (r *Repository) ListRunsByPekerjaan(ctx context.Context, pekerjaanID domain
 }
 
 func (r *Repository) FinishRun(ctx context.Context, id domain.ID, status domain.Status, exitCode *int, stdout, stderr string, finishedAt time.Time) error {
-	if strings.TrimSpace(string(id)) == "" || strings.TrimSpace(string(status)) == "" {
+	if strings.TrimSpace(string(id)) == "" || !isTerminalStatus(status) {
 		return fmt.Errorf("run: %w", ErrInvalid)
+	}
+	var current domain.Status
+	if err := r.db.QueryRowContext(ctx, `SELECT status FROM run WHERE id = ?`, id).Scan(&current); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return ErrNotFound
+		}
+		return fmt.Errorf("baca status run: %w", err)
+	}
+	if current != domain.StatusRunning || !current.CanTransitionTo(status) {
+		return fmt.Errorf("run: transisi status %q ke %q tidak diizinkan: %w", current, status, ErrInvalid)
 	}
 	if finishedAt.IsZero() {
 		finishedAt = time.Now().UTC()
