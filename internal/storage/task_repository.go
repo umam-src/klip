@@ -2,6 +2,8 @@ package storage
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -20,7 +22,7 @@ func (r *Repository) UpdateTugasStatus(ctx context.Context, id domain.ID, status
 
 	var current domain.Status
 	if err := r.db.QueryRowContext(ctx, `SELECT status FROM tugas WHERE id = ?`, id).Scan(&current); err != nil {
-		if err.Error() == "sql: no rows in result set" {
+		if errors.Is(err, sql.ErrNoRows) {
 			return ErrNotFound
 		}
 		return fmt.Errorf("baca status tugas: %w", err)
