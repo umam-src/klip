@@ -41,7 +41,7 @@ Catatan: `Ruang`, `Agen`, `Sasaran`, `Pekerjaan`, `Tugas`, `Sesi`, dan `Hasil` s
 - [ ] Streaming.
 - [x] Timeout.
 - [x] Cancellation melalui `context.Context`.
-- [ ] Retry terbatas.
+- [x] Retry terbatas.
 - [x] Pemilihan model melalui konfigurasi/request.
 - [ ] Status koneksi provider.
 - [x] Jangan menyimpan API key ke log.
