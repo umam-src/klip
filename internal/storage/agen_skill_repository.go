@@ -2,7 +2,6 @@ package storage
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"strings"
 
@@ -77,5 +76,4 @@ func validateAgenSkill(relation domain.AgenSkill) error {
 	return nil
 }
 
-var _ sql.Result
 var _ AgenSkillRepository = (*Repository)(nil)
