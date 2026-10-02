@@ -40,9 +40,12 @@ func (a *App) Handler() http.Handler {
 	mux.HandleFunc("/api/v1/ruang/{id}/sasaran", a.handleSasaran)
 	mux.HandleFunc("/api/v1/ruang/", a.handleRuangChild)
 	mux.HandleFunc("/api/v1/pekerjaan/{id}/komentar", a.handleKomentar)
+	mux.HandleFunc("/api/v1/pekerjaan/{id}/approval", a.handlePekerjaanApproval)
 	mux.HandleFunc("/api/v1/pekerjaan/", a.handlePekerjaanChild)
 	mux.HandleFunc("/api/v1/tugas/{id}/komentar", a.handleTugasKomentar)
+	mux.HandleFunc("/api/v1/tugas/{id}/approval", a.handleTugasApproval)
 	mux.HandleFunc("/api/v1/tugas/", a.handleTugasKomentar)
+	mux.HandleFunc("/api/v1/approval/{id}/{action}", a.handleApprovalDecision)
 	return mux
 }
 
