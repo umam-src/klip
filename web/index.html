@@ -77,6 +77,18 @@
     <section id="task-detail" class="section" hidden aria-labelledby="task-title">
       <div class="section-head"><div><p class="eyebrow">Tugas</p><h2 id="task-title">Tugas</h2></div><button class="button" type="button" id="back-to-job">Kembali ke pekerjaan</button></div>
       <div id="task-detail-card" class="panel detail-grid"></div>
+      <div class="panel task-thread">
+        <div class="panel-head"><div><h3>Thread</h3><p>Diskusi dan balasan untuk tugas ini.</p></div><button class="button small" type="button" id="refresh-comments">Muat ulang</button></div>
+        <form id="comment-form" class="inline-form">
+          <div id="replying-to" class="reply-context" hidden></div>
+          <textarea name="body" rows="3" placeholder="Tulis komentar..." required maxlength="4000"></textarea>
+          <div class="form-actions">
+            <button class="button primary small" type="submit">Kirim komentar</button>
+            <button class="button small" type="button" id="cancel-reply" hidden>Batal membalas</button>
+          </div>
+        </form>
+        <div id="comment-list" class="stack" aria-live="polite"></div>
+      </div>
     </section>
     <section class="section overview" aria-labelledby="overview-title">
       <div class="section-head"><div><p class="eyebrow">Alur</p><h2 id="overview-title">Struktur Klip</h2></div></div>
