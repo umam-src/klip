@@ -26,7 +26,7 @@ Daftar kerja pengembangan. Prioritas: P0 wajib, P1 penting, P2 setelah inti stab
 - [ ] Thread dan komentar tugas.
 - [ ] Persetujuan.
 - [ ] Activity log.
-- [ ] Repository/service layer untuk domain.
+- [x] Repository/service layer untuk domain.
 - [x] Unit test domain.
 
 Catatan: `Ruang`, `Agen`, `Sasaran`, `Pekerjaan`, `Tugas`, `Sesi`, dan `Hasil` sudah memiliki dasar skema. Konsep `Organisasi`, `Pengguna`, dan `Proyek` tidak menjadi syarat fondasi Klip.
@@ -155,7 +155,7 @@ Catatan: `Ruang`, `Agen`, `Sasaran`, `Pekerjaan`, `Tugas`, `Sesi`, dan `Hasil` s
 - [x] docs/runtime.md.
 - [x] docs/AI-PROVIDERS.md.
 - [x] docs/security.md.
-- [ ] docs/storage.md.
+- [x] docs/storage.md.
 - [x] docs/backup.md.
-- [ ] docs/release.md.
-- [ ] docs/size-budget.md.
+- [x] docs/release.md.
+- [x] docs/size-budget.md.
