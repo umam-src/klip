@@ -27,7 +27,7 @@ Daftar kerja pengembangan. Prioritas: P0 wajib, P1 penting, P2 setelah inti stab
 - [ ] Persetujuan.
 - [ ] Activity log.
 - [ ] Repository/service layer untuk domain.
-- [ ] Unit test domain.
+- [x] Unit test domain.
 
 Catatan: `Ruang`, `Agen`, `Sasaran`, `Pekerjaan`, `Tugas`, `Sesi`, dan `Hasil` sudah memiliki dasar skema. Konsep `Organisasi`, `Pengguna`, dan `Proyek` tidak menjadi syarat fondasi Klip.
 
@@ -98,8 +98,8 @@ Catatan: `Ruang`, `Agen`, `Sasaran`, `Pekerjaan`, `Tugas`, `Sesi`, dan `Hasil` s
 
 ## P1 — Data dan keamanan
 
-- [ ] Backup database.
-- [ ] Restore database.
+- [x] Backup database.
+- [x] Restore database.
 - [ ] Backup hasil.
 - [x] Secret tidak masuk log.
 - [x] Default bind hanya ke localhost.
@@ -151,11 +151,11 @@ Catatan: `Ruang`, `Agen`, `Sasaran`, `Pekerjaan`, `Tugas`, `Sesi`, dan `Hasil` s
 - [x] docs/ARCHITECTURE.md.
 - [x] docs/DOMAIN.md.
 - [x] docs/PARITY.md.
-- [ ] docs/data-model.md.
+- [x] docs/data-model.md.
 - [x] docs/runtime.md.
 - [x] docs/AI-PROVIDERS.md.
 - [x] docs/security.md.
 - [ ] docs/storage.md.
-- [ ] docs/backup.md.
+- [x] docs/backup.md.
 - [ ] docs/release.md.
 - [ ] docs/size-budget.md.
