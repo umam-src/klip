@@ -33,6 +33,7 @@ Format mengikuti Keep a Changelog dan versi mengikuti Semantic Versioning.
 - Pembacaan hasil HTTP kini streaming agar unduhan hingga 16 MiB tidak perlu dimuat penuh ke memori.
 - Tinjauan CSRF menetapkan bahwa mode UI lokal saat ini belum memerlukan token karena API tidak memakai cookie sesi dan bind bawaan hanya localhost.
 - Dokumentasi optimasi menjelaskan pengukuran heap idle dan membedakannya dari RSS proses.
+- Test status provider diperbaiki agar skenario provider tanpa model benar-benar menggunakan konfigurasi model kosong.
 
 ### Removed
 - Belum ada.
