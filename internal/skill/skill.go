@@ -16,8 +16,8 @@ var (
 // Format penyimpanan yang didukung adalah SKILL.md dengan front matter
 // sederhana berisi name dan description, diikuti isi instruksi Markdown.
 type Skill struct {
-	Name        string
-	Description string
+	Name         string
+	Description  string
 	Instructions string
 }
 
@@ -89,8 +89,8 @@ func Parse(content string) (Skill, error) {
 	}
 
 	return Skill{
-		Name:        name,
-		Description: fields["description"],
+		Name:         name,
+		Description:  fields["description"],
 		Instructions: instructions,
 	}, nil
 }
