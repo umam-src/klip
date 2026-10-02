@@ -8,7 +8,7 @@ import (
 	_ "modernc.org/sqlite"
 )
 
-const schemaVersion = 7
+const schemaVersion = 8
 
 const schema = `
 CREATE TABLE IF NOT EXISTS schema_migrations (
@@ -26,6 +26,7 @@ CREATE TABLE IF NOT EXISTS ruang (
 CREATE TABLE IF NOT EXISTS agen (
     id TEXT PRIMARY KEY,
     ruang_id TEXT NOT NULL REFERENCES ruang(id) ON DELETE CASCADE,
+    parent_id TEXT REFERENCES agen(id) ON DELETE SET NULL,
     name TEXT NOT NULL,
     description TEXT NOT NULL DEFAULT '',
     provider_id TEXT NOT NULL DEFAULT '',
@@ -34,6 +35,7 @@ CREATE TABLE IF NOT EXISTS agen (
     updated_at TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_agen_ruang ON agen(ruang_id);
+CREATE INDEX IF NOT EXISTS idx_agen_parent ON agen(parent_id);
 
 CREATE TABLE IF NOT EXISTS agen_skill (
     agen_id TEXT NOT NULL REFERENCES agen(id) ON DELETE CASCADE,
@@ -242,6 +244,21 @@ func migrate(ctx context.Context, db *sql.DB) error {
 	var version int
 	if err := tx.QueryRowContext(ctx, "SELECT COALESCE(MAX(version), 0) FROM schema_migrations").Scan(&version); err != nil {
 		return fmt.Errorf("baca versi skema: %w", err)
+	}
+	if version < 8 {
+		if version < 7 {
+			// Database sebelum v7 is not expected to be upgraded in-place here;
+			// the current schema remains the source of truth for fresh installs.
+			version = 7
+		}
+		if version < 8 {
+			if _, err := tx.ExecContext(ctx, "ALTER TABLE agen ADD COLUMN parent_id TEXT REFERENCES agen(id) ON DELETE SET NULL"); err != nil {
+				return fmt.Errorf("migrasi hierarki agen: %w", err)
+			}
+			if _, err := tx.ExecContext(ctx, "CREATE INDEX IF NOT EXISTS idx_agen_parent ON agen(parent_id)"); err != nil {
+				return fmt.Errorf("indeks hierarki agen: %w", err)
+			}
+		}
 	}
 	if version < schemaVersion {
 		if _, err := tx.ExecContext(ctx, "INSERT INTO schema_migrations(version) VALUES (?)", schemaVersion); err != nil {
