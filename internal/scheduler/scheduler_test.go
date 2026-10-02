@@ -12,32 +12,122 @@ import (
 )
 
 type fakeRepo struct {
-	mu sync.Mutex
+	mu       sync.Mutex
 	schedule domain.Schedule
-	runs []domain.ScheduleRun
-	next time.Time
+	runs     []domain.ScheduleRun
+	next     time.Time
 }
-func (r *fakeRepo) CreateSchedule(context.Context, domain.Schedule) error { return nil }
-func (r *fakeRepo) GetSchedule(context.Context, domain.ID) (domain.Schedule, error) { return r.schedule, nil }
-func (r *fakeRepo) ListSchedules(context.Context) ([]domain.Schedule, error) { r.mu.Lock(); defer r.mu.Unlock(); s := r.schedule; if !r.next.IsZero() { s.NextRunAt = r.next }; return []domain.Schedule{s}, nil }
-func (r *fakeRepo) UpdateScheduleRun(_ context.Context, _ domain.ID, next time.Time) error { r.mu.Lock(); r.next = next; r.mu.Unlock(); return nil }
-func (r *fakeRepo) CreateScheduleRun(_ context.Context, run domain.ScheduleRun) error { r.mu.Lock(); r.runs = append(r.runs, run); r.mu.Unlock(); return nil }
-func (r *fakeRepo) FinishScheduleRun(_ context.Context, id domain.ID, status domain.ScheduleRunStatus, errText string, finished time.Time) error { r.mu.Lock(); defer r.mu.Unlock(); for i := range r.runs { if r.runs[i].ID == id { r.runs[i].Status = status; r.runs[i].Error = errText; r.runs[i].FinishedAt = &finished } }; return nil }
-func (r *fakeRepo) ListScheduleRuns(context.Context, domain.ID, int) ([]domain.ScheduleRun, error) { return nil, nil }
 
-type fakeExecutor struct { mu sync.Mutex; calls int; fail int; done chan struct{} }
-func (e *fakeExecutor) Execute(context.Context, agent.ExecutionRequest) (agent.ExecutionResult, error) { e.mu.Lock(); e.calls++; calls := e.calls; e.mu.Unlock(); if calls <= e.fail { return agent.ExecutionResult{}, errors.New("gagal") }; if e.done != nil { close(e.done); e.done = nil }; return agent.ExecutionResult{}, nil }
+func (r *fakeRepo) CreateSchedule(context.Context, domain.Schedule) error { return nil }
+
+func (r *fakeRepo) GetSchedule(context.Context, domain.ID) (domain.Schedule, error) {
+	return r.schedule, nil
+}
+
+func (r *fakeRepo) ListSchedules(context.Context) ([]domain.Schedule, error) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	schedule := r.schedule
+	if !r.next.IsZero() {
+		schedule.NextRunAt = r.next
+	}
+	return []domain.Schedule{schedule}, nil
+}
+
+func (r *fakeRepo) UpdateScheduleRun(_ context.Context, _ domain.ID, next time.Time) error {
+	r.mu.Lock()
+	r.next = next
+	r.mu.Unlock()
+	return nil
+}
+
+func (r *fakeRepo) CreateScheduleRun(_ context.Context, run domain.ScheduleRun) error {
+	r.mu.Lock()
+	r.runs = append(r.runs, run)
+	r.mu.Unlock()
+	return nil
+}
+
+func (r *fakeRepo) FinishScheduleRun(_ context.Context, id domain.ID, status domain.ScheduleRunStatus, errText string, finished time.Time) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	for i := range r.runs {
+		if r.runs[i].ID == id {
+			r.runs[i].Status = status
+			r.runs[i].Error = errText
+			r.runs[i].FinishedAt = &finished
+		}
+	}
+	return nil
+}
+
+func (r *fakeRepo) ListScheduleRuns(context.Context, domain.ID, int) ([]domain.ScheduleRun, error) {
+	return nil, nil
+}
+
+type fakeExecutor struct {
+	mu    sync.Mutex
+	calls int
+	fail  int
+	done  chan struct{}
+}
+
+func (e *fakeExecutor) Execute(context.Context, agent.ExecutionRequest) (agent.ExecutionResult, error) {
+	e.mu.Lock()
+	e.calls++
+	calls := e.calls
+	e.mu.Unlock()
+	if calls <= e.fail {
+		return agent.ExecutionResult{}, errors.New("gagal")
+	}
+	if e.done != nil {
+		close(e.done)
+		e.done = nil
+	}
+	return agent.ExecutionResult{}, nil
+}
 
 func TestSchedulerRetryAndHistory(t *testing.T) {
-	repo := &fakeRepo{schedule: domain.Schedule{ID:"s1", Name:"uji", PekerjaanID:"p1", AgenID:"a1", Program:"true", Interval:time.Hour, NextRunAt:time.Now().Add(-time.Second), Status:domain.ScheduleEnabled, RetryLimit:2}}
-	exec := &fakeExecutor{fail:1, done:make(chan struct{})}
-	s, err := New(repo, exec, Config{PollInterval:5*time.Millisecond, RetryDelay:time.Millisecond, Heartbeat:5*time.Millisecond})
-	if err != nil { t.Fatal(err) }
-	ctx, cancel := context.WithCancel(context.Background()); defer cancel(); s.Start(ctx)
-	select { case <-exec.done: case <-time.After(time.Second): t.Fatal("scheduler tidak menjalankan pekerjaan") }
+	repo := &fakeRepo{schedule: domain.Schedule{
+		ID:          "s1",
+		Name:        "uji",
+		PekerjaanID: "p1",
+		AgenID:      "a1",
+		Program:     "true",
+		Interval:    time.Hour,
+		NextRunAt:   time.Now().Add(-time.Second),
+		Status:      domain.ScheduleEnabled,
+		RetryLimit:  2,
+	}}
+	exec := &fakeExecutor{fail: 1, done: make(chan struct{})}
+	s, err := New(repo, exec, Config{
+		PollInterval: 5 * time.Millisecond,
+		RetryDelay:   time.Millisecond,
+		Heartbeat:    5 * time.Millisecond,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	s.Start(ctx)
+	select {
+	case <-exec.done:
+	case <-time.After(time.Second):
+		t.Fatal("scheduler tidak menjalankan pekerjaan")
+	}
 	s.Stop()
-	repo.mu.Lock(); defer repo.mu.Unlock()
-	if exec.calls != 2 { t.Fatalf("calls = %d, want 2", exec.calls) }
-	if len(repo.runs) != 2 { t.Fatalf("history = %d, want 2", len(repo.runs)) }
-	for _, run := range repo.runs { if run.Status != domain.ScheduleRunSucceeded && run.Status != domain.ScheduleRunFailed { t.Fatalf("status = %q", run.Status) } }
+	repo.mu.Lock()
+	defer repo.mu.Unlock()
+	if exec.calls != 2 {
+		t.Fatalf("calls = %d, want 2", exec.calls)
+	}
+	if len(repo.runs) != 2 {
+		t.Fatalf("history = %d, want 2", len(repo.runs))
+	}
+	for _, run := range repo.runs {
+		if run.Status != domain.ScheduleRunSucceeded && run.Status != domain.ScheduleRunFailed {
+			t.Fatalf("status = %q", run.Status)
+		}
+	}
 }
