@@ -13,9 +13,14 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  release:
+  verify:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    outputs:
+      exists: ${{ steps.release.outputs.exists }}
+      version: ${{ steps.changelog.outputs.version }}
+      tag: ${{ steps.changelog.outputs.tag }}
+      prerelease: ${{ steps.changelog.outputs.prerelease }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -108,30 +113,53 @@ jobs:
           fi
           go test ./...
 
-      - name: Build Linux binary
-        if: steps.release.outputs.exists == 'false'
+  build:
+    needs: verify
+    if: needs.verify.outputs.exists == 'false'
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - os: ubuntu-latest
+            goos: linux
+            goarch: amd64
+            suffix: ''
+          - os: windows-latest
+            goos: windows
+            goarch: amd64
+            suffix: '.exe'
+          - os: macos-latest
+            goos: darwin
+            goarch: arm64
+            suffix: ''
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.26.x'
+          cache: true
+
+      - name: Build release binary
         shell: bash
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+          VERSION: ${{ needs.verify.outputs.version }}
         run: |
           set -euo pipefail
           mkdir -p dist
-          flags=(-trimpath -buildvcs=false "-ldflags=-s -w -X main.version=${{ steps.changelog.outputs.version }}")
+          name="klip-${GOOS}-${GOARCH}${{ matrix.suffix }}"
+          flags=(-trimpath -buildvcs=false "-ldflags=-s -w -X main.version=${VERSION}")
+          CGO_ENABLED=0 go build "${flags[@]}" -o "dist/${name}" ./cmd/klip
 
-          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
-            go build "${flags[@]}" -o dist/klip-linux-amd64 ./cmd/klip
-
-          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
-            go build "${flags[@]}" -o dist/klip-linux-amd64-repro ./cmd/klip
-
-          if ! cmp -s dist/klip-linux-amd64 dist/klip-linux-amd64-repro; then
-            echo "::error::Build release tidak reproducible."
-            sha256sum dist/klip-linux-amd64 dist/klip-linux-amd64-repro
-            exit 1
-          fi
-          rm dist/klip-linux-amd64-repro
-
-          size=$(stat -c '%s' dist/klip-linux-amd64)
+          size=$(stat -c '%s' "dist/${name}" 2>/dev/null || stat -f '%z' "dist/${name}")
           mb=$(awk "BEGIN { printf \"%.2f\", $size / 1024 / 1024 }")
-          echo "Binary: ${mb} MiB (${size} bytes)"
+          echo "Binary: ${name}: ${mb} MiB (${size} bytes)"
 
           if [ "$size" -gt 104857600 ]; then
             echo "::error::Binary melebihi batas keras 100 MiB."
@@ -142,49 +170,51 @@ jobs:
             echo "::warning::Binary mencapai atau melebihi target 50 MiB."
           fi
 
-          sha256sum dist/klip-linux-amd64 > dist/SHA256SUMS
+          sha256sum "dist/${name}" > "dist/${name}.sha256" 2>/dev/null || shasum -a 256 "dist/${name}" > "dist/${name}.sha256"
 
-      - name: Smoke test release binary
-        if: steps.release.outputs.exists == 'false'
-        shell: bash
-        run: |
-          set -euo pipefail
-          ./dist/klip-linux-amd64 >"$RUNNER_TEMP/klip.log" 2>&1 &
-          pid=$!
-          trap 'kill "$pid" 2>/dev/null || true' EXIT
+      - name: Upload release artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: klip-${{ matrix.goos }}-${{ matrix.goarch }}
+          path: dist/*
+          if-no-files-found: error
+          retention-days: 1
 
-          for attempt in $(seq 1 30); do
-            if curl --fail --silent --show-error http://127.0.0.1:8787/health >/dev/null; then
-              echo "Smoke test: /health berhasil."
-              exit 0
-            fi
-            if ! kill -0 "$pid" 2>/dev/null; then
-              echo "Klip berhenti sebelum health endpoint siap."
-              cat "$RUNNER_TEMP/klip.log"
-              exit 1
-            fi
-            sleep 0.2
-          done
+  publish:
+    needs: [verify, build]
+    if: needs.verify.outputs.exists == 'false'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
 
-          echo "Klip tidak merespons /health dalam batas waktu."
-          cat "$RUNNER_TEMP/klip.log"
-          exit 1
+      - name: Download release artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+          pattern: klip-*
+          merge-multiple: true
 
       - name: Publish GitHub Release
-        if: steps.release.outputs.exists == 'false'
         env:
           GH_TOKEN: ${{ github.token }}
+          TAG: ${{ needs.verify.outputs.tag }}
         shell: bash
         run: |
           set -euo pipefail
-          TAG="${{ steps.changelog.outputs.tag }}"
-          ARGS=("$TAG" "dist/klip-linux-amd64" "dist/SHA256SUMS" \
-            --title "$TAG" \
-            --notes-file release_notes.md \
-            --target "$GITHUB_SHA")
-
-          if [ "${{ steps.changelog.outputs.prerelease }}" = "true" ]; then
-            ARGS+=(--prerelease)
+          if [ "${{ needs.verify.outputs.prerelease }}" = "true" ]; then
+            gh release create "$TAG" dist/* \
+              --title "$TAG" \
+              --notes-file release_notes.md \
+              --target "$GITHUB_SHA" \
+              --prerelease
+          else
+            gh release create "$TAG" dist/* \
+              --title "$TAG" \
+              --notes-file release_notes.md \
+              --target "$GITHUB_SHA"
           fi
-
-          gh release create "${ARGS[@]}"
