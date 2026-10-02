@@ -29,6 +29,7 @@ Format mengikuti Keep a Changelog dan versi mengikuti Semantic Versioning.
 - Skema SQLite dinaikkan ke versi 7 untuk menyimpan jadwal dan riwayat scheduler.
 - Pemeriksaan format CI kembali bersih setelah handler scheduler diformat dengan `gofmt`.
 - Penyimpanan hasil menolak direktori induk yang berupa symlink untuk mencegah penulisan keluar dari root hasil.
+- Pembacaan hasil HTTP kini streaming agar unduhan hingga 16 MiB tidak perlu dimuat penuh ke memori.
 - Tinjauan CSRF menetapkan bahwa mode UI lokal saat ini belum memerlukan token karena API tidak memakai cookie sesi dan bind bawaan hanya localhost.
 
 ### Removed
