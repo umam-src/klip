@@ -10,20 +10,17 @@
 <body>
   <header class="topbar">
     <a class="brand" href="/" aria-label="Klip beranda">
-      <span class="brand-mark" aria-hidden="true">K</span>
-      <span>Klip</span>
+      <span class="brand-mark" aria-hidden="true">K</span><span>Klip</span>
     </a>
     <span class="status"><i></i> Lokal</span>
   </header>
+
   <main class="shell">
     <section class="hero">
       <p class="eyebrow">Ruang kerja AI lokal</p>
       <h1>Kerjakan dengan lebih teratur.</h1>
-      <p class="lead">Kelola ruang, agen, pekerjaan, dan hasil dari satu tempat. Data tetap berada di perangkatmu.</p>
-      <div class="actions">
-        <a class="button primary" href="#ruang">Mulai bekerja</a>
-        <a class="button" href="/health">Periksa layanan</a>
-      </div>
+      <p class="lead">Kelola ruang, agen, pekerjaan, dan tugas dari satu tempat. Data tetap berada di perangkatmu.</p>
+      <div class="actions"><a class="button primary" href="#ruang">Mulai bekerja</a><a class="button" href="/health">Periksa layanan</a></div>
     </section>
 
     <section id="ruang" class="section" aria-labelledby="ruang-title">
@@ -31,8 +28,50 @@
         <div><p class="eyebrow">Ruang</p><h2 id="ruang-title">Tempat kerja</h2></div>
         <button class="button" type="button" id="refresh">Muat ulang</button>
       </div>
-      <div id="space-list" class="grid" aria-live="polite">
-        <div class="empty"><strong>Belum ada ruang.</strong><span>Buat ruang pertama melalui API atau nanti dari antarmuka Klip.</span></div>
+      <div id="space-list" class="grid" aria-live="polite"></div>
+    </section>
+
+    <section id="workspace" class="section workspace" hidden aria-labelledby="workspace-title">
+      <div class="section-head">
+        <div><p class="eyebrow" id="workspace-label">Ruang</p><h2 id="workspace-title">Detail ruang</h2></div>
+        <button class="button" type="button" id="back-to-spaces">Semua ruang</button>
+      </div>
+
+      <div class="columns">
+        <div class="panel">
+          <div class="panel-head"><div><h3>Agen</h3><p>Worker AI untuk ruang ini.</p></div><button class="button small" type="button" data-toggle="agent-form">Tambah</button></div>
+          <form id="agent-form" class="inline-form" hidden>
+            <input name="name" placeholder="Nama agen" required maxlength="120">
+            <input name="provider_id" placeholder="Penyedia, mis. ollama" maxlength="80">
+            <input name="model_id" placeholder="Model, mis. qwen" maxlength="120">
+            <button class="button primary small" type="submit">Simpan agen</button>
+          </form>
+          <div id="agent-list" class="stack"></div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head"><div><h3>Pekerjaan</h3><p>Unit kerja utama dalam ruang.</p></div><button class="button small" type="button" data-toggle="job-form">Tambah</button></div>
+          <form id="job-form" class="inline-form" hidden>
+            <input name="title" placeholder="Judul pekerjaan" required maxlength="160">
+            <button class="button primary small" type="submit">Simpan pekerjaan</button>
+          </form>
+          <div id="job-list" class="stack"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="job-detail" class="section" hidden aria-labelledby="job-title">
+      <div class="section-head">
+        <div><p class="eyebrow">Tugas</p><h2 id="job-title">Pekerjaan</h2></div>
+        <button class="button" type="button" id="back-to-workspace">Kembali</button>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><div><h3>Daftar tugas</h3><p>Langkah konkret untuk menyelesaikan pekerjaan.</p></div><button class="button small" type="button" data-toggle="task-form">Tambah</button></div>
+        <form id="task-form" class="inline-form" hidden>
+          <input name="title" placeholder="Judul tugas" required maxlength="160">
+          <button class="button primary small" type="submit">Simpan tugas</button>
+        </form>
+        <div id="task-list" class="stack"></div>
       </div>
     </section>
 
@@ -40,8 +79,8 @@
       <div class="section-head"><div><p class="eyebrow">Alur</p><h2 id="overview-title">Struktur Klip</h2></div></div>
       <div class="flow">
         <article><span>01</span><h3>Agen</h3><p>Worker AI dengan penyedia dan model yang kamu pilih.</p></article>
-        <article><span>02</span><h3>Pekerjaan</h3><p>Tujuan kerja yang dapat dipecah menjadi beberapa tugas.</p></article>
-        <article><span>03</span><h3>Hasil</h3><p>Output yang tersimpan sebagai bagian dari riwayat pekerjaan.</p></article>
+        <article><span>02</span><h3>Pekerjaan</h3><p>Unit kerja yang dapat dipecah menjadi beberapa tugas.</p></article>
+        <article><span>03</span><h3>Tugas</h3><p>Langkah konkret yang dapat dijalankan dan dilacak.</p></article>
       </div>
     </section>
   </main>
