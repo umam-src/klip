@@ -8,7 +8,7 @@ import (
 	_ "modernc.org/sqlite"
 )
 
-const schemaVersion = 5
+const schemaVersion = 6
 
 const schema = `
 CREATE TABLE IF NOT EXISTS schema_migrations (
@@ -34,6 +34,13 @@ CREATE TABLE IF NOT EXISTS agen (
     updated_at TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_agen_ruang ON agen(ruang_id);
+
+CREATE TABLE IF NOT EXISTS agen_skill (
+    agen_id TEXT NOT NULL REFERENCES agen(id) ON DELETE CASCADE,
+    skill_name TEXT NOT NULL,
+    PRIMARY KEY (agen_id, skill_name)
+);
+CREATE INDEX IF NOT EXISTS idx_agen_skill_name ON agen_skill(skill_name);
 
 CREATE TABLE IF NOT EXISTS sasaran (
     id TEXT PRIMARY KEY,
