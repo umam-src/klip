@@ -1,0 +1,94 @@
+name: Build
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Git ref to build (branch, tag, or commit)
+        required: false
+        default: main
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: build-${{ github.workflow }}-${{ inputs.ref || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - os: ubuntu-latest
+            goos: linux
+            goarch: amd64
+            suffix: ''
+          - os: windows-latest
+            goos: windows
+            goarch: amd64
+            suffix: '.exe'
+          - os: macos-latest
+            goos: darwin
+            goarch: arm64
+            suffix: ''
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.26.x'
+          cache: true
+
+      - name: Verify source
+        run: |
+          files=$(gofmt -l .)
+          if [ -n "$files" ]; then
+            echo "File Go belum diformat dengan gofmt:"
+            echo "$files"
+            exit 1
+          fi
+          go test ./...
+
+      - name: Build binary
+        shell: bash
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          name="klip-${GOOS}-${GOARCH}${{ matrix.suffix }}"
+          flags=(-trimpath -buildvcs=false "-ldflags=-s -w")
+          CGO_ENABLED=0 go build "${flags[@]}" -o "dist/${name}" ./cmd/klip
+
+          size=$(stat -c '%s' "dist/${name}" 2>/dev/null || stat -f '%z' "dist/${name}")
+          mb=$(awk "BEGIN { printf \"%.2f\", $size / 1024 / 1024 }")
+          echo "Binary: ${name}: ${mb} MiB (${size} bytes)"
+
+          if [ "$size" -gt 104857600 ]; then
+            echo "::error::Binary melebihi batas keras 100 MiB."
+            exit 1
+          fi
+
+          if [ "$size" -ge 52428800 ]; then
+            echo "::warning::Binary mencapai atau melebihi target 50 MiB."
+          fi
+
+          sha256sum "dist/${name}" > "dist/${name}.sha256" 2>/dev/null || shasum -a 256 "dist/${name}" > "dist/${name}.sha256"
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: klip-build-${{ matrix.goos }}-${{ matrix.goarch }}
+          path: dist/*
+          if-no-files-found: error
+          retention-days: 7
