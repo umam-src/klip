@@ -84,6 +84,31 @@ jobs:
             echo "OK: binary berada di bawah target 50 MiB."
           fi
 
+      - name: Smoke test release binary
+        run: |
+          KLIP_DATA_DIR="$RUNNER_TEMP/klip-data"
+          mkdir -p "$KLIP_DATA_DIR"
+          ./dist/klip-linux-amd64 >"$RUNNER_TEMP/klip.log" 2>&1 &
+          pid=$!
+          trap 'kill "$pid" 2>/dev/null || true' EXIT
+
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent --show-error http://127.0.0.1:8787/health >/dev/null; then
+              echo "Smoke test: /health berhasil."
+              exit 0
+            fi
+            if ! kill -0 "$pid" 2>/dev/null; then
+              echo "Klip berhenti sebelum health endpoint siap."
+              cat "$RUNNER_TEMP/klip.log"
+              exit 1
+            fi
+            sleep 0.2
+          done
+
+          echo "Klip tidak merespons /health dalam batas waktu."
+          cat "$RUNNER_TEMP/klip.log"
+          exit 1
+
       - name: Publish GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
