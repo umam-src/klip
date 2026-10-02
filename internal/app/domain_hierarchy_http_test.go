@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/umam-src/klip/internal/config"
+	"github.com/umam-src/klip/internal/domain"
 	"github.com/umam-src/klip/internal/storage"
 )
 
@@ -20,7 +21,7 @@ func TestHandlerAgentHierarchy(t *testing.T) {
 	defer db.Close()
 
 	repo := storage.NewRepository(db)
-	if err := repo.CreateRuang(ctx, ruangForHierarchyTest("ruang-http")); err != nil {
+	if err := repo.CreateRuang(ctx, domain.Ruang{ID: "ruang-http", Name: "Ruang HTTP"}); err != nil {
 		t.Fatal(err)
 	}
 
@@ -38,11 +39,8 @@ func TestHandlerAgentHierarchy(t *testing.T) {
 	}
 
 	rootBody := create(`{"id":"agen-root","name":"Root"}`)
-	if !strings.Contains(rootBody, `"parent_id"`) {
-		// parent_id is omitted for root agents by design.
-		if strings.Contains(rootBody, `"parent_id":`) {
-			t.Fatalf("unexpected root parent: %s", rootBody)
-		}
+	if strings.Contains(rootBody, `"parent_id":`) {
+		t.Fatalf("unexpected root parent: %s", rootBody)
 	}
 	childBody := create(`{"id":"agen-child","parent_id":"agen-root","name":"Child"}`)
 	if !strings.Contains(childBody, `"parent_id":"agen-root"`) {
@@ -58,23 +56,4 @@ func TestHandlerAgentHierarchy(t *testing.T) {
 	if body := res.Body.String(); !strings.Contains(body, `"id":"agen-root"`) || !strings.Contains(body, `"id":"agen-child"`) || !strings.Contains(body, `"parent_id":"agen-root"`) {
 		t.Fatalf("hierarchy response = %s", body)
 	}
-}
-
-func ruangForHierarchyTest(id string) (ruang storageTestRuang) {
-	return storageTestRuang{ID: id, Name: "Ruang HTTP"}
-}
-
-type storageTestRuang struct {
-	ID   string
-	Name string
-}
-
-func (r storageTestRuang) toDomain() (result struct {
-	ID   string
-	Name string
-}) {
-	return struct {
-		ID   string
-		Name string
-	}{ID: r.ID, Name: r.Name}
 }
