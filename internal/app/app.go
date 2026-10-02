@@ -36,6 +36,7 @@ func (a *App) Handler() http.Handler {
 	mux.HandleFunc("/health", a.handleHealth)
 	mux.HandleFunc("/api/v1/chat", a.handleChat)
 	mux.HandleFunc("/api/v1/provider/status", a.handleProviderStatus)
+	mux.HandleFunc("/api/v1/settings", a.handleSettings)
 	mux.HandleFunc("/api/v1/ruang", a.handleRuang)
 	mux.HandleFunc("/api/v1/ruang/{id}/sasaran", a.handleSasaran)
 	mux.HandleFunc("/api/v1/ruang/", a.handleRuangChild)
@@ -84,6 +85,32 @@ func (a *App) handleProviderStatus(w http.ResponseWriter, r *http.Request) {
 	}
 	status.Reachable = true
 	writeJSON(w, http.StatusOK, status)
+}
+
+type settingsResponse struct {
+	DataDir   string `json:"data_dir"`
+	Listen    string `json:"listen"`
+	Locale    string `json:"locale"`
+	Provider  string `json:"provider"`
+	BaseURL   string `json:"base_url"`
+	Model     string `json:"model"`
+	APIKeySet bool   `json:"api_key_set"`
+}
+
+func (a *App) handleSettings(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		writeError(w, http.StatusMethodNotAllowed, "metode tidak didukung")
+		return
+	}
+	writeJSON(w, http.StatusOK, settingsResponse{
+		DataDir:   a.config.DataDir,
+		Listen:    a.config.Listen,
+		Locale:    a.config.Locale,
+		Provider:  a.config.AI.Provider,
+		BaseURL:   a.config.AI.BaseURL,
+		Model:     a.config.AI.Model,
+		APIKeySet: strings.TrimSpace(a.config.AI.APIKey) != "",
+	})
 }
 
 type chatRequest struct {
