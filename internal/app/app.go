@@ -15,10 +15,11 @@ import (
 )
 
 type App struct {
-	config   config.Config
-	provider ai.AIProvider
-	repo     *storage.Repository
-	executor agent.Executor
+	config      config.Config
+	provider    ai.AIProvider
+	repo        *storage.Repository
+	resultStore *storage.ResultStore
+	executor    agent.Executor
 }
 
 func New(cfg config.Config, provider ai.AIProvider, repos ...*storage.Repository) *App {
@@ -26,8 +27,9 @@ func New(cfg config.Config, provider ai.AIProvider, repos ...*storage.Repository
 	if len(repos) > 0 {
 		repo = repos[0]
 	}
+	resultStore, _ := storage.NewResultStore(cfg.DataDir)
 	executor := agent.Executor{Runner: agent.NewRunner(0, 0), Repo: repo}
-	return &App{config: cfg, provider: provider, repo: repo, executor: executor}
+	return &App{config: cfg, provider: provider, repo: repo, resultStore: resultStore, executor: executor}
 }
 
 func (a *App) Handler() http.Handler {
@@ -47,6 +49,7 @@ func (a *App) Handler() http.Handler {
 	mux.HandleFunc("/api/v1/tugas/{id}/approval", a.handleTugasApproval)
 	mux.HandleFunc("/api/v1/tugas/", a.handleTugasKomentar)
 	mux.HandleFunc("/api/v1/approval/{id}/{action}", a.handleApprovalDecision)
+	mux.HandleFunc("/api/v1/hasil/{id}/file", a.handleHasilFile)
 	return mux
 }
 
