@@ -24,3 +24,9 @@ type AIProvider interface {
 	ID() string
 	Chat(ctx context.Context, req ChatRequest) (ChatResponse, error)
 }
+
+// Streamer is an optional provider capability for incremental chat output.
+// Providers that do not support streaming continue to use Chat.
+type Streamer interface {
+	Stream(ctx context.Context, req ChatRequest, emit func(ChatResponse) error) error
+}
