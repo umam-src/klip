@@ -11,12 +11,12 @@ const (
 )
 
 type Approval struct {
-	ID          ID            `json:"id"`
-	PekerjaanID ID            `json:"pekerjaan_id"`
-	TugasID     *ID           `json:"tugas_id,omitempty"`
+	ID          ID             `json:"id"`
+	PekerjaanID ID             `json:"pekerjaan_id"`
+	TugasID     *ID            `json:"tugas_id,omitempty"`
 	Status      ApprovalStatus `json:"status"`
-	Reason      string        `json:"reason,omitempty"`
-	CreatedAt   time.Time     `json:"created_at"`
-	UpdatedAt   time.Time     `json:"updated_at"`
-	DecidedAt   *time.Time    `json:"decided_at,omitempty"`
+	Reason      string         `json:"reason,omitempty"`
+	CreatedAt   time.Time      `json:"created_at"`
+	UpdatedAt   time.Time      `json:"updated_at"`
+	DecidedAt   *time.Time     `json:"decided_at,omitempty"`
 }
