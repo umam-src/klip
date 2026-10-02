@@ -45,7 +45,7 @@ func (r *Repository) FinalizeExecution(ctx context.Context, runID, sesiID domain
 		value := domain.ID(eventTugasID.String)
 		actualTugasID = &value
 	}
-	if !sameOptionalID(tugasID, actualTugasID) {
+	if tugasID != nil && !sameOptionalID(tugasID, actualTugasID) {
 		return fmt.Errorf("execution: tugas tidak sesuai dengan run: %w", ErrInvalid)
 	}
 
