@@ -36,6 +36,24 @@ func (fakeHealthProvider) Chat(_ context.Context, req ai.ChatRequest) (ai.ChatRe
 
 func (p fakeHealthProvider) Check(context.Context) error { return p.err }
 
+func BenchmarkAppMemoryIdle(b *testing.B) {
+	dataDir := b.TempDir()
+	cfg := config.Default(dataDir)
+	cfg.AI.Provider = "ollama"
+	cfg.AI.Model = "model-uji"
+
+	b.ReportAllocs()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		app := New(cfg, fakeProvider{})
+		runtime.GC()
+		var stats runtime.MemStats
+		runtime.ReadMemStats(&stats)
+		b.ReportMetric(float64(stats.HeapAlloc), "heap-alloc-bytes")
+		runtime.KeepAlive(app)
+	}
+}
+
 func TestHandlerHealth(t *testing.T) {
 	handler := New(config.Default(t.TempDir()), fakeProvider{}).Handler()
 	req := httptest.NewRequest(http.MethodGet, "/health", nil)
@@ -81,6 +99,7 @@ func TestHandlerProviderStatus(t *testing.T) {
 		{
 			name:       "provider not configured",
 			provider:   fakeHealthProvider{},
+			model:      "model-uji",
 			wantStatus: http.StatusOK,
 			wantBody:   `{"provider":"ollama","configured":false,"reachable":true}`,
 		},
