@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"path"
 	"strings"
 	"time"
 
@@ -279,6 +280,23 @@ func (r *Repository) CreateTugas(ctx context.Context, tugas domain.Tugas) error 
 	if strings.TrimSpace(string(tugas.PekerjaanID)) == "" || tugas.Position < 0 {
 		return fmt.Errorf("tugas: pekerjaan wajib diisi dan posisi tidak boleh negatif: %w", ErrInvalid)
 	}
+	if tugas.ParentID != nil {
+		parentID := strings.TrimSpace(string(*tugas.ParentID))
+		if parentID == "" {
+			return fmt.Errorf("tugas: parent tidak valid: %w", ErrInvalid)
+		}
+		var parentPekerjaanID string
+		err := r.db.QueryRowContext(ctx, `SELECT pekerjaan_id FROM tugas WHERE id = ?`, parentID).Scan(&parentPekerjaanID)
+		if errors.Is(err, sql.ErrNoRows) {
+			return fmt.Errorf("tugas: parent tidak ditemukan: %w", ErrInvalid)
+		}
+		if err != nil {
+			return fmt.Errorf("cek parent tugas: %w", err)
+		}
+		if parentPekerjaanID != string(tugas.PekerjaanID) {
+			return fmt.Errorf("tugas: parent tidak sesuai dengan pekerjaan: %w", ErrInvalid)
+		}
+	}
 	var parentID any
 	if tugas.ParentID != nil {
 		parentID = string(*tugas.ParentID)
@@ -357,8 +375,25 @@ func (r *Repository) ListTugasByPekerjaan(ctx context.Context, pekerjaanID domai
 }
 
 func (r *Repository) CreateHasil(ctx context.Context, hasil domain.Hasil) error {
-	if strings.TrimSpace(string(hasil.ID)) == "" || strings.TrimSpace(string(hasil.PekerjaanID)) == "" || strings.TrimSpace(hasil.Kind) == "" || strings.TrimSpace(hasil.Name) == "" || strings.TrimSpace(hasil.Path) == "" {
-		return fmt.Errorf("hasil: id, pekerjaan, jenis, nama, dan path wajib diisi: %w", ErrInvalid)
+	if err := validateHasil(hasil); err != nil {
+		return fmt.Errorf("hasil: %w", err)
+	}
+	if hasil.TugasID != nil {
+		tugasID := strings.TrimSpace(string(*hasil.TugasID))
+		if tugasID == "" {
+			return fmt.Errorf("hasil: tugas tidak valid: %w", ErrInvalid)
+		}
+		var tugasPekerjaanID string
+		err := r.db.QueryRowContext(ctx, `SELECT pekerjaan_id FROM tugas WHERE id = ?`, tugasID).Scan(&tugasPekerjaanID)
+		if errors.Is(err, sql.ErrNoRows) {
+			return fmt.Errorf("hasil: tugas tidak ditemukan: %w", ErrInvalid)
+		}
+		if err != nil {
+			return fmt.Errorf("cek tugas hasil: %w", err)
+		}
+		if tugasPekerjaanID != string(hasil.PekerjaanID) {
+			return fmt.Errorf("hasil: tugas tidak sesuai dengan pekerjaan: %w", ErrInvalid)
+		}
 	}
 	var tugasID any
 	if hasil.TugasID != nil {
@@ -432,6 +467,23 @@ func (r *Repository) ListHasilByPekerjaan(ctx context.Context, pekerjaanID domai
 		return nil, fmt.Errorf("baca daftar hasil: %w", err)
 	}
 	return result, nil
+}
+
+func validateHasil(hasil domain.Hasil) error {
+	if strings.TrimSpace(string(hasil.ID)) == "" || strings.TrimSpace(string(hasil.PekerjaanID)) == "" || strings.TrimSpace(hasil.Kind) == "" || strings.TrimSpace(hasil.Name) == "" || strings.TrimSpace(hasil.Path) == "" {
+		return ErrInvalid
+	}
+	if strings.ContainsRune(hasil.Name, '\x00') || strings.ContainsAny(hasil.Name, `/\\`) {
+		return ErrInvalid
+	}
+	if strings.ContainsRune(hasil.Path, '\x00') || strings.ContainsRune(hasil.Path, '\\') || path.IsAbs(hasil.Path) {
+		return ErrInvalid
+	}
+	clean := path.Clean(hasil.Path)
+	if clean != hasil.Path || clean == "." || clean == ".." || strings.HasPrefix(clean, "../") {
+		return ErrInvalid
+	}
+	return nil
 }
 
 func validateIDName(id domain.ID, name string) error {
