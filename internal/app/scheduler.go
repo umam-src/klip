@@ -12,29 +12,29 @@ import (
 )
 
 type scheduleRequest struct {
-	Name        string     `json:"name"`
-	PekerjaanID domain.ID   `json:"pekerjaan_id"`
-	TugasID     *domain.ID  `json:"tugas_id,omitempty"`
-	AgenID      domain.ID   `json:"agen_id"`
-	Program     string      `json:"program"`
-	Arguments   []string    `json:"arguments,omitempty"`
-	IntervalSec int64       `json:"interval_seconds"`
-	NextRunAt   string      `json:"next_run_at,omitempty"`
-	RetryLimit  int         `json:"retry_limit,omitempty"`
+	Name        string    `json:"name"`
+	PekerjaanID domain.ID  `json:"pekerjaan_id"`
+	TugasID     *domain.ID `json:"tugas_id,omitempty"`
+	AgenID      domain.ID  `json:"agen_id"`
+	Program     string     `json:"program"`
+	Arguments   []string   `json:"arguments,omitempty"`
+	IntervalSec int64      `json:"interval_seconds"`
+	NextRunAt   string     `json:"next_run_at,omitempty"`
+	RetryLimit  int        `json:"retry_limit,omitempty"`
 }
 
 type scheduleResponse struct {
-	ID          domain.ID              `json:"id"`
-	Name        string                 `json:"name"`
-	PekerjaanID domain.ID              `json:"pekerjaan_id"`
-	TugasID     *domain.ID             `json:"tugas_id,omitempty"`
-	AgenID      domain.ID              `json:"agen_id"`
-	Program     string                 `json:"program"`
-	Arguments   []string               `json:"arguments"`
-	IntervalSec int64                  `json:"interval_seconds"`
-	NextRunAt   time.Time              `json:"next_run_at"`
-	Status      domain.ScheduleStatus  `json:"status"`
-	RetryLimit  int                    `json:"retry_limit"`
+	ID          domain.ID             `json:"id"`
+	Name        string                `json:"name"`
+	PekerjaanID domain.ID             `json:"pekerjaan_id"`
+	TugasID     *domain.ID            `json:"tugas_id,omitempty"`
+	AgenID      domain.ID             `json:"agen_id"`
+	Program     string                `json:"program"`
+	Arguments   []string              `json:"arguments"`
+	IntervalSec int64                 `json:"interval_seconds"`
+	NextRunAt   time.Time             `json:"next_run_at"`
+	Status      domain.ScheduleStatus `json:"status"`
+	RetryLimit  int                   `json:"retry_limit"`
 }
 
 func (a *App) handleScheduler(w http.ResponseWriter, r *http.Request) {
