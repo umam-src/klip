@@ -35,6 +35,7 @@ Format mengikuti Keep a Changelog dan versi mengikuti Semantic Versioning.
 - Dokumentasi optimasi menjelaskan pengukuran heap idle dan membedakannya dari RSS proses.
 - Test status provider diperbaiki agar skenario provider tanpa model benar-benar menggunakan konfigurasi model kosong.
 - Release sekarang membangun binary Linux amd64, Windows amd64, dan macOS arm64; pengujian sumber tetap dilakukan sekali sebelum build matrix.
+- Release build tidak lagi mengandalkan simbol versi linker yang tidak tersedia di binary CLI.
 
 ### Removed
 - Belum ada.
