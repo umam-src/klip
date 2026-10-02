@@ -47,6 +47,28 @@ func TestResultStoreOpen(t *testing.T) {
 	}
 }
 
+func BenchmarkResultStoreOpen(b *testing.B) {
+	store, err := NewResultStore(b.TempDir())
+	if err != nil {
+		b.Fatalf("NewResultStore() error = %v", err)
+	}
+	if err := store.Put("benchmark.bin", strings.NewReader(strings.Repeat("x", 64<<10))); err != nil {
+		b.Fatalf("Put() error = %v", err)
+	}
+
+	b.ReportAllocs()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		file, err := store.Open("benchmark.bin")
+		if err != nil {
+			b.Fatalf("Open() error = %v", err)
+		}
+		if err := file.Close(); err != nil {
+			b.Fatalf("Close() error = %v", err)
+		}
+	}
+}
+
 func TestResultStoreRejectsUnsafePath(t *testing.T) {
 	store, err := NewResultStore(t.TempDir())
 	if err != nil {
