@@ -19,6 +19,7 @@ type createRuangRequest struct {
 
 type createAgenRequest struct {
 	ID          string `json:"id"`
+	ParentID    string `json:"parent_id,omitempty"`
 	Name        string `json:"name"`
 	Description string `json:"description,omitempty"`
 	ProviderID  string `json:"provider_id,omitempty"`
@@ -135,7 +136,7 @@ func (a *App) handlePekerjaanChild(w http.ResponseWriter, r *http.Request) {
 func (a *App) handleAgen(w http.ResponseWriter, r *http.Request, ruangID domain.ID) {
 	switch r.Method {
 	case http.MethodGet:
-		items, err := a.repo.ListAgenByRuang(r.Context(), ruangID)
+		items, err := a.repo.ListAgenByRuangWithParent(r.Context(), ruangID)
 		if err != nil {
 			writeStorageError(w, err)
 			return
@@ -146,19 +147,25 @@ func (a *App) handleAgen(w http.ResponseWriter, r *http.Request, ruangID domain.
 		if !decodeJSON(w, r, &req) {
 			return
 		}
+		var parentID *domain.ID
+		if value := strings.TrimSpace(req.ParentID); value != "" {
+			id := domain.ID(value)
+			parentID = &id
+		}
 		agent := domain.Agen{
 			ID:          domain.ID(strings.TrimSpace(req.ID)),
 			RuangID:     ruangID,
+			ParentID:    parentID,
 			Name:        strings.TrimSpace(req.Name),
 			Description: strings.TrimSpace(req.Description),
 			ProviderID:  strings.TrimSpace(req.ProviderID),
 			ModelID:     strings.TrimSpace(req.ModelID),
 		}
-		if err := a.repo.CreateAgen(r.Context(), agent); err != nil {
+		if err := a.repo.CreateAgenWithParent(r.Context(), agent); err != nil {
 			writeStorageError(w, err)
 			return
 		}
-		created, err := a.repo.GetAgen(r.Context(), agent.ID)
+		created, err := a.repo.GetAgenWithParent(r.Context(), agent.ID)
 		if err != nil {
 			writeError(w, http.StatusInternalServerError, "agen berhasil dibuat tetapi gagal dibaca")
 			return
