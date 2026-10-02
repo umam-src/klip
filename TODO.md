@@ -38,7 +38,7 @@ Catatan: `Ruang`, `Agen`, `Sasaran`, `Pekerjaan`, `Tugas`, `Sesi`, dan `Hasil` s
 - [x] Dukungan OpenAI-compatible API.
 - [x] Adapter Ollama.
 - [ ] Adapter llama.cpp/llama-server khusus jika kebutuhan native muncul.
-- [ ] Streaming.
+- [x] Streaming.
 - [x] Timeout.
 - [x] Cancellation melalui `context.Context`.
 - [x] Retry terbatas.
