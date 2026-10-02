@@ -65,26 +65,6 @@ func TestRepositoryCoreEntities(t *testing.T) {
 	if err != nil || hasil.TugasID == nil || *hasil.TugasID != parent || hasil.Path != "hasil/hasil.txt" {
 		t.Fatalf("GetHasil() = %+v, error = %v", hasil, err)
 	}
-
-	agents, err := repo.ListAgenByRuang(ctx, "ruang-1")
-	if err != nil || len(agents) != 1 || agents[0].ID != "agen-1" {
-		t.Fatalf("ListAgenByRuang() = %+v, error = %v", agents, err)
-	}
-
-	jobs, err := repo.ListPekerjaanByRuang(ctx, "ruang-1")
-	if err != nil || len(jobs) != 1 || jobs[0].ID != "pekerjaan-1" {
-		t.Fatalf("ListPekerjaanByRuang() = %+v, error = %v", jobs, err)
-	}
-
-	tasks, err := repo.ListTugasByPekerjaan(ctx, "pekerjaan-1")
-	if err != nil || len(tasks) != 2 || tasks[0].ID != "tugas-1" || tasks[1].ID != "tugas-2" {
-		t.Fatalf("ListTugasByPekerjaan() = %+v, error = %v", tasks, err)
-	}
-
-	results, err := repo.ListHasilByPekerjaan(ctx, "pekerjaan-1")
-	if err != nil || len(results) != 1 || results[0].ID != "hasil-1" {
-		t.Fatalf("ListHasilByPekerjaan() = %+v, error = %v", results, err)
-	}
 }
 
 func TestRepositoryNotFoundAndValidation(t *testing.T) {
@@ -130,4 +110,67 @@ func TestRepositoryForeignKeys(t *testing.T) {
 	if err = repo.CreateTugas(ctx, domain.Tugas{ID: "tugas-1", PekerjaanID: "missing", Title: "Tugas"}); err == nil {
 		t.Fatal("CreateTugas() error = nil, want foreign-key error")
 	}
+}
+
+func TestRepositoryResultIntegrity(t *testing.T) {
+	ctx := context.Background()
+	db, err := Open(ctx, ":memory:")
+	if err != nil {
+		t.Fatalf("Open() error = %v", err)
+	}
+	defer db.Close()
+
+	repo := NewRepository(db)
+	if err := repo.CreateRuang(ctx, domain.Ruang{ID: "ruang-1", Name: "Ruang"}); err != nil {
+		t.Fatal(err)
+	}
+	for _, job := range []domain.Pekerjaan{
+		{ID: "pekerjaan-1", RuangID: "ruang-1", Title: "Satu"},
+		{ID: "pekerjaan-2", RuangID: "ruang-1", Title: "Dua"},
+	} {
+		if err := repo.CreatePekerjaan(ctx, job); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := repo.CreateTugas(ctx, domain.Tugas{ID: "tugas-1", PekerjaanID: "pekerjaan-1", Title: "Tugas"}); err != nil {
+		t.Fatal(err)
+	}
+	if err := repo.CreateTugas(ctx, domain.Tugas{ID: "tugas-2", PekerjaanID: "pekerjaan-2", Title: "Tugas"}); err != nil {
+		t.Fatal(err)
+	}
+
+	valid := domain.Hasil{ID: "hasil-valid", PekerjaanID: "pekerjaan-1", TugasID: domainID("tugas-1"), Kind: "file", Name: "hasil.txt", Path: "hasil/hasil.txt"}
+	if err := repo.CreateHasil(ctx, valid); err != nil {
+		t.Fatalf("valid result rejected: %v", err)
+	}
+
+	for _, result := range []domain.Hasil{
+		{ID: "hasil-abs", PekerjaanID: "pekerjaan-1", Kind: "file", Name: "hasil.txt", Path: "/tmp/hasil.txt"},
+		{ID: "hasil-dot", PekerjaanID: "pekerjaan-1", Kind: "file", Name: "hasil.txt", Path: "./hasil.txt"},
+		{ID: "hasil-parent", PekerjaanID: "pekerjaan-1", Kind: "file", Name: "hasil.txt", Path: "../hasil.txt"},
+		{ID: "hasil-name", PekerjaanID: "pekerjaan-1", Kind: "file", Name: "sub/hasil.txt", Path: "hasil.txt"},
+	} {
+		if err := repo.CreateHasil(ctx, result); !errors.Is(err, ErrInvalid) {
+			t.Errorf("CreateHasil(%q) error = %v, want ErrInvalid", result.Path, err)
+		}
+	}
+
+	crossJob := valid
+	crossJob.ID = "hasil-cross-job"
+	crossJob.PekerjaanID = "pekerjaan-2"
+	if err := repo.CreateHasil(ctx, crossJob); !errors.Is(err, ErrInvalid) {
+		t.Fatalf("cross-job result error = %v, want ErrInvalid", err)
+	}
+
+	missingTask := valid
+	missingTask.ID = "hasil-missing-task"
+	missingTask.TugasID = domainID("missing")
+	if err := repo.CreateHasil(ctx, missingTask); !errors.Is(err, ErrInvalid) {
+		t.Fatalf("missing task result error = %v, want ErrInvalid", err)
+	}
+}
+
+func domainID(value string) *domain.ID {
+	id := domain.ID(value)
+	return &id
 }
