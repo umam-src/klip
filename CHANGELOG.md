@@ -21,6 +21,7 @@ Format mengikuti Keep a Changelog dan versi mengikuti Semantic Versioning.
 - API lokal untuk membuat, melihat, dan membaca riwayat jadwal.
 - Cadangan berkas hasil lokal dalam arsip `.tar.gz` tanpa mengikuti tautan simbolik.
 - Audit event lokal untuk pembuatan dan keputusan approval serta pembuatan jadwal.
+- Benchmark heap memori idle aplikasi untuk mendeteksi regresi penggunaan memori.
 
 ### Changed
 - Konfigurasi sekarang menyimpan locale secara eksplisit dan menormalkan locale yang belum didukung ke `id-ID`.
@@ -31,6 +32,7 @@ Format mengikuti Keep a Changelog dan versi mengikuti Semantic Versioning.
 - Penyimpanan hasil menolak direktori induk yang berupa symlink untuk mencegah penulisan keluar dari root hasil.
 - Pembacaan hasil HTTP kini streaming agar unduhan hingga 16 MiB tidak perlu dimuat penuh ke memori.
 - Tinjauan CSRF menetapkan bahwa mode UI lokal saat ini belum memerlukan token karena API tidak memakai cookie sesi dan bind bawaan hanya localhost.
+- Dokumentasi optimasi menjelaskan pengukuran heap idle dan membedakannya dari RSS proses.
 
 ### Removed
 - Belum ada.
