@@ -85,15 +85,15 @@ func (r *Repository) StartExecution(ctx context.Context, sesi domain.Sesi, run d
 		return ExecutionStart{}, err
 	}
 	if err := appendEvent(ctx, tx, domain.Event{
-			PekerjaanID: run.PekerjaanID,
-			TugasID:     run.TugasID,
-			SesiID:      idPtr(sesi.ID),
-			RunID:       idPtr(run.ID),
-			AgenID:      idPtr(run.AgenID),
-			Type:        domain.EventExecutionStarted,
-			Message:     "Eksekusi dimulai",
-			CreatedAt:   started,
-		}); err != nil {
+		PekerjaanID: run.PekerjaanID,
+		TugasID:     run.TugasID,
+		SesiID:      idPtr(sesi.ID),
+		RunID:       idPtr(run.ID),
+		AgenID:      idPtr(run.AgenID),
+		Type:        domain.EventExecutionStarted,
+		Message:     "Eksekusi dimulai",
+		CreatedAt:   started,
+	}); err != nil {
 		return ExecutionStart{}, err
 	}
 	if err := tx.Commit(); err != nil {
