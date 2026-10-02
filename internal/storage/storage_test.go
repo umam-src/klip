@@ -12,11 +12,13 @@ func TestOpenCreatesSchema(t *testing.T) {
 	}
 	defer db.Close()
 
-	var count int
-	if err := db.QueryRow("SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'pekerjaan'").Scan(&count); err != nil {
-		t.Fatalf("cek tabel pekerjaan: %v", err)
-	}
-	if count != 1 {
-		t.Fatalf("tabel pekerjaan tidak ditemukan")
+	for _, table := range []string{"pekerjaan", "event"} {
+		var count int
+		if err := db.QueryRow("SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = ?", table).Scan(&count); err != nil {
+			t.Fatalf("cek tabel %s: %v", table, err)
+		}
+		if count != 1 {
+			t.Fatalf("tabel %s tidak ditemukan", table)
+		}
 	}
 }
