@@ -36,6 +36,7 @@ Format mengikuti Keep a Changelog dan versi mengikuti Semantic Versioning.
 - Test status provider diperbaiki agar skenario provider tanpa model benar-benar menggunakan konfigurasi model kosong.
 - Release sekarang membangun binary Linux amd64, Windows amd64, dan macOS arm64; pengujian sumber tetap dilakukan sekali sebelum build matrix.
 - Release build tidak lagi mengandalkan simbol versi linker yang tidak tersedia di binary CLI.
+- CI membatalkan run lama pada ref yang sama saat commit baru masuk dan menggunakan permission workflow minimum untuk mengurangi pemborosan runner tanpa melemahkan pemeriksaan utama.
 
 ### Removed
 - Belum ada.
