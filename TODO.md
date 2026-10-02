@@ -16,7 +16,7 @@ Daftar kerja pengembangan. Prioritas: P0 wajib, P1 penting, P2 setelah inti stab
 - [x] Tambahkan health endpoint.
 - [ ] Tambahkan i18n dengan `id-ID` sebagai default.
 - [x] Pastikan asset UI dibundel lokal, tanpa CDN wajib.
-- [ ] Tambahkan build reproducible.
+- [x] Tambahkan build reproducible.
 - [x] Tambahkan pemeriksaan ukuran binary di CI.
 - [ ] Tambahkan pemeriksaan ukuran Docker image.
 
