@@ -22,7 +22,12 @@ type SchedulerRepository interface {
 }
 
 func (r *Repository) CreateSchedule(ctx context.Context, schedule domain.Schedule) error {
-	if strings.TrimSpace(string(schedule.ID)) == "" || strings.TrimSpace(schedule.Name) == "" || strings.TrimSpace(string(schedule.PekerjaanID)) == "" || strings.TrimSpace(string(schedule.AgenID)) == "" || strings.TrimSpace(schedule.Program) == "" || schedule.Interval <= 0 || schedule.NextRunAt.IsZero() {
+	if strings.TrimSpace(string(schedule.ID)) == "" ||
+		strings.TrimSpace(schedule.Name) == "" ||
+		strings.TrimSpace(string(schedule.PekerjaanID)) == "" ||
+		strings.TrimSpace(string(schedule.AgenID)) == "" ||
+		strings.TrimSpace(schedule.Program) == "" ||
+		schedule.Interval <= 0 || schedule.NextRunAt.IsZero() {
 		return fmt.Errorf("jadwal: %w", ErrInvalid)
 	}
 	if schedule.Status != domain.ScheduleEnabled && schedule.Status != domain.ScheduleDisabled {
@@ -36,7 +41,10 @@ func (r *Repository) CreateSchedule(ctx context.Context, schedule domain.Schedul
 		return fmt.Errorf("jadwal: argumen: %w", err)
 	}
 	created, updated := timestamps(schedule.CreatedAt, schedule.UpdatedAt)
-	_, err = r.db.ExecContext(ctx, `INSERT INTO schedule (id, name, pekerjaan_id, tugas_id, agen_id, program, arguments, interval_seconds, next_run_at, status, retry_limit, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, schedule.ID, schedule.Name, schedule.PekerjaanID, schedule.TugasID, schedule.AgenID, schedule.Program, string(args), int64(schedule.Interval/time.Second), schedule.NextRunAt.UTC().Format(time.RFC3339Nano), schedule.Status, schedule.RetryLimit, created, updated)
+	_, err = r.db.ExecContext(ctx, `INSERT INTO schedule (id, name, pekerjaan_id, tugas_id, agen_id, program, arguments, interval_seconds, next_run_at, status, retry_limit, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		schedule.ID, schedule.Name, schedule.PekerjaanID, schedule.TugasID, schedule.AgenID,
+		schedule.Program, string(args), int64(schedule.Interval/time.Second),
+		schedule.NextRunAt.UTC().Format(time.RFC3339Nano), schedule.Status, schedule.RetryLimit, created, updated)
 	if err != nil {
 		return fmt.Errorf("buat jadwal: %w", err)
 	}
@@ -71,7 +79,8 @@ func (r *Repository) ListSchedules(ctx context.Context) ([]domain.Schedule, erro
 }
 
 func (r *Repository) UpdateScheduleRun(ctx context.Context, id domain.ID, nextRunAt time.Time) error {
-	result, err := r.db.ExecContext(ctx, `UPDATE schedule SET next_run_at = ?, updated_at = ? WHERE id = ?`, nextRunAt.UTC().Format(time.RFC3339Nano), time.Now().UTC().Format(time.RFC3339Nano), id)
+	result, err := r.db.ExecContext(ctx, `UPDATE schedule SET next_run_at = ?, updated_at = ? WHERE id = ?`,
+		nextRunAt.UTC().Format(time.RFC3339Nano), time.Now().UTC().Format(time.RFC3339Nano), id)
 	if err != nil {
 		return fmt.Errorf("perbarui jadwal: %w", err)
 	}
@@ -85,7 +94,8 @@ func (r *Repository) CreateScheduleRun(ctx context.Context, run domain.ScheduleR
 	if strings.TrimSpace(string(run.ID)) == "" || strings.TrimSpace(string(run.ScheduleID)) == "" || run.Attempt < 1 {
 		return fmt.Errorf("riwayat jadwal: %w", ErrInvalid)
 	}
-	_, err := r.db.ExecContext(ctx, `INSERT INTO schedule_run (id, schedule_id, status, attempt, started_at, finished_at, error) VALUES (?, ?, ?, ?, ?, ?, ?)`, run.ID, run.ScheduleID, run.Status, run.Attempt, run.StartedAt.UTC().Format(time.RFC3339Nano), nullableTime(run.FinishedAt), run.Error)
+	_, err := r.db.ExecContext(ctx, `INSERT INTO schedule_run (id, schedule_id, status, attempt, started_at, finished_at, error) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+		run.ID, run.ScheduleID, run.Status, run.Attempt, run.StartedAt.UTC().Format(time.RFC3339Nano), nullableTime(run.FinishedAt), run.Error)
 	if err != nil {
 		return fmt.Errorf("buat riwayat jadwal: %w", err)
 	}
@@ -93,7 +103,8 @@ func (r *Repository) CreateScheduleRun(ctx context.Context, run domain.ScheduleR
 }
 
 func (r *Repository) FinishScheduleRun(ctx context.Context, id domain.ID, status domain.ScheduleRunStatus, errText string, finishedAt time.Time) error {
-	result, err := r.db.ExecContext(ctx, `UPDATE schedule_run SET status = ?, error = ?, finished_at = ? WHERE id = ?`, status, errText, finishedAt.UTC().Format(time.RFC3339Nano), id)
+	result, err := r.db.ExecContext(ctx, `UPDATE schedule_run SET status = ?, error = ?, finished_at = ? WHERE id = ?`,
+		status, errText, finishedAt.UTC().Format(time.RFC3339Nano), id)
 	if err != nil {
 		return fmt.Errorf("selesaikan riwayat jadwal: %w", err)
 	}
@@ -121,34 +132,67 @@ func (r *Repository) ListScheduleRuns(ctx context.Context, scheduleID domain.ID,
 		}
 		var err error
 		run.StartedAt, err = parseTime(started.String)
-		if err != nil { return nil, err }
-		if finished.Valid && finished.String != "" { value, err := parseTime(finished.String); if err != nil { return nil, err }; run.FinishedAt = &value }
+		if err != nil {
+			return nil, err
+		}
+		if finished.Valid && finished.String != "" {
+			value, err := parseTime(finished.String)
+			if err != nil {
+				return nil, err
+			}
+			run.FinishedAt = &value
+		}
 		result = append(result, run)
 	}
 	return result, rows.Err()
 }
 
-type rowScanner interface { Scan(...any) error }
+type rowScanner interface {
+	Scan(...any) error
+}
 
 func scanScheduleRow(row rowScanner) (domain.Schedule, error) {
-	var s domain.Schedule
+	var schedule domain.Schedule
 	var tugasID sql.NullString
 	var args, nextRun, created, updated string
 	var intervalSeconds int64
-	if err := row.Scan(&s.ID, &s.Name, &s.PekerjaanID, &tugasID, &s.AgenID, &s.Program, &args, &intervalSeconds, &nextRun, &s.Status, &s.RetryLimit, &created, &updated); err != nil {
-		if err == sql.ErrNoRows { return domain.Schedule{}, ErrNotFound }
+	if err := row.Scan(&schedule.ID, &schedule.Name, &schedule.PekerjaanID, &tugasID, &schedule.AgenID, &schedule.Program, &args, &intervalSeconds, &nextRun, &schedule.Status, &schedule.RetryLimit, &created, &updated); err != nil {
+		if err == sql.ErrNoRows {
+			return domain.Schedule{}, ErrNotFound
+		}
 		return domain.Schedule{}, fmt.Errorf("baca jadwal: %w", err)
 	}
-	if tugasID.Valid { id := domain.ID(tugasID.String); s.TugasID = &id }
-	if err := json.Unmarshal([]byte(args), &s.Arguments); err != nil { return domain.Schedule{}, fmt.Errorf("jadwal argumen rusak: %w", err) }
+	if tugasID.Valid {
+		id := domain.ID(tugasID.String)
+		schedule.TugasID = &id
+	}
+	if err := json.Unmarshal([]byte(args), &schedule.Arguments); err != nil {
+		return domain.Schedule{}, fmt.Errorf("jadwal argumen rusak: %w", err)
+	}
 	var err error
-	s.Interval = time.Duration(intervalSeconds) * time.Second
-	s.NextRunAt, err = parseTime(nextRun); if err != nil { return domain.Schedule{}, err }
-	s.CreatedAt, err = parseTime(created); if err != nil { return domain.Schedule{}, err }
-	s.UpdatedAt, err = parseTime(updated); if err != nil { return domain.Schedule{}, err }
-	return s, nil
+	schedule.Interval = time.Duration(intervalSeconds) * time.Second
+	schedule.NextRunAt, err = parseTime(nextRun)
+	if err != nil {
+		return domain.Schedule{}, err
+	}
+	schedule.CreatedAt, err = parseTime(created)
+	if err != nil {
+		return domain.Schedule{}, err
+	}
+	schedule.UpdatedAt, err = parseTime(updated)
+	if err != nil {
+		return domain.Schedule{}, err
+	}
+	return schedule, nil
 }
 
-func (r *Repository) scanSchedule(row *sql.Row) (domain.Schedule, error) { return scanScheduleRow(row) }
+func (r *Repository) scanSchedule(row *sql.Row) (domain.Schedule, error) {
+	return scanScheduleRow(row)
+}
 
-func nullableTime(value *time.Time) any { if value == nil { return nil }; return value.UTC().Format(time.RFC3339Nano) }
+func nullableTime(value *time.Time) any {
+	if value == nil {
+		return nil
+	}
+	return value.UTC().Format(time.RFC3339Nano)
+}
