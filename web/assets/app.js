@@ -23,9 +23,7 @@
     return String(value).replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]);
   }
 
-  function empty(message) {
-    return `<div class="empty"><strong>${escapeHTML(message)}</strong></div>`;
-  }
+  function empty(message) { return `<div class="empty"><strong>${escapeHTML(message)}</strong></div>`; }
 
   async function loadSpaces() {
     refresh.disabled = true;
@@ -35,11 +33,8 @@
         ? spaces.map((space) => `<button class="card card-button" type="button" data-space="${escapeHTML(space.id)}"><h3>${escapeHTML(space.name || 'Tanpa nama')}</h3><p>${escapeHTML(space.id || '')}</p></button>`).join('')
         : empty('Belum ada ruang.');
       list.querySelectorAll('[data-space]').forEach((button) => button.addEventListener('click', () => openSpace(button.dataset.space)));
-    } catch (_) {
-      list.innerHTML = empty('Ruang belum dapat dimuat. Pastikan layanan Klip sedang berjalan.');
-    } finally {
-      refresh.disabled = false;
-    }
+    } catch (_) { list.innerHTML = empty('Ruang belum dapat dimuat. Pastikan layanan Klip sedang berjalan.'); }
+    finally { refresh.disabled = false; }
   }
 
   async function openSpace(ruangID) {
@@ -49,13 +44,10 @@
       if (!state.ruang) throw new Error('ruang tidak ditemukan');
       $('#workspace-label').textContent = `Ruang · ${state.ruang.name}`;
       $('#workspace-title').textContent = state.ruang.name;
-      $('#workspace').hidden = false;
-      $('#job-detail').hidden = true;
+      $('#workspace').hidden = false; $('#job-detail').hidden = true;
       await Promise.all([loadAgents(), loadJobs()]);
       $('#workspace').scrollIntoView({ behavior: 'smooth', block: 'start' });
-    } catch (_) {
-      list.insertAdjacentHTML('beforeend', empty('Ruang tidak dapat dibuka.'));
-    }
+    } catch (_) { list.insertAdjacentHTML('beforeend', empty('Ruang tidak dapat dibuka.')); }
   }
 
   async function loadAgents() {
@@ -84,10 +76,7 @@
       $('#job-detail').hidden = false;
       await loadTasks();
       $('#job-detail').scrollIntoView({ behavior: 'smooth', block: 'start' });
-    } catch (_) {
-      $('#job-detail').hidden = false;
-      $('#task-list').innerHTML = empty('Pekerjaan tidak dapat dibuka.');
-    }
+    } catch (_) { $('#job-detail').hidden = false; $('#task-list').innerHTML = empty('Pekerjaan tidak dapat dibuka.'); }
   }
 
   async function loadTasks() {
@@ -104,32 +93,20 @@
       form.hidden = !form.hidden;
       if (!form.hidden) form.querySelector('input')?.focus();
     }));
-
     $('#agent-form').addEventListener('submit', async (event) => {
-      event.preventDefault();
-      const form = new FormData(event.currentTarget);
-      try {
-        await send(`/api/v1/ruang/${encodeURIComponent(state.ruang.id)}/agen`, { id: id(), name: form.get('name'), provider_id: form.get('provider_id'), model_id: form.get('model_id') });
-        event.currentTarget.reset(); event.currentTarget.hidden = true; await loadAgents();
-      } catch (_) { alert('Agen belum dapat disimpan.'); }
+      event.preventDefault(); const form = new FormData(event.currentTarget);
+      try { await send(`/api/v1/ruang/${encodeURIComponent(state.ruang.id)}/agen`, { id: id(), name: form.get('name'), provider_id: form.get('provider_id'), model_id: form.get('model_id') }); event.currentTarget.reset(); event.currentTarget.hidden = true; await loadAgents(); }
+      catch (_) { alert('Agen belum dapat disimpan.'); }
     });
-
     $('#job-form').addEventListener('submit', async (event) => {
-      event.preventDefault();
-      const form = new FormData(event.currentTarget);
-      try {
-        await send(`/api/v1/ruang/${encodeURIComponent(state.ruang.id)}/pekerjaan`, { id: id(), title: form.get('title') });
-        event.currentTarget.reset(); event.currentTarget.hidden = true; await loadJobs();
-      } catch (_) { alert('Pekerjaan belum dapat disimpan.'); }
+      event.preventDefault(); const form = new FormData(event.currentTarget);
+      try { await send(`/api/v1/ruang/${encodeURIComponent(state.ruang.id)}/pekerjaan`, { id: id(), title: form.get('title') }); event.currentTarget.reset(); event.currentTarget.hidden = true; await loadJobs(); }
+      catch (_) { alert('Pekerjaan belum dapat disimpan.'); }
     });
-
     $('#task-form').addEventListener('submit', async (event) => {
-      event.preventDefault();
-      const form = new FormData(event.currentTarget);
-      try {
-        await send(`/api/v1/pekerjaan/${encodeURIComponent(state.pekerjaan.id)}/tugas`, { id: id(), title: form.get('title'), position: 0 });
-        event.currentTarget.reset(); event.currentTarget.hidden = true; await loadTasks();
-      } catch (_) { alert('Tugas belum dapat disimpan.'); }
+      event.preventDefault(); const form = new FormData(event.currentTarget);
+      try { await send(`/api/v1/pekerjaan/${encodeURIComponent(state.pekerjaan.id)}/tugas`, { id: id(), title: form.get('title'), position: 0 }); event.currentTarget.reset(); event.currentTarget.hidden = true; await loadTasks(); }
+      catch (_) { alert('Tugas belum dapat disimpan.'); }
     });
   }
 
