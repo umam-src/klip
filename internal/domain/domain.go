@@ -17,6 +17,39 @@ const (
 	StatusCancelled Status = "cancelled"
 )
 
+// CanTransitionTo reports whether a domain status can move to the target status.
+// Keeping this rule in the domain prevents runtime and storage layers from
+// independently inventing lifecycle semantics.
+func (s Status) CanTransitionTo(next Status) bool {
+	if s == next {
+		return isKnownStatus(s)
+	}
+
+	switch s {
+	case StatusDraft:
+		return next == StatusReady || next == StatusCancelled
+	case StatusReady:
+		return next == StatusRunning || next == StatusBlocked || next == StatusCancelled
+	case StatusRunning:
+		return next == StatusWaiting || next == StatusCompleted || next == StatusFailed || next == StatusCancelled
+	case StatusWaiting:
+		return next == StatusRunning || next == StatusBlocked || next == StatusCancelled
+	case StatusBlocked:
+		return next == StatusReady || next == StatusCancelled
+	default:
+		return false
+	}
+}
+
+func isKnownStatus(status Status) bool {
+	switch status {
+	case StatusDraft, StatusReady, StatusRunning, StatusWaiting, StatusBlocked, StatusCompleted, StatusFailed, StatusCancelled:
+		return true
+	default:
+		return false
+	}
+}
+
 type Ruang struct {
 	ID        ID        `json:"id"`
 	Name      string    `json:"name"`
