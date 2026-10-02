@@ -25,7 +25,23 @@ Server menggunakan `127.0.0.1` sebagai alamat bawaan. Endpoint yang tersedia pad
 
 Tidak ada endpoint untuk menjalankan program arbitrer. Ketidakhadiran endpoint ini adalah bagian dari desain keamanan, bukan keterbatasan yang boleh dilewati dengan meneruskan parameter proses ke endpoint lain.
 
-Endpoint yang menerima JSON hanya memproses `application/json` bila `Content-Type` diberikan. Ini mencegah permintaan lintas situs sederhana dengan tipe isi seperti `text/plain` diperlakukan sebagai operasi JSON yang mengubah data.
+Endpoint yang menerima JSON hanya memproses `application/json` bila `Content-Type` diberikan. Ini membatasi beberapa permintaan lintas situs sederhana dengan tipe isi yang tidak cocok, tetapi bukan pengganti perlindungan CSRF.
+
+### CSRF
+
+Klip saat ini tidak menggunakan cookie sesi atau autentikasi browser untuk API lokal. Server juga hanya bind ke localhost secara bawaan. Karena tidak ada kredensial browser yang dikirim otomatis ke endpoint mutasi, perlindungan CSRF berbasis token belum diperlukan pada mode UI saat ini.
+
+Jika autentikasi berbasis cookie atau mode bind non-localhost ditambahkan, CSRF harus ditinjau kembali sebelum mode tersebut diaktifkan.
+
+## Audit aksi penting
+
+Aksi penting yang mengubah alur kerja dicatat sebagai event lokal tanpa memasukkan alasan, prompt, isi proses, atau data rahasia ke event audit. Saat ini cakupannya meliputi:
+
+- pembuatan approval pekerjaan atau tugas;
+- keputusan approval (setujui atau tolak);
+- pembuatan jadwal.
+
+Event runtime tetap mencatat mulai, selesai, gagal, dan pembatalan eksekusi. Kegagalan menulis event audit tidak membatalkan aksi utama yang sudah berhasil, sehingga audit bersifat best-effort pada mode lokal.
 
 ## Data lokal
 
@@ -35,12 +51,10 @@ Model AI tidak dibundel ke binary Klip dan file model tetap berada di luar aplik
 
 ## Batas yang belum tersedia
 
-Beberapa perlindungan sengaja belum diaktifkan karena belum ada alur produk yang membutuhkannya:
+Beberapa perlindungan tetap belum tersedia karena belum ada alur produk yang membutuhkannya:
 
-- persetujuan manusia untuk eksekusi;
-- audit aktivitas;
-- isolasi proses atau sandbox;
 - autentikasi dan otorisasi HTTP;
+- isolasi proses atau sandbox;
 - kebijakan `Origin` khusus untuk browser.
 
-Sebelum eksekusi proses dibuka melalui HTTP, batas-batas tersebut perlu dirancang sebagai bagian dari alur eksekusi, bukan ditambahkan sebagai tambalan pada endpoint.
+Sebelum eksekusi proses dibuka melalui HTTP atau server dipasang di luar localhost, batas-batas tersebut perlu dirancang sebagai bagian dari alur eksekusi, bukan ditambahkan sebagai tambalan pada endpoint.
