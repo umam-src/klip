@@ -15,6 +15,7 @@ Format mengikuti Keep a Changelog dan versi mengikuti Semantic Versioning.
 - Loader skill lokal dengan batas ukuran, validasi nama, penolakan tautan simbolik, dan urutan deterministik.
 - Relasi skill lokal ke agen yang tersimpan di SQLite dengan validasi nama, pencegahan duplikasi, dan penghapusan berantai.
 - Relasi hierarki agen satu induk dalam ruang yang sama, termasuk validasi parent dan API pembuatan serta daftar agen.
+- Streaming chat AI melalui kemampuan provider opsional dan endpoint SSE lokal.
 - Penyimpanan berkas hasil lokal dengan batas 16 MiB dan validasi path.
 - Endpoint lokal untuk menyimpan serta membuka berkas hasil.
 - Aksi buka hasil dari panel Hasil di UI.
