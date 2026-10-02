@@ -80,7 +80,7 @@ Catatan: `Ruang`, `Agen`, `Sasaran`, `Pekerjaan`, `Tugas`, `Sesi`, dan `Hasil` s
 - [ ] Skill lokal.
 - [ ] Relasi skill ke agen.
 - [ ] Penyimpanan hasil.
-- [ ] Validasi nama dan path hasil.
+- [x] Validasi nama dan path hasil.
 - [ ] Metadata hasil.
 - [ ] Download/view hasil melalui UI.
 
