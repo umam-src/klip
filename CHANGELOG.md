@@ -13,10 +13,12 @@ Format mengikuti Keep a Changelog dan versi mengikuti Semantic Versioning.
 - Event runtime untuk mencatat awal dan akhir eksekusi secara lokal.
 - Format `SKILL.md` sederhana untuk instruksi skill lokal.
 - Loader skill lokal dengan batas ukuran, validasi nama, penolakan tautan simbolik, dan urutan deterministik.
+- Relasi skill lokal ke agen yang tersimpan di SQLite dengan validasi nama, pencegahan duplikasi, dan penghapusan berantai.
 
 ### Changed
 - Konfigurasi sekarang menyimpan locale secara eksplisit dan menormalkan locale yang belum didukung ke `id-ID`.
 - State `Run`, `Sesi`, dan `Tugas` beserta event runtime diperbarui secara atomik saat memulai dan menyelesaikan eksekusi.
+- Validasi nama skill digunakan bersama oleh parser skill dan penyimpanan relasi agen.
 
 ### Removed
 - Belum ada.
