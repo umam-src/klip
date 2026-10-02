@@ -9,13 +9,13 @@ Daftar kerja pengembangan. Prioritas: P0 wajib, P1 penting, P2 setelah inti stab
 - [x] Tambahkan konfigurasi lokal.
 - [x] Tambahkan SQLite dan migrasi.
 - [x] Tambahkan HTTP server.
-- [ ] Tambahkan template HTML.
-- [ ] Tambahkan CSS ringan tanpa framework UI besar.
+- [x] Tambahkan template HTML.
+- [x] Tambahkan CSS ringan tanpa framework UI besar.
 - [ ] Tambahkan CLI dasar.
 - [x] Tambahkan logging.
 - [x] Tambahkan health endpoint.
 - [ ] Tambahkan i18n dengan `id-ID` sebagai default.
-- [ ] Pastikan asset UI dibundel lokal, tanpa CDN wajib.
+- [x] Pastikan asset UI dibundel lokal, tanpa CDN wajib.
 - [ ] Tambahkan build reproducible.
 - [x] Tambahkan pemeriksaan ukuran binary di CI.
 - [ ] Tambahkan pemeriksaan ukuran Docker image.
@@ -60,7 +60,10 @@ Catatan: `Ruang`, `Agen`, `Sasaran`, `Pekerjaan`, `Tugas`, `Sesi`, dan `Hasil` s
 
 ## P1 — UI
 
-- [ ] Dasbor.
+- [x] Dasbor awal lokal.
+- [x] CSS ringan tanpa framework besar.
+- [x] Asset UI dibundel ke binary.
+- [x] Daftar ruang dasar.
 - [ ] Daftar agen.
 - [ ] Detail agen.
 - [ ] Struktur ruang.
