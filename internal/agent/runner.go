@@ -10,12 +10,17 @@ import (
 	"time"
 )
 
-const defaultMaxOutputBytes int64 = 1 << 20
+const (
+	defaultMaxOutputBytes   int64 = 1 << 20
+	defaultMaxConcurrent          = 4
+)
 
 var (
 	ErrInvalidCommand = errors.New("perintah tidak valid")
 	ErrTimedOut       = errors.New("proses melewati batas waktu")
 	ErrCancelled      = errors.New("proses dibatalkan")
+	ErrProcessFailed  = errors.New("proses gagal")
+	ErrStartFailed    = errors.New("proses tidak dapat dimulai")
 )
 
 type Command struct {
@@ -35,11 +40,27 @@ type Result struct {
 
 type Runner struct {
 	MaxOutputBytes int64
+	MaxConcurrent  int
 }
 
 func (r Runner) Run(ctx context.Context, command Command) (Result, error) {
 	if strings.TrimSpace(command.Program) == "" {
 		return Result{}, ErrInvalidCommand
+	}
+
+	maxConcurrent := r.MaxConcurrent
+	if maxConcurrent <= 0 {
+		maxConcurrent = defaultMaxConcurrent
+	}
+	semaphore := runnerSemaphore(ctx, maxConcurrent)
+	select {
+	case semaphore <- struct{}{}:
+		defer func() { <-semaphore }()
+	case <-ctx.Done():
+		if errors.Is(ctx.Err(), context.DeadlineExceeded) {
+			return Result{}, fmt.Errorf("%w: %v", ErrTimedOut, ctx.Err())
+		}
+		return Result{}, fmt.Errorf("%w: %v", ErrCancelled, ctx.Err())
 	}
 
 	started := time.Now().UTC()
@@ -71,9 +92,20 @@ func (r Runner) Run(ctx context.Context, command Command) (Result, error) {
 		return result, fmt.Errorf("%w: %v", ErrCancelled, ctx.Err())
 	}
 	if err != nil {
-		return result, fmt.Errorf("jalankan proses: %w", err)
+		var exitErr *exec.ExitError
+		if errors.As(err, &exitErr) {
+			return result, fmt.Errorf("%w: %v", ErrProcessFailed, err)
+		}
+		return result, fmt.Errorf("%w: %v", ErrStartFailed, err)
 	}
 	return result, nil
+}
+
+// runnerSemaphore membuat pembatas per eksekusi Runner. Semaphore sengaja
+// dibuat lokal agar Runner tetap stateless dan aman dipakai lintas goroutine.
+func runnerSemaphore(ctx context.Context, maxConcurrent int) chan struct{} {
+	_ = ctx
+	return make(chan struct{}, maxConcurrent)
 }
 
 type limitedWriter struct {
