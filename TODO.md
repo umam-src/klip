@@ -62,12 +62,12 @@ Catatan: `Ruang`, `Agen`, `Sasaran`, `Pekerjaan`, `Tugas`, `Sesi`, dan `Hasil` s
 
 - [x] Dasbor awal lokal.
 - [x] CSS ringan tanpa framework besar.
-- [x] Asset UI dibundel ke binary.
+- [x] Asset UI dibundel lokal.
 - [x] Daftar ruang dasar.
 - [x] Daftar agen.
 - [x] Detail agen.
 - [x] Struktur ruang.
-- [ ] Daftar sasaran.
+- [x] Daftar sasaran.
 - [x] Daftar pekerjaan.
 - [x] Daftar tugas.
 - [x] Detail tugas.
