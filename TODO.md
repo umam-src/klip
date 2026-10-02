@@ -53,10 +53,10 @@ Catatan: `Ruang`, `Agen`, `Sasaran`, `Pekerjaan`, `Tugas`, `Sesi`, dan `Hasil` s
 - [x] Capture stdout/stderr.
 - [x] Timeout proses.
 - [x] Cancellation.
-- [ ] Concurrency limit.
+- [x] Concurrency limit.
 - [x] Run history.
 - [ ] Event runtime.
-- [ ] Error classification.
+- [x] Error classification.
 
 ## P1 — UI
 
@@ -111,10 +111,10 @@ Catatan: `Ruang`, `Agen`, `Sasaran`, `Pekerjaan`, `Tugas`, `Sesi`, dan `Hasil` s
 - [ ] Hapus dependency yang tidak diperlukan.
 - [x] Optimasi binary release dasar dengan `-trimpath -ldflags '-s -w'` di CI.
 - [ ] Optimasi static asset.
-- [ ] Uji target binary <50 MB.
-- [ ] Uji Docker image <100 MB.
-- [x] Hard fail jika binary >500 MB.
-- [ ] Hard fail Docker image >500 MB.
+- [ ] Uji target binary <50 MiB.
+- [ ] Uji Docker image <100 MiB.
+- [x] Hard fail jika binary >100 MiB.
+- [ ] Hard fail Docker image >100 MiB.
 - [ ] Benchmark startup.
 - [ ] Benchmark memory idle.
 - [ ] Benchmark SQLite.
@@ -149,7 +149,7 @@ Catatan: `Ruang`, `Agen`, `Sasaran`, `Pekerjaan`, `Tugas`, `Sesi`, dan `Hasil` s
 - [x] docs/DOMAIN.md.
 - [x] docs/PARITY.md.
 - [ ] docs/data-model.md.
-- [ ] docs/runtime.md.
+- [x] docs/runtime.md.
 - [x] docs/AI-PROVIDERS.md.
 - [ ] docs/security.md.
 - [ ] docs/storage.md.
