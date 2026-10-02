@@ -103,7 +103,7 @@ Catatan: `Ruang`, `Agen`, `Sasaran`, `Pekerjaan`, `Tugas`, `Sesi`, dan `Hasil` s
 - [x] Validasi dasar input HTTP.
 - [ ] Proteksi CSRF jika diperlukan oleh mode UI.
 - [ ] Audit aksi penting.
-- [ ] Dokumentasikan batas keamanan local-first.
+- [x] Dokumentasikan batas keamanan local-first.
 
 ## P2 — Optimasi
 
@@ -151,7 +151,7 @@ Catatan: `Ruang`, `Agen`, `Sasaran`, `Pekerjaan`, `Tugas`, `Sesi`, dan `Hasil` s
 - [ ] docs/data-model.md.
 - [x] docs/runtime.md.
 - [x] docs/AI-PROVIDERS.md.
-- [ ] docs/security.md.
+- [x] docs/security.md.
 - [ ] docs/storage.md.
 - [ ] docs/backup.md.
 - [ ] docs/release.md.
