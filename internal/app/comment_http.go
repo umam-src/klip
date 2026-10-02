@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	"github.com/umam-src/klip/internal/domain"
-	"github.com/umam-src/klip/internal/storage"
 )
 
 type createKomentarRequest struct {
@@ -73,5 +72,3 @@ func (a *App) createKomentar(w http.ResponseWriter, r *http.Request, pekerjaanID
 	if err != nil { writeError(w, http.StatusInternalServerError, "komentar berhasil dibuat tetapi gagal dibaca"); return }
 	writeJSON(w, http.StatusCreated, created)
 }
-
-var _ = storage.ErrInvalid
