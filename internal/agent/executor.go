@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -130,6 +131,9 @@ func (e Executor) Execute(ctx context.Context, request ExecutionRequest) (Execut
 func validateExecutionRequest(request ExecutionRequest) error {
 	if request.PekerjaanID == "" || request.AgenID == "" || strings.TrimSpace(request.Program) == "" {
 		return fmt.Errorf("executor: %w", storage.ErrInvalid)
+	}
+	if request.Dir != "" && !filepath.IsAbs(request.Dir) {
+		return fmt.Errorf("executor: direktori kerja harus berupa path absolut: %w", storage.ErrInvalid)
 	}
 	values := append([]string{request.Program, request.Dir}, request.Arguments...)
 	values = append(values, request.Env...)
