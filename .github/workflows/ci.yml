@@ -22,6 +22,9 @@ jobs:
           go-version: '1.25'
           cache: true
 
+      - name: Download dependencies
+        run: go mod download
+
       - name: Test
         run: go test ./...
 
@@ -53,6 +56,9 @@ jobs:
         with:
           go-version: '1.25'
           cache: true
+
+      - name: Download dependencies
+        run: go mod download
 
       - name: Build Linux release
         run: |
