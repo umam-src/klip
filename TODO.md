@@ -23,9 +23,9 @@ Daftar kerja pengembangan. Prioritas: P0 wajib, P1 penting, P2 setelah inti stab
 ## P0 — Domain inti
 
 - [ ] Relasi hierarki agen.
-- [ ] Thread dan komentar tugas.
-- [ ] Persetujuan.
-- [ ] Activity log.
+- [x] Thread dan komentar tugas.
+- [x] Persetujuan.
+- [x] Activity log.
 - [x] Repository/service layer untuk domain.
 - [x] Unit test domain.
 
@@ -71,7 +71,7 @@ Catatan: `Ruang`, `Agen`, `Sasaran`, `Pekerjaan`, `Tugas`, `Sesi`, dan `Hasil` s
 - [x] Daftar pekerjaan.
 - [x] Daftar tugas.
 - [x] Detail tugas.
-- [ ] Thread tugas.
+- [x] Thread tugas.
 - [ ] Antrean persetujuan.
 - [ ] Riwayat aktivitas.
 - [ ] Halaman provider/model.
