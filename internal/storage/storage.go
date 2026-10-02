@@ -8,7 +8,7 @@ import (
 	_ "modernc.org/sqlite"
 )
 
-const schemaVersion = 6
+const schemaVersion = 7
 
 const schema = `
 CREATE TABLE IF NOT EXISTS schema_migrations (
@@ -159,6 +159,35 @@ CREATE TABLE IF NOT EXISTS approval (
 CREATE INDEX IF NOT EXISTS idx_approval_pekerjaan ON approval(pekerjaan_id, created_at DESC, id DESC);
 CREATE INDEX IF NOT EXISTS idx_approval_tugas ON approval(tugas_id, created_at DESC, id DESC);
 CREATE INDEX IF NOT EXISTS idx_approval_status ON approval(status);
+
+CREATE TABLE IF NOT EXISTS schedule (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    pekerjaan_id TEXT NOT NULL REFERENCES pekerjaan(id) ON DELETE CASCADE,
+    tugas_id TEXT REFERENCES tugas(id) ON DELETE SET NULL,
+    agen_id TEXT NOT NULL REFERENCES agen(id) ON DELETE RESTRICT,
+    program TEXT NOT NULL,
+    arguments TEXT NOT NULL DEFAULT '[]',
+    interval_seconds INTEGER NOT NULL,
+    next_run_at TEXT NOT NULL,
+    status TEXT NOT NULL,
+    retry_limit INTEGER NOT NULL DEFAULT 0,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_schedule_due ON schedule(status, next_run_at, id);
+
+CREATE TABLE IF NOT EXISTS schedule_run (
+    id TEXT PRIMARY KEY,
+    schedule_id TEXT NOT NULL REFERENCES schedule(id) ON DELETE CASCADE,
+    status TEXT NOT NULL,
+    attempt INTEGER NOT NULL,
+    started_at TEXT NOT NULL,
+    finished_at TEXT,
+    error TEXT NOT NULL DEFAULT ''
+);
+CREATE INDEX IF NOT EXISTS idx_schedule_run_schedule ON schedule_run(schedule_id, started_at DESC, id DESC);
+CREATE INDEX IF NOT EXISTS idx_schedule_run_status ON schedule_run(status);
 `
 
 // Open membuka database lokal dan memastikan skema minimum Klip tersedia.
