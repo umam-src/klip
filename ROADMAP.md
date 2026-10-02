@@ -10,45 +10,49 @@ Klip adalah orkestrator AI yang ringan, offline-first, dan mengutamakan AI lokal
 - Model AI tidak dibundel ke binary atau image Klip.
 - Bahasa antarmuka default: Bahasa Indonesia.
 - AI lokal menjadi pilihan utama; layanan gratis menjadi pilihan berikutnya.
-- Fungsi utama Paperclip dipertahankan, tetapi implementasi dibuat lebih sederhana.
+- Klip mengambil kebutuhan produk dari proyek inspirasi tanpa menyalin source code, UI, atau domain secara 1:1.
 
 ## Versi
 
 ### 0.1 — Fondasi
 
-- [ ] Struktur proyek Go.
-- [ ] Single binary.
-- [ ] SQLite lokal.
-- [ ] HTTP server dan UI dasar.
+- [x] Struktur proyek Go.
+- [x] Fondasi single binary.
+- [x] SQLite lokal.
+- [x] HTTP server lokal.
+- [ ] UI dasar.
 - [ ] CLI dasar.
-- [ ] Konfigurasi lokal.
+- [x] Konfigurasi lokal.
 - [ ] Sistem i18n dengan `id-ID` sebagai default.
-- [ ] Health check dan logging sederhana.
-- [ ] CI dasar dengan cache dan pemeriksaan ukuran.
+- [x] Health check dan logging sederhana.
+- [x] CI dasar dengan cache dan pemeriksaan ukuran binary.
 
-### 0.2 — Inti organisasi dan pekerjaan
+### 0.2 — Inti ruang dan pekerjaan
 
-- [ ] Organisasi.
-- [ ] Pengguna.
-- [ ] Agen dan struktur hierarki.
-- [ ] Sasaran.
-- [ ] Proyek.
-- [ ] Tugas.
-- [ ] Percakapan/thread tugas.
+- [x] Ruang.
+- [x] Agen.
+- [x] Sasaran.
+- [x] Pekerjaan.
+- [x] Tugas.
+- [x] Sesi.
+- [x] Hasil.
+- [ ] Thread/komentar tugas.
 - [ ] Persetujuan.
 - [ ] Riwayat aktivitas.
+- [ ] Repository/service layer.
 
 ### 0.3 — Local AI
 
-- [ ] Antarmuka provider AI.
-- [ ] Ollama.
-- [ ] OpenAI-compatible API.
-- [ ] llama.cpp/llama-server.
+- [x] Antarmuka provider AI.
+- [x] Ollama melalui endpoint OpenAI-compatible.
+- [x] OpenAI-compatible API.
+- [ ] llama.cpp/llama-server adapter khusus.
 - [ ] Streaming respons.
-- [ ] Timeout dan pembatalan.
+- [x] Timeout dan pembatalan.
 - [ ] Retry sederhana.
-- [ ] Pemilihan model.
-- [ ] Konfigurasi endpoint lokal.
+- [x] Pemilihan model.
+- [ ] Status koneksi provider.
+- [x] Konfigurasi endpoint lokal.
 
 ### 0.4 — Runtime agen
 
@@ -74,7 +78,8 @@ Klip adalah orkestrator AI yang ringan, offline-first, dan mengutamakan AI lokal
 
 - [ ] Dasbor.
 - [ ] Manajemen agen.
-- [ ] Sasaran dan proyek.
+- [ ] Ruang dan sasaran.
+- [ ] Daftar dan detail pekerjaan.
 - [ ] Daftar dan detail tugas.
 - [ ] Thread tugas.
 - [ ] Antrean persetujuan.
@@ -106,9 +111,9 @@ Klip adalah orkestrator AI yang ringan, offline-first, dan mengutamakan AI lokal
 
 ### 0.9 — Kompatibilitas
 
-- [ ] Matriks fungsi utama Paperclip.
-- [ ] Import data yang diperlukan.
-- [ ] Penyelarasan konsep domain.
+- [ ] Matriks kebutuhan produk dari proyek inspirasi.
+- [ ] Import data yang benar-benar diperlukan.
+- [ ] Penyelarasan konsep domain bila dibutuhkan.
 - [ ] Stabilitas API lokal.
 - [ ] Dokumentasi migrasi.
 
