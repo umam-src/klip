@@ -81,23 +81,53 @@ func (a *App) handleProviderStatus(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, status)
 }
 
+type chatRequest struct {
+	Prompt string `json:"prompt"`
+	Model  string `json:"model,omitempty"`
+}
+
+type chatResponse struct {
+	Model   string `json:"model"`
+	Content string `json:"content"`
+}
+
+type errorResponse struct {
+	Error string `json:"error"`
+}
+
 func (a *App) handleChat(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		writeError(w, http.StatusMethodNotAllowed, "metode tidak didukung")
 		return
 	}
-	var req chatRequest
-	if !decodeJSON(w, r, &req) { return }
 	if a.provider == nil {
-		writeError(w, http.StatusServiceUnavailable, "provider AI belum siap")
+		writeError(w, http.StatusServiceUnavailable, "AI belum siap; isi model pada config.json")
 		return
 	}
-	response, err := a.provider.Chat(r.Context(), ai.ChatRequest{Message: req.Message})
-	if err != nil { writeError(w, http.StatusBadGateway, "gagal memproses chat"); return }
-	writeJSON(w, http.StatusOK, response)
-}
 
-type chatRequest struct { Message string `json:"message"` }
+	var req chatRequest
+	if !decodeJSON(w, r, &req) {
+		return
+	}
+	if strings.TrimSpace(req.Prompt) == "" {
+		writeError(w, http.StatusBadRequest, "prompt tidak boleh kosong")
+		return
+	}
+
+	model := a.config.AI.Model
+	if strings.TrimSpace(req.Model) != "" {
+		model = strings.TrimSpace(req.Model)
+	}
+	result, err := a.provider.Chat(r.Context(), ai.ChatRequest{
+		Model:    model,
+		Messages: []ai.Message{{Role: "user", Content: req.Prompt}},
+	})
+	if err != nil {
+		writeError(w, http.StatusBadGateway, "gagal menghubungi penyedia AI")
+		return
+	}
+	writeJSON(w, http.StatusOK, chatResponse{Model: result.Model, Content: result.Content})
+}
 
 func writeJSON(w http.ResponseWriter, status int, value any) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
@@ -106,5 +136,5 @@ func writeJSON(w http.ResponseWriter, status int, value any) {
 }
 
 func writeError(w http.ResponseWriter, status int, message string) {
-	writeJSON(w, status, map[string]string{"error": message})
+	writeJSON(w, status, errorResponse{Error: message})
 }
