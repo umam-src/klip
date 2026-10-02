@@ -4,11 +4,12 @@ import (
 	"context"
 	"errors"
 	"testing"
+	"time"
 )
 
 func TestRetryChatRetriesTransientProviderError(t *testing.T) {
 	attempts := 0
-	response, err := retryChat(context.Background(), RetryConfig{Attempts: 3, BaseDelay: 0, MaxDelay: 0}, func(context.Context) (ChatResponse, error) {
+	response, err := retryChat(context.Background(), RetryConfig{Attempts: 3, BaseDelay: time.Nanosecond, MaxDelay: time.Nanosecond}, func(context.Context) (ChatResponse, error) {
 		attempts++
 		if attempts < 3 {
 			return ChatResponse{}, providerHTTPError{status: 503}
@@ -23,7 +24,7 @@ func TestRetryChatRetriesTransientProviderError(t *testing.T) {
 func TestRetryChatDoesNotRetryClientError(t *testing.T) {
 	attempts := 0
 	want := providerHTTPError{status: 400}
-	_, err := retryChat(context.Background(), RetryConfig{Attempts: 3, BaseDelay: 0, MaxDelay: 0}, func(context.Context) (ChatResponse, error) {
+	_, err := retryChat(context.Background(), RetryConfig{Attempts: 3, BaseDelay: time.Nanosecond, MaxDelay: time.Nanosecond}, func(context.Context) (ChatResponse, error) {
 		attempts++
 		return ChatResponse{}, want
 	})
