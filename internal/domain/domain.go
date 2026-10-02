@@ -60,6 +60,7 @@ type Ruang struct {
 type Agen struct {
 	ID          ID        `json:"id"`
 	RuangID     ID        `json:"ruang_id"`
+	ParentID    *ID       `json:"parent_id,omitempty"`
 	Name        string    `json:"name"`
 	Description string    `json:"description,omitempty"`
 	ProviderID  string    `json:"provider_id,omitempty"`
