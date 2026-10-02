@@ -11,9 +11,9 @@ import (
 )
 
 const (
-	defaultRetryAttempts = 3
+	defaultRetryAttempts  = 3
 	defaultRetryBaseDelay = 250 * time.Millisecond
-	defaultRetryMaxDelay = 2 * time.Second
+	defaultRetryMaxDelay  = 2 * time.Second
 )
 
 type RetryConfig struct {
@@ -86,6 +86,12 @@ func retryableError(err error) bool {
 	return false
 }
 
-type providerHTTPError struct { status int }
-func (e providerHTTPError) Error() string { return fmt.Sprintf("provider AI mengembalikan HTTP %d", e.status) }
+type providerHTTPError struct {
+	status int
+}
+
+func (e providerHTTPError) Error() string {
+	return fmt.Sprintf("provider AI mengembalikan HTTP %d", e.status)
+}
+
 func (e providerHTTPError) HTTPStatusCode() int { return e.status }
