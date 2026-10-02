@@ -39,11 +39,12 @@ func TestHandlerAktivitasReturnsSafeNewestLimitedHistory(t *testing.T) {
 	res := httptest.NewRecorder()
 	handler.ServeHTTP(res, req)
 
+	body := res.Body.String()
 	if res.Code != http.StatusOK {
-		t.Fatalf("status = %d, body = %s", res.Code, res.Body.String())
+		t.Fatalf("status = %d, body = %s", res.Code, body)
 	}
 	var got []activityResponse
-	if err := json.NewDecoder(res.Body).Decode(&got); err != nil {
+	if err := json.NewDecoder(strings.NewReader(body)).Decode(&got); err != nil {
 		t.Fatalf("decode response: %v", err)
 	}
 	if len(got) != 1 || got[0].ID != "event-new" {
@@ -52,7 +53,6 @@ func TestHandlerAktivitasReturnsSafeNewestLimitedHistory(t *testing.T) {
 	if got[0].Summary != "Eksekusi selesai" {
 		t.Fatalf("summary = %q", got[0].Summary)
 	}
-	body := res.Body.String()
 	if strings.Contains(body, "credential-token") || strings.Contains(body, "prompt rahasia") {
 		t.Fatalf("response leaked event message: %s", body)
 	}
