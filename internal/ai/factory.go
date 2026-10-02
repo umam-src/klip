@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/umam-src/klip/internal/config"
 )
@@ -19,7 +20,7 @@ func NewProvider(cfg config.AIConfig) (AIProvider, error) {
 		return nil, errors.New("model AI belum ditentukan")
 	}
 
-	client := &http.Client{}
+	client := &http.Client{Timeout: 2 * time.Minute}
 	switch strings.ToLower(cfg.Provider) {
 	case "ollama":
 		return &Ollama{BaseURL: cfg.BaseURL, Client: client}, nil
