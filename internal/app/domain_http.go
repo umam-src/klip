@@ -40,11 +40,11 @@ type createTugasRequest struct {
 }
 
 type createHasilRequest struct {
-	ID     string `json:"id"`
+	ID      string `json:"id"`
 	TugasID string `json:"tugas_id,omitempty"`
-	Kind   string `json:"kind"`
-	Name   string `json:"name"`
-	Path   string `json:"path"`
+	Kind    string `json:"kind"`
+	Name    string `json:"name"`
+	Path    string `json:"path"`
 }
 
 func (a *App) handleRuang(w http.ResponseWriter, r *http.Request) {
