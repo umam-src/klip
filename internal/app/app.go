@@ -139,6 +139,7 @@ func (a *App) handleSettings(w http.ResponseWriter, r *http.Request) {
 type chatRequest struct {
 	Prompt string `json:"prompt"`
 	Model  string `json:"model,omitempty"`
+	Stream bool   `json:"stream,omitempty"`
 }
 
 type chatResponse struct {
@@ -173,15 +174,64 @@ func (a *App) handleChat(w http.ResponseWriter, r *http.Request) {
 	if strings.TrimSpace(req.Model) != "" {
 		model = strings.TrimSpace(req.Model)
 	}
-	result, err := a.provider.Chat(r.Context(), ai.ChatRequest{
+	chatReq := ai.ChatRequest{
 		Model:    model,
 		Messages: []ai.Message{{Role: "user", Content: req.Prompt}},
-	})
+	}
+	if req.Stream {
+		a.handleChatStream(w, r, chatReq)
+		return
+	}
+	result, err := a.provider.Chat(r.Context(), chatReq)
 	if err != nil {
 		writeError(w, http.StatusBadGateway, "gagal menghubungi penyedia AI")
 		return
 	}
 	writeJSON(w, http.StatusOK, chatResponse{Model: result.Model, Content: result.Content})
+}
+
+func (a *App) handleChatStream(w http.ResponseWriter, r *http.Request, req ai.ChatRequest) {
+	streamer, ok := a.provider.(ai.Streamer)
+	if !ok {
+		writeError(w, http.StatusNotImplemented, "penyedia AI tidak mendukung streaming")
+		return
+	}
+	flusher, ok := w.(http.Flusher)
+	if !ok {
+		writeError(w, http.StatusInternalServerError, "server tidak mendukung streaming")
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/event-stream; charset=utf-8")
+	w.Header().Set("Cache-Control", "no-cache")
+	w.Header().Set("X-Accel-Buffering", "no")
+	w.WriteHeader(http.StatusOK)
+
+	emit := func(chunk ai.ChatResponse) error {
+	payload, err := json.Marshal(chatResponse{Model: chunk.Model, Content: chunk.Content})
+	if err != nil {
+		return err
+	}
+	if _, err := w.Write([]byte("data: "));
+		err != nil {
+		return err
+	}
+	if _, err := w.Write(payload);
+		err != nil {
+		return err
+	}
+	if _, err := w.Write([]byte("\n\n")); err != nil {
+		return err
+	}
+	flusher.Flush()
+	return nil
+	}
+
+	if err := streamer.Stream(r.Context(), req, emit); err != nil {
+		return
+	}
+	_, _ = w.Write([]byte("data: [DONE]\n\n"))
+	flusher.Flush()
 }
 
 func writeJSON(w http.ResponseWriter, status int, value any) {
