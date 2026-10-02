@@ -42,7 +42,7 @@ func (r *Repository) CreateKomentar(ctx context.Context, komentar domain.Komenta
 		} else if err != nil {
 			return fmt.Errorf("cek induk komentar: %w", err)
 		}
-		if parentPekerjaanID != string(komentar.PekerjaanID) || !sameOptionalID(parentTugasID, komentar.TugasID) {
+		if parentPekerjaanID != string(komentar.PekerjaanID) || !sameOptionalKomentarID(parentTugasID, komentar.TugasID) {
 			return fmt.Errorf("komentar: induk tidak sesuai konteks: %w", ErrInvalid)
 		}
 	}
@@ -149,7 +149,7 @@ func scanKomentarRows(rows *sql.Rows) ([]domain.Komentar, error) {
 	return result, nil
 }
 
-func sameOptionalID(value sql.NullString, expected *domain.ID) bool {
+func sameOptionalKomentarID(value sql.NullString, expected *domain.ID) bool {
 	if !value.Valid {
 		return expected == nil
 	}
