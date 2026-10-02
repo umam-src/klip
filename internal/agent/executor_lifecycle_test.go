@@ -110,7 +110,7 @@ func TestExecutorMarksTaskFailedOnTimeout(t *testing.T) {
 
 func TestExecutorMarksTaskCancelledOnCancellation(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
-	cancel()
+	defer cancel()
 
 	db, err := storage.Open(context.Background(), ":memory:")
 	if err != nil {
@@ -124,8 +124,19 @@ func TestExecutorMarksTaskCancelledOnCancellation(t *testing.T) {
 		t.Fatalf("CreateTugas() error = %v", err)
 	}
 
-	program, args := testCommand("hello")
-	result, err := (Executor{Repo: repo}).Execute(ctx, ExecutionRequest{PekerjaanID: "pekerjaan-1", TugasID: idPtr("tugas-1"), AgenID: "agen-1", Program: program, Arguments: args})
+	program, args := testCommand("sleep")
+	done := make(chan ExecutionResult, 1)
+	errs := make(chan error, 1)
+	go func() {
+		result, err := (Executor{Repo: repo}).Execute(ctx, ExecutionRequest{PekerjaanID: "pekerjaan-1", TugasID: idPtr("tugas-1"), AgenID: "agen-1", Program: program, Arguments: args})
+		done <- result
+		errs <- err
+	}()
+
+	time.Sleep(50 * time.Millisecond)
+	cancel()
+	result := <-done
+	err = <-errs
 	if !errors.Is(err, ErrCancelled) {
 		t.Fatalf("Execute() error = %v, want ErrCancelled", err)
 	}
