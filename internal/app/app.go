@@ -208,23 +208,21 @@ func (a *App) handleChatStream(w http.ResponseWriter, r *http.Request, req ai.Ch
 	w.WriteHeader(http.StatusOK)
 
 	emit := func(chunk ai.ChatResponse) error {
-	payload, err := json.Marshal(chatResponse{Model: chunk.Model, Content: chunk.Content})
-	if err != nil {
-		return err
-	}
-	if _, err := w.Write([]byte("data: "));
-		err != nil {
-		return err
-	}
-	if _, err := w.Write(payload);
-		err != nil {
-		return err
-	}
-	if _, err := w.Write([]byte("\n\n")); err != nil {
-		return err
-	}
-	flusher.Flush()
-	return nil
+		payload, err := json.Marshal(chatResponse{Model: chunk.Model, Content: chunk.Content})
+		if err != nil {
+			return err
+		}
+		if _, err := w.Write([]byte("data: ")); err != nil {
+			return err
+		}
+		if _, err := w.Write(payload); err != nil {
+			return err
+		}
+		if _, err := w.Write([]byte("\n\n")); err != nil {
+			return err
+		}
+		flusher.Flush()
+		return nil
 	}
 
 	if err := streamer.Stream(r.Context(), req, emit); err != nil {
