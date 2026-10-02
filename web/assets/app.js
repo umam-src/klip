@@ -26,7 +26,8 @@
   function empty(message) { return `<div class="empty"><strong>${escapeHTML(message)}</strong></div>`; }
 
   function detail(label, value) {
-    return `<div><dt>${escapeHTML(label)}</dt><dd>${escapeHTML(value || 'Belum diatur')}</dd></div>`;
+    const text = value === undefined || value === null || value === '' ? 'Belum diatur' : value;
+    return `<div><dt>${escapeHTML(label)}</dt><dd>${escapeHTML(text)}</dd></div>`;
   }
 
   async function loadSpaces() {
