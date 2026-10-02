@@ -2,6 +2,7 @@ package storage
 
 import (
 	"context"
+	"errors"
 	"testing"
 	"time"
 
@@ -33,10 +34,9 @@ func TestRunRepositoryRoundTrip(t *testing.T) {
 		ID:          "run-1",
 		PekerjaanID: "pekerjaan-run",
 		AgenID:      "agen-run",
-		Status:      domain.StatusCompleted,
+		Status:      domain.StatusRunning,
 		Program:     "printf",
 		Arguments:   []string{"hello"},
-		Stdout:      "hello",
 		StartedAt:   now,
 	}
 	if err := repo.CreateRun(ctx, run); err != nil {
@@ -47,7 +47,7 @@ func TestRunRepositoryRoundTrip(t *testing.T) {
 	if err != nil {
 		t.Fatalf("GetRun() error = %v", err)
 	}
-	if got.Program != run.Program || got.Status != run.Status || got.Stdout != run.Stdout {
+	if got.Program != run.Program || got.Status != run.Status {
 		t.Fatalf("GetRun() = %+v", got)
 	}
 	if len(got.Arguments) != 1 || got.Arguments[0] != "hello" {
@@ -57,12 +57,28 @@ func TestRunRepositoryRoundTrip(t *testing.T) {
 		t.Fatalf("started_at = %v, want %v", got.StartedAt, now)
 	}
 
+	finished := now.Add(time.Minute)
+	exitCode := 0
+	if err := repo.FinishRun(ctx, run.ID, domain.StatusCompleted, &exitCode, "hello", "", finished); err != nil {
+		t.Fatalf("FinishRun() error = %v", err)
+	}
+	got, err = repo.GetRun(ctx, run.ID)
+	if err != nil {
+		t.Fatalf("GetRun() after finish error = %v", err)
+	}
+	if got.Status != domain.StatusCompleted || got.Stdout != "hello" || got.ExitCode == nil || *got.ExitCode != 0 || got.FinishedAt == nil {
+		t.Fatalf("finished run = %+v", got)
+	}
+
 	list, err := repo.ListRunsByPekerjaan(ctx, run.PekerjaanID)
 	if err != nil {
 		t.Fatalf("ListRunsByPekerjaan() error = %v", err)
 	}
 	if len(list) != 1 || list[0].ID != run.ID {
 		t.Fatalf("runs = %+v", list)
+	}
+	if err := repo.FinishRun(ctx, run.ID, domain.StatusFailed, nil, "", "", finished.Add(time.Minute)); !errors.Is(err, ErrInvalid) {
+		t.Fatalf("second finish error = %v, want ErrInvalid", err)
 	}
 }
 
@@ -75,7 +91,7 @@ func TestRunRepositoryRequiresRelations(t *testing.T) {
 
 	repo := NewRepository(db)
 	err = repo.CreateRun(context.Background(), domain.Run{ID: "run-invalid", Program: "printf"})
-	if err == nil {
-		t.Fatal("CreateRun() error = nil, want error")
+	if !errors.Is(err, ErrInvalid) {
+		t.Fatalf("CreateRun() error = %v, want ErrInvalid", err)
 	}
 }
