@@ -133,7 +133,21 @@ func TestExecutorMarksTaskCancelledOnCancellation(t *testing.T) {
 		errs <- err
 	}()
 
-	time.Sleep(50 * time.Millisecond)
+	deadline := time.Now().Add(time.Second)
+	for {
+		runs, listErr := repo.ListRunsByPekerjaan(context.Background(), "pekerjaan-1")
+		if listErr != nil {
+			t.Fatalf("ListRunsByPekerjaan() error = %v", listErr)
+		}
+		if len(runs) == 1 {
+			break
+		}
+		if time.Now().After(deadline) {
+			t.Fatal("run tidak dimulai dalam batas waktu pengujian")
+		}
+		time.Sleep(time.Millisecond)
+	}
+
 	cancel()
 	result := <-done
 	err = <-errs
