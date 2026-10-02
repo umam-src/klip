@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"runtime"
@@ -23,6 +24,18 @@ func (fakeProvider) Chat(_ context.Context, req ai.ChatRequest) (ai.ChatResponse
 	return ai.ChatResponse{Model: req.Model, Content: "jawaban uji"}, nil
 }
 
+type fakeHealthProvider struct {
+	err error
+}
+
+func (fakeHealthProvider) ID() string { return "health-test" }
+
+func (fakeHealthProvider) Chat(_ context.Context, req ai.ChatRequest) (ai.ChatResponse, error) {
+	return ai.ChatResponse{Model: req.Model, Content: "jawaban uji"}, nil
+}
+
+func (p fakeHealthProvider) Check(context.Context) error { return p.err }
+
 func TestHandlerHealth(t *testing.T) {
 	handler := New(config.Default(t.TempDir()), fakeProvider{}).Handler()
 	req := httptest.NewRequest(http.MethodGet, "/health", nil)
@@ -33,6 +46,88 @@ func TestHandlerHealth(t *testing.T) {
 	}
 	if got := res.Body.String(); got != "ok\n" {
 		t.Fatalf("body = %q, want %q", got, "ok\n")
+	}
+}
+
+func TestHandlerProviderStatus(t *testing.T) {
+	tests := []struct {
+		name       string
+		provider   ai.AIProvider
+		model      string
+		wantStatus int
+		wantBody   string
+	}{
+		{
+			name:       "reachable",
+			provider:   fakeHealthProvider{},
+			model:      "model-uji",
+			wantStatus: http.StatusOK,
+			wantBody:   `{"provider":"ollama","configured":true,"reachable":true}`,
+		},
+		{
+			name:       "unreachable",
+			provider:   fakeHealthProvider{err: errors.New("provider down")},
+			model:      "model-uji",
+			wantStatus: http.StatusServiceUnavailable,
+			wantBody:   `{"provider":"ollama","configured":true,"reachable":false}`,
+		},
+		{
+			name:       "provider without health checker",
+			provider:   fakeProvider{},
+			model:      "model-uji",
+			wantStatus: http.StatusOK,
+			wantBody:   `{"provider":"ollama","configured":true,"reachable":false}`,
+		},
+		{
+			name:       "provider not configured",
+			provider:   fakeHealthProvider{},
+			wantStatus: http.StatusOK,
+			wantBody:   `{"provider":"ollama","configured":false,"reachable":true}`,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cfg := config.Default(t.TempDir())
+			cfg.AI.Provider = "ollama"
+			cfg.AI.Model = tt.model
+			handler := New(cfg, tt.provider).Handler()
+			req := httptest.NewRequest(http.MethodGet, "/api/v1/provider/status", nil)
+			res := httptest.NewRecorder()
+			handler.ServeHTTP(res, req)
+			if res.Code != tt.wantStatus {
+				t.Fatalf("status = %d, want %d; body = %s", res.Code, tt.wantStatus, res.Body.String())
+			}
+			if got := strings.TrimSpace(res.Body.String()); got != tt.wantBody {
+				t.Fatalf("body = %q, want %q", got, tt.wantBody)
+			}
+		})
+	}
+}
+
+func TestHandlerProviderStatusWithoutProvider(t *testing.T) {
+	cfg := config.Default(t.TempDir())
+	cfg.AI.Provider = "ollama"
+	cfg.AI.Model = "model-uji"
+	handler := New(cfg, nil).Handler()
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/provider/status", nil)
+	res := httptest.NewRecorder()
+	handler.ServeHTTP(res, req)
+	if res.Code != http.StatusServiceUnavailable {
+		t.Fatalf("status = %d, want %d", res.Code, http.StatusServiceUnavailable)
+	}
+	if got := strings.TrimSpace(res.Body.String()); got != `{"provider":"ollama","configured":false,"reachable":false}` {
+		t.Fatalf("body = %q", got)
+	}
+}
+
+func TestHandlerProviderStatusRejectsNonGET(t *testing.T) {
+	handler := New(config.Default(t.TempDir()), fakeProvider{}).Handler()
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/provider/status", nil)
+	res := httptest.NewRecorder()
+	handler.ServeHTTP(res, req)
+	if res.Code != http.StatusMethodNotAllowed {
+		t.Fatalf("status = %d, want %d", res.Code, http.StatusMethodNotAllowed)
 	}
 }
 
