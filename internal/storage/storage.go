@@ -8,7 +8,7 @@ import (
 	_ "modernc.org/sqlite"
 )
 
-const schemaVersion = 3
+const schemaVersion = 4
 
 const schema = `
 CREATE TABLE IF NOT EXISTS schema_migrations (
@@ -125,6 +125,19 @@ CREATE TABLE IF NOT EXISTS event (
 CREATE INDEX IF NOT EXISTS idx_event_pekerjaan_created ON event(pekerjaan_id, created_at DESC, id DESC);
 CREATE INDEX IF NOT EXISTS idx_event_sesi ON event(sesi_id);
 CREATE INDEX IF NOT EXISTS idx_event_run ON event(run_id);
+
+CREATE TABLE IF NOT EXISTS komentar (
+    id TEXT PRIMARY KEY,
+    pekerjaan_id TEXT NOT NULL REFERENCES pekerjaan(id) ON DELETE CASCADE,
+    tugas_id TEXT REFERENCES tugas(id) ON DELETE CASCADE,
+    parent_id TEXT REFERENCES komentar(id) ON DELETE CASCADE,
+    body TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_komentar_pekerjaan_created ON komentar(pekerjaan_id, created_at, id);
+CREATE INDEX IF NOT EXISTS idx_komentar_tugas_created ON komentar(tugas_id, created_at, id);
+CREATE INDEX IF NOT EXISTS idx_komentar_parent ON komentar(parent_id);
 `
 
 // Open membuka database lokal dan memastikan skema minimum Klip tersedia.
