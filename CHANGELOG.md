@@ -15,6 +15,8 @@ Format mengikuti Keep a Changelog dan versi mengikuti Semantic Versioning.
 - Model `Run` untuk riwayat eksekusi agen.
 - Runner proses lokal berbasis argv tanpa interpolasi shell.
 - Batas output proses default 1 MiB.
+- Batas proses berjalan bersamaan pada runner.
+- Klasifikasi kesalahan proses untuk timeout, pembatalan, kegagalan proses, dan kegagalan memulai.
 - Penyimpanan riwayat `Run` di SQLite.
 - Migrasi skema SQLite versi 2 untuk riwayat eksekusi.
 - Penyimpanan SQLite tanpa kebutuhan CGO.
