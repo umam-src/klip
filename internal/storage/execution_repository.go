@@ -61,15 +61,15 @@ func (r *Repository) FinalizeExecution(ctx context.Context, runID, sesiID domain
 		return fmt.Errorf("execution: status event tidak dikenal: %q: %w", status, ErrInvalid)
 	}
 	if err := appendEvent(ctx, tx, domain.Event{
-			PekerjaanID: pekerjaanID,
-			TugasID:     eventTaskID,
-			SesiID:      idPtr(sesiID),
-			RunID:       idPtr(runID),
-			AgenID:      idPtr(agenID),
-			Type:        eventType,
-			Message:     "Eksekusi selesai dengan status " + string(status),
-			CreatedAt:   finishedAt,
-		}); err != nil {
+		PekerjaanID: pekerjaanID,
+		TugasID:     eventTaskID,
+		SesiID:      idPtr(sesiID),
+		RunID:       idPtr(runID),
+		AgenID:      idPtr(agenID),
+		Type:        eventType,
+		Message:     "Eksekusi selesai dengan status " + string(status),
+		CreatedAt:   finishedAt,
+	}); err != nil {
 		return err
 	}
 	if err := tx.Commit(); err != nil {
