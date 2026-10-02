@@ -11,8 +11,8 @@ import (
 )
 
 const (
-	defaultMaxOutputBytes   int64 = 1 << 20
-	defaultMaxConcurrent          = 4
+	defaultMaxOutputBytes int64 = 1 << 20
+	defaultMaxConcurrent        = 4
 )
 
 var (
@@ -21,6 +21,8 @@ var (
 	ErrCancelled      = errors.New("proses dibatalkan")
 	ErrProcessFailed  = errors.New("proses gagal")
 	ErrStartFailed    = errors.New("proses tidak dapat dimulai")
+
+	defaultSemaphore = make(chan struct{}, defaultMaxConcurrent)
 )
 
 type Command struct {
@@ -40,7 +42,22 @@ type Result struct {
 
 type Runner struct {
 	MaxOutputBytes int64
-	MaxConcurrent  int
+	semaphore      chan struct{}
+}
+
+// NewRunner membuat runner dengan batas jumlah proses yang dapat berjalan
+// bersamaan. Nilai nol atau negatif memakai batas bawaan.
+func NewRunner(maxConcurrent int, maxOutputBytes int64) Runner {
+	if maxConcurrent <= 0 {
+		maxConcurrent = defaultMaxConcurrent
+	}
+	if maxOutputBytes <= 0 {
+		maxOutputBytes = defaultMaxOutputBytes
+	}
+	return Runner{
+		MaxOutputBytes: maxOutputBytes,
+		semaphore:      make(chan struct{}, maxConcurrent),
+	}
 }
 
 func (r Runner) Run(ctx context.Context, command Command) (Result, error) {
@@ -48,11 +65,10 @@ func (r Runner) Run(ctx context.Context, command Command) (Result, error) {
 		return Result{}, ErrInvalidCommand
 	}
 
-	maxConcurrent := r.MaxConcurrent
-	if maxConcurrent <= 0 {
-		maxConcurrent = defaultMaxConcurrent
+	semaphore := r.semaphore
+	if semaphore == nil {
+		semaphore = defaultSemaphore
 	}
-	semaphore := runnerSemaphore(ctx, maxConcurrent)
 	select {
 	case semaphore <- struct{}{}:
 		defer func() { <-semaphore }()
@@ -99,13 +115,6 @@ func (r Runner) Run(ctx context.Context, command Command) (Result, error) {
 		return result, fmt.Errorf("%w: %v", ErrStartFailed, err)
 	}
 	return result, nil
-}
-
-// runnerSemaphore membuat pembatas per eksekusi Runner. Semaphore sengaja
-// dibuat lokal agar Runner tetap stateless dan aman dipakai lintas goroutine.
-func runnerSemaphore(ctx context.Context, maxConcurrent int) chan struct{} {
-	_ = ctx
-	return make(chan struct{}, maxConcurrent)
 }
 
 type limitedWriter struct {
