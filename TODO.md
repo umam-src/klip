@@ -75,7 +75,7 @@ Catatan: `Ruang`, `Agen`, `Sasaran`, `Pekerjaan`, `Tugas`, `Sesi`, dan `Hasil` s
 - [x] Antrean persetujuan.
 - [x] Riwayat aktivitas.
 - [x] Halaman provider/model.
-- [ ] Pengaturan.
+- [x] Pengaturan.
 
 ## P1 — Skills dan hasil
 
