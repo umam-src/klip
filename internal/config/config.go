@@ -8,9 +8,9 @@ import (
 )
 
 type Config struct {
-	DataDir string    `json:"data_dir,omitempty"`
-	Listen  string    `json:"listen,omitempty"`
-	AI      AIConfig  `json:"ai"`
+	DataDir string   `json:"data_dir,omitempty"`
+	Listen  string   `json:"listen,omitempty"`
+	AI      AIConfig `json:"ai"`
 }
 
 type AIConfig struct {
