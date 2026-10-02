@@ -99,7 +99,7 @@ func TestHandlerProviderStatus(t *testing.T) {
 		{
 			name:       "provider not configured",
 			provider:   fakeHealthProvider{},
-			model:      "model-uji",
+			model:      "",
 			wantStatus: http.StatusOK,
 			wantBody:   `{"provider":"ollama","configured":false,"reachable":true}`,
 		},
