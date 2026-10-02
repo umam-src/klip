@@ -49,7 +49,9 @@ jobs:
           cache: true
 
       - name: Verify source
+        shell: bash
         run: |
+          set -euo pipefail
           files=$(gofmt -l .)
           if [ -n "$files" ]; then
             echo "File Go belum diformat dengan gofmt:"
