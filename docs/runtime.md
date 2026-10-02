@@ -23,8 +23,19 @@ Jika eksekusi terkait `Tugas`, Klip memastikan tugas berada di `Pekerjaan` yang 
 - Program dijalankan langsung sebagai argumen proses, bukan melalui shell.
 - Konteks dapat membatalkan proses.
 - Batas waktu dan ukuran keluaran diterapkan oleh runtime.
+- Runner memberi tanda jika keluaran terpotong karena batas ukuran.
 - Jumlah proses bersamaan dibatasi oleh runner.
 - Model AI tidak disimpan di dalam binary Klip.
+
+## Pengukuran performa
+
+Benchmark runtime dan SQLite tersedia sebagai baseline lokal. Jalankan:
+
+```bash
+go test ./... -run '^$' -bench 'BenchmarkRunner|BenchmarkOpenMemory|BenchmarkSQLiteWriteRead' -benchmem
+```
+
+Benchmark digunakan untuk membandingkan perubahan runtime, bukan sebagai target angka tetap. Optimasi dilakukan setelah ada hasil pengukuran yang menunjukkan bagian yang memang perlu diperbaiki.
 
 ## Hasil
 
