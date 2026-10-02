@@ -7,6 +7,7 @@ Model data Klip dibuat kecil agar alur kerja lokal mudah dipahami dan disimpan.
 ```text
 Ruang
  ├── Agen
+ │    └── Agen induk/anak
  ├── Sasaran
  ├── Pekerjaan
  │    ├── Tugas
@@ -19,7 +20,7 @@ Ruang
 ## Entitas
 
 - **Ruang** — batas kerja yang independen.
-- **Agen** — pekerja AI yang berada dalam satu ruang.
+- **Agen** — pekerja AI yang berada dalam satu ruang dan dapat memiliki satu agen induk.
 - **Sasaran** — hasil yang ingin dicapai dalam ruang.
 - **Pekerjaan** — unit kerja utama dan pemilik sesi eksekusi.
 - **Tugas** — langkah konkret dalam pekerjaan; dapat memiliki tugas induk.
@@ -31,7 +32,9 @@ Ruang
 
 `Tugas`, `Sesi`, dan `Run` tidak saling menggantikan. Tugas menyatakan pekerjaan yang harus dilakukan, sesi menyatakan konteks pelaksanaan, dan run menyatakan proses yang benar-benar dijalankan.
 
-`Tugas` yang memiliki `ParentID` harus tetap berada pada `Pekerjaan` yang sama. `Sesi`, `Run`, dan `Agen` juga diperiksa agar hubungan ruang dan pekerjaan tidak melampaui batas domainnya.
+`Tugas` yang memiliki `ParentID` harus tetap berada pada `Pekerjaan` yang sama. `Agen` yang memiliki `ParentID` harus tetap berada pada `Ruang` yang sama dengan agen induknya. Hubungan induk agen hanya dibuat terhadap agen yang sudah ada, sehingga pembuatan hubungan awal tidak dapat membentuk siklus.
+
+`Sesi`, `Run`, dan `Agen` juga diperiksa agar hubungan ruang dan pekerjaan tidak melampaui batas domainnya.
 
 Status mengikuti aturan transisi domain. Penyimpanan tidak boleh membuat transisi yang tidak diizinkan hanya karena operasi SQL dapat melakukannya.
 
