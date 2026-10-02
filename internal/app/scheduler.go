@@ -12,7 +12,7 @@ import (
 )
 
 type scheduleRequest struct {
-	Name        string    `json:"name"`
+	Name        string     `json:"name"`
 	PekerjaanID domain.ID  `json:"pekerjaan_id"`
 	TugasID     *domain.ID `json:"tugas_id,omitempty"`
 	AgenID      domain.ID  `json:"agen_id"`
