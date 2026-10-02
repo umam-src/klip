@@ -36,6 +36,7 @@ func main() {
 	}
 	defer db.Close()
 
+	repo := storage.NewRepository(db)
 	provider, err := ai.NewProvider(cfg.AI)
 	if err != nil {
 		log.Printf("AI belum siap: %v", err)
@@ -43,7 +44,7 @@ func main() {
 
 	server := &http.Server{
 		Addr:    cfg.Listen,
-		Handler: app.New(cfg, provider).Handler(),
+		Handler: app.New(cfg, provider, repo).Handler(),
 	}
 
 	log.Printf("Klip — orkestrator AI lokal")
