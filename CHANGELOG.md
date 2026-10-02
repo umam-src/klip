@@ -17,11 +17,14 @@ Format mengikuti Keep a Changelog dan versi mengikuti Semantic Versioning.
 - Penyimpanan berkas hasil lokal dengan batas 16 MiB dan validasi path.
 - Endpoint lokal untuk menyimpan serta membuka berkas hasil.
 - Aksi buka hasil dari panel Hasil di UI.
+- Jadwal lokal berbasis interval, antrean pekerjaan, pencegahan eksekusi ganda, retry terbatas, heartbeat, dan riwayat scheduler.
+- API lokal untuk membuat, melihat, dan membaca riwayat jadwal.
 
 ### Changed
 - Konfigurasi sekarang menyimpan locale secara eksplisit dan menormalkan locale yang belum didukung ke `id-ID`.
 - State `Run`, `Sesi`, dan `Tugas` beserta event runtime diperbarui secara atomik saat memulai dan menyelesaikan eksekusi.
 - Validasi nama skill digunakan bersama oleh parser skill dan penyimpanan relasi agen.
+- Skema SQLite dinaikkan ke versi 7 untuk menyimpan jadwal dan riwayat scheduler.
 
 ### Removed
 - Belum ada.
