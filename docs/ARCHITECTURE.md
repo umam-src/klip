@@ -20,9 +20,12 @@ Klip
 
 ## Batas ukuran
 
-- Berkas program: target < 50 MB.
-- Docker image: target < 100 MB.
-- > 500 MB untuk artefak runtime dianggap gagal.
+Ukuran diutamakan sekecil mungkin tanpa mengorbankan kualitas kode, keamanan, maintainability, atau performa.
+
+- Berkas program: **target < 50 MiB**.
+- 50–100 MiB: warning dan wajib ditinjau.
+- > 100 MiB: gagal pada CI rilis.
+- Docker image: target < 100 MiB.
 - Model AI tidak dibundel.
 
 Ukuran sumber kode GitHub bukan metrik ukuran produk.
