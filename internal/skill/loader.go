@@ -29,22 +29,19 @@ func LoadDir(root string) ([]Skill, error) {
 	seen := make(map[string]struct{}, len(entries))
 
 	for _, entry := range entries {
-		if !entry.IsDir() {
-			continue
-		}
-		if entry.Type()&os.ModeSymlink != 0 {
+		if !entry.IsDir() || entry.Type()&os.ModeSymlink != 0 {
 			continue
 		}
 
 		path := filepath.Join(root, entry.Name(), "SKILL.md")
-		info, err := os.Stat(path)
+		info, err := os.Lstat(path)
 		if err != nil {
 			if errors.Is(err, os.ErrNotExist) {
 				continue
 			}
 			return nil, fmt.Errorf("skill %q: periksa SKILL.md: %w", entry.Name(), err)
 		}
-		if !info.Mode().IsRegular() {
+		if info.Mode()&os.ModeSymlink != 0 || !info.Mode().IsRegular() {
 			return nil, fmt.Errorf("skill %q: SKILL.md bukan berkas biasa", entry.Name())
 		}
 		if info.Size() > MaxSkillFileSize {
