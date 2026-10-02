@@ -10,9 +10,6 @@ import (
 	"github.com/umam-src/klip/internal/domain"
 )
 
-// CreateAgenWithParent creates an agent and optionally attaches it to an
-// existing agent in the same room. A parent is immutable through creation;
-// this keeps the first hierarchy implementation simple and cycle-free.
 func (r *Repository) CreateAgenWithParent(ctx context.Context, agen domain.Agen) error {
 	if err := validateIDName(agen.ID, agen.Name); err != nil {
 		return fmt.Errorf("agen: %w", err)
