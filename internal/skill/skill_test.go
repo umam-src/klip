@@ -23,9 +23,9 @@ func TestParse(t *testing.T) {
 
 func TestParseRejectsInvalidDocument(t *testing.T) {
 	tests := map[string]string{
-		"tanpa front matter": "name: ringkas\ndescription: x\n---\nisi",
-		"nama tidak valid":   "---\nname: Ringkas\ndescription: x\n---\nisi",
-		"instruksi kosong":   "---\nname: ringkas\ndescription: x\n---\n",
+		"tanpa front matter":  "name: ringkas\ndescription: x\n---\nisi",
+		"nama tidak valid":    "---\nname: Ringkas\ndescription: x\n---\nisi",
+		"instruksi kosong":    "---\nname: ringkas\ndescription: x\n---\n",
 		"field tidak dikenal": "---\nname: ringkas\nowner: umam\ndescription: x\n---\nisi",
 	}
 
