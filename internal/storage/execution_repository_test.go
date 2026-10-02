@@ -39,8 +39,8 @@ func TestFinalizeExecutionRollsBackAsOneUnit(t *testing.T) {
 	}
 
 	err = repo.FinalizeExecution(ctx, "run-1", "sesi-1", idPtr("tugas-missing"), domain.StatusCompleted, intPtr(0), "ok", "", fixture)
-	if !errors.Is(err, ErrNotFound) {
-		t.Fatalf("FinalizeExecution() error = %v, want ErrNotFound", err)
+	if !errors.Is(err, ErrInvalid) {
+		t.Fatalf("FinalizeExecution() error = %v, want ErrInvalid", err)
 	}
 
 	run, err := repo.GetRun(ctx, "run-1")
@@ -64,10 +64,6 @@ func TestFinalizeExecutionRollsBackAsOneUnit(t *testing.T) {
 	if tugas.Status != domain.StatusRunning {
 		t.Fatalf("tugas berubah setelah rollback: %q", tugas.Status)
 	}
-}
-
-func idPtr(id domain.ID) *domain.ID {
-	return &id
 }
 
 func intPtr(value int) *int {
