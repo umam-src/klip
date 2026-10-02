@@ -38,9 +38,6 @@ func (e Executor) Execute(ctx context.Context, request ExecutionRequest) (Execut
 	if e.Repo == nil {
 		return ExecutionResult{}, errors.New("executor: repository wajib diisi")
 	}
-	if e.Runner == nil {
-		return ExecutionResult{}, errors.New("executor: runner wajib diisi")
-	}
 	if request.PekerjaanID == "" || request.AgenID == "" || request.Program == "" {
 		return ExecutionResult{}, fmt.Errorf("executor: %w", storage.ErrInvalid)
 	}
