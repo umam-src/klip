@@ -62,6 +62,10 @@
         <div class="panel-head"><div><h3>Antrean persetujuan</h3><p>Tindakan yang menunggu keputusan sebelum dapat dijalankan.</p></div><button class="button small" type="button" id="refresh-approvals">Muat ulang</button></div>
         <div id="approval-list" class="stack" aria-live="polite"></div>
       </div>
+      <div class="panel activity-history">
+        <div class="panel-head"><div><h3>Riwayat aktivitas</h3><p>Peristiwa terbaru dari pekerjaan di ruang ini.</p></div><button class="button small" type="button" id="refresh-activity">Muat ulang</button></div>
+        <div id="activity-list" class="stack" aria-live="polite"></div>
+      </div>
     </section>
     <section id="agent-detail" class="section" hidden aria-labelledby="agent-title">
       <div class="section-head"><div><p class="eyebrow">Agen</p><h2 id="agent-title">Agen</h2></div><button class="button" type="button" id="back-to-workspace-from-agent">Kembali</button></div>
@@ -102,5 +106,6 @@
   <footer><span>Klip</span><span>Local-first · Bahasa Indonesia</span></footer>
   <script src="/assets/app.js" defer></script>
   <script src="/assets/sasaran.js" defer></script>
+  <script src="/assets/aktivitas.js" defer></script>
 </body>
 </html>
