@@ -1,5 +1,5 @@
 (() => {
-  const state = { ruang: null, pekerjaan: null };
+  const state = { ruang: null, agen: null, pekerjaan: null, tugas: null };
   const $ = (selector) => document.querySelector(selector);
   const list = $('#space-list');
   const refresh = $('#refresh');
@@ -25,6 +25,10 @@
 
   function empty(message) { return `<div class="empty"><strong>${escapeHTML(message)}</strong></div>`; }
 
+  function detail(label, value) {
+    return `<div><dt>${escapeHTML(label)}</dt><dd>${escapeHTML(value || 'Belum diatur')}</dd></div>`;
+  }
+
   async function loadSpaces() {
     refresh.disabled = true;
     try {
@@ -42,9 +46,10 @@
       const spaces = await request('/api/v1/ruang');
       state.ruang = spaces.find((space) => space.id === ruangID);
       if (!state.ruang) throw new Error('ruang tidak ditemukan');
+      state.agen = null; state.pekerjaan = null; state.tugas = null;
       $('#workspace-label').textContent = `Ruang · ${state.ruang.name}`;
       $('#workspace-title').textContent = state.ruang.name;
-      $('#workspace').hidden = false; $('#job-detail').hidden = true;
+      $('#workspace').hidden = false; $('#agent-detail').hidden = true; $('#job-detail').hidden = true; $('#task-detail').hidden = true;
       await Promise.all([loadAgents(), loadJobs()]);
       $('#workspace').scrollIntoView({ behavior: 'smooth', block: 'start' });
     } catch (_) { list.insertAdjacentHTML('beforeend', empty('Ruang tidak dapat dibuka.')); }
@@ -54,8 +59,18 @@
     const target = $('#agent-list');
     try {
       const agents = await request(`/api/v1/ruang/${encodeURIComponent(state.ruang.id)}/agen`);
-      target.innerHTML = agents.length ? agents.map((agent) => `<article class="item"><strong>${escapeHTML(agent.name)}</strong><span>${escapeHTML(agent.provider_id || 'Penyedia belum diatur')}${agent.model_id ? ` · ${escapeHTML(agent.model_id)}` : ''}</span></article>`).join('') : empty('Belum ada agen.');
+      target.innerHTML = agents.length ? agents.map((agent) => `<button class="item item-button" type="button" data-agent="${escapeHTML(agent.id)}"><strong>${escapeHTML(agent.name)}</strong><span>${escapeHTML(agent.provider_id || 'Penyedia belum diatur')}${agent.model_id ? ` · ${escapeHTML(agent.model_id)}` : ''}</span></button>`).join('') : empty('Belum ada agen.');
+      target.querySelectorAll('[data-agent]').forEach((button) => button.addEventListener('click', () => openAgent(button.dataset.agent, agents)));
     } catch (_) { target.innerHTML = empty('Agen belum dapat dimuat.'); }
+  }
+
+  function openAgent(agenID, agents) {
+    state.agen = agents.find((agent) => agent.id === agenID);
+    if (!state.agen) return;
+    $('#agent-title').textContent = state.agen.name;
+    $('#agent-detail-card').innerHTML = `<dl>${detail('Nama', state.agen.name)}${detail('Deskripsi', state.agen.description)}${detail('Penyedia', state.agen.provider_id)}${detail('Model', state.agen.model_id)}${detail('ID', state.agen.id)}</dl>`;
+    $('#workspace').hidden = true; $('#agent-detail').hidden = false; $('#job-detail').hidden = true; $('#task-detail').hidden = true;
+    $('#agent-detail').scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
   async function loadJobs() {
@@ -63,28 +78,38 @@
     try {
       const jobs = await request(`/api/v1/ruang/${encodeURIComponent(state.ruang.id)}/pekerjaan`);
       target.innerHTML = jobs.length ? jobs.map((job) => `<button class="item item-button" type="button" data-job="${escapeHTML(job.id)}"><strong>${escapeHTML(job.title)}</strong><span>Status · ${escapeHTML(job.status)}</span></button>`).join('') : empty('Belum ada pekerjaan.');
-      target.querySelectorAll('[data-job]').forEach((button) => button.addEventListener('click', () => openJob(button.dataset.job)));
+      target.querySelectorAll('[data-job]').forEach((button) => button.addEventListener('click', () => openJob(button.dataset.job, jobs)));
     } catch (_) { target.innerHTML = empty('Pekerjaan belum dapat dimuat.'); }
   }
 
-  async function openJob(pekerjaanID) {
+  async function openJob(pekerjaanID, jobs) {
+    state.pekerjaan = jobs.find((job) => job.id === pekerjaanID);
+    if (!state.pekerjaan) return;
+    state.tugas = null;
     try {
-      const jobs = await request(`/api/v1/ruang/${encodeURIComponent(state.ruang.id)}/pekerjaan`);
-      state.pekerjaan = jobs.find((job) => job.id === pekerjaanID);
-      if (!state.pekerjaan) throw new Error('pekerjaan tidak ditemukan');
       $('#job-title').textContent = state.pekerjaan.title;
-      $('#job-detail').hidden = false;
+      $('#workspace').hidden = true; $('#agent-detail').hidden = true; $('#job-detail').hidden = false; $('#task-detail').hidden = true;
       await loadTasks();
       $('#job-detail').scrollIntoView({ behavior: 'smooth', block: 'start' });
-    } catch (_) { $('#job-detail').hidden = false; $('#task-list').innerHTML = empty('Pekerjaan tidak dapat dibuka.'); }
+    } catch (_) { $('#task-list').innerHTML = empty('Pekerjaan tidak dapat dibuka.'); }
   }
 
   async function loadTasks() {
     const target = $('#task-list');
     try {
       const tasks = await request(`/api/v1/pekerjaan/${encodeURIComponent(state.pekerjaan.id)}/tugas`);
-      target.innerHTML = tasks.length ? tasks.map((task) => `<article class="item"><strong>${escapeHTML(task.title)}</strong><span>Status · ${escapeHTML(task.status)}</span></article>`).join('') : empty('Belum ada tugas.');
+      target.innerHTML = tasks.length ? tasks.map((task) => `<button class="item item-button" type="button" data-task="${escapeHTML(task.id)}"><strong>${escapeHTML(task.title)}</strong><span>Status · ${escapeHTML(task.status)}</span></button>`).join('') : empty('Belum ada tugas.');
+      target.querySelectorAll('[data-task]').forEach((button) => button.addEventListener('click', () => openTask(button.dataset.task, tasks)));
     } catch (_) { target.innerHTML = empty('Tugas belum dapat dimuat.'); }
+  }
+
+  function openTask(tugasID, tasks) {
+    state.tugas = tasks.find((task) => task.id === tugasID);
+    if (!state.tugas) return;
+    $('#task-title').textContent = state.tugas.title;
+    $('#task-detail-card').innerHTML = `<dl>${detail('Judul', state.tugas.title)}${detail('Status', state.tugas.status)}${detail('Posisi', state.tugas.position)}${detail('Tugas induk', state.tugas.parent_id)}${detail('ID', state.tugas.id)}</dl>`;
+    $('#workspace').hidden = true; $('#agent-detail').hidden = true; $('#job-detail').hidden = true; $('#task-detail').hidden = false;
+    $('#task-detail').scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
   function bindForms() {
@@ -110,8 +135,10 @@
     });
   }
 
-  $('#back-to-spaces').addEventListener('click', () => { $('#workspace').hidden = true; $('#job-detail').hidden = true; $('#ruang').scrollIntoView({ behavior: 'smooth' }); });
-  $('#back-to-workspace').addEventListener('click', () => { $('#job-detail').hidden = true; $('#workspace').scrollIntoView({ behavior: 'smooth' }); });
+  $('#back-to-spaces').addEventListener('click', () => { $('#workspace').hidden = true; $('#agent-detail').hidden = true; $('#job-detail').hidden = true; $('#task-detail').hidden = true; $('#ruang').scrollIntoView({ behavior: 'smooth' }); });
+  $('#back-to-workspace-from-agent').addEventListener('click', () => { $('#agent-detail').hidden = true; $('#workspace').hidden = false; $('#workspace').scrollIntoView({ behavior: 'smooth', block: 'start' }); });
+  $('#back-to-workspace').addEventListener('click', () => { $('#job-detail').hidden = true; $('#workspace').hidden = false; $('#workspace').scrollIntoView({ behavior: 'smooth' }); });
+  $('#back-to-job').addEventListener('click', () => { $('#task-detail').hidden = true; $('#job-detail').hidden = false; $('#job-detail').scrollIntoView({ behavior: 'smooth', block: 'start' }); });
   refresh.addEventListener('click', loadSpaces);
   bindForms();
   loadSpaces();
