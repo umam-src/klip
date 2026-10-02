@@ -52,7 +52,9 @@ CI harus hemat menit:
 - test utama satu kali per pull request;
 - build lintas platform terutama pada release;
 - pemeriksaan ukuran dilakukan setelah build;
-- E2E berat tidak dijalankan tanpa alasan pada setiap perubahan kecil.
+- E2E berat tidak dijalankan tanpa alasan pada setiap perubahan kecil;
+- batalkan run lama pada ref yang sama ketika commit baru sudah memicu run yang lebih relevan;
+- gunakan permission minimum untuk workflow.
 
 ## Pelajaran CI
 
@@ -61,3 +63,4 @@ CI harus hemat menit:
 - Benchmark memori tidak dijalankan pada setiap CI karena hasilnya sensitif terhadap lingkungan runner; jalankan saat investigasi optimasi dan bandingkan pada lingkungan yang konsisten.
 - Pada test table-driven, setiap kasus harus mengisi seluruh parameter yang memengaruhi perilaku yang diuji; jangan memakai nilai contoh dari kasus lain untuk skenario kosong/tidak terkonfigurasi.
 - Linker flag release hanya boleh mengatur simbol yang benar-benar ada di binary; jangan menambahkan `-X` versi tanpa variable string target karena release build harus dapat diverifikasi lintas platform.
+- CI dapat menghemat runner minutes dengan `concurrency.cancel-in-progress`, tetapi jangan menggantinya dengan filter path yang berisiko membuat required check tidak pernah muncul.
