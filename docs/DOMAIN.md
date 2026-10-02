@@ -15,7 +15,7 @@ Dokumen ini menetapkan bahasa domain Klip agar desain produk tetap mandiri dan t
 | Istilah | Arti di Klip |
 |---|---|
 | **Ruang** | Lingkup kerja mandiri yang menyimpan agen, pekerjaan, pengaturan, dan hasil. |
-| **Agen** | Pelaksana berbasis AI yang memiliki peran, aturan, kemampuan, dan model. |
+| **Agen** | Pelaksana berbasis AI yang memiliki peran, aturan, kemampuan, dan model. Agen dapat berada di bawah agen induk dalam ruang yang sama. |
 | **Sasaran** | Hasil yang ingin dicapai oleh manusia atau agen. |
 | **Pekerjaan** | Unit kerja utama yang memiliki konteks dan hasil yang diharapkan. |
 | **Tugas** | Langkah konkret yang dapat dikerjakan dan dilacak secara terpisah. |
@@ -34,6 +34,8 @@ Dokumen ini menetapkan bahasa domain Klip agar desain produk tetap mandiri dan t
 ```text
 Ruang
  ├── Agen
+ │    ├── Agen induk
+ │    │    └── Agen anak
  │    ├── Skill
  │    └── Alat
  ├── Sasaran
@@ -53,6 +55,10 @@ Ruang
 Klip dimulai dari **Ruang**, bukan hierarki organisasi. Pengguna tunggal dapat menjalankan Klip tanpa membuat organisasi, tim, atau struktur administratif tambahan.
 
 Jika kebutuhan multi-pengguna berkembang, akses dapat ditambahkan tanpa menjadikan struktur organisasi sebagai syarat penggunaan dasar.
+
+### Hierarki agen dibatasi oleh ruang
+
+Satu agen dapat memiliki paling banyak satu agen induk. Agen induk harus sudah ada dan berada pada **Ruang** yang sama. Hubungan awal dibuat saat agen anak dibuat; belum ada operasi pemindahan atau perubahan induk agar aturan siklus tetap sederhana dan aman.
 
 ### Pekerjaan dan tugas berbeda
 
