@@ -81,7 +81,7 @@ Catatan: `Ruang`, `Agen`, `Sasaran`, `Pekerjaan`, `Tugas`, `Sesi`, dan `Hasil` s
 
 - [x] Format skill sederhana.
 - [x] Skill lokal.
-- [ ] Relasi skill ke agen.
+- [x] Relasi skill ke agen.
 - [ ] Penyimpanan hasil.
 - [x] Validasi nama dan path hasil.
 - [x] Metadata hasil.
