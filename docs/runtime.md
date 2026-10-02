@@ -12,11 +12,24 @@ Sesi
 Run
   ↓
 status akhir
+  ↓
+Event
 ```
 
 Jika eksekusi terkait `Tugas`, Klip memastikan tugas berada di `Pekerjaan` yang sama. Saat proses dimulai, status tugas menjadi `running`. Setelah proses selesai, status tugas mengikuti hasil eksekusi.
 
 `Run` menyimpan program, argumen, waktu, kode keluar, serta keluaran standar dan keluaran error. `Sesi` menyimpan hubungan eksekusi dengan pekerjaan dan agen.
+
+## Event runtime
+
+Event runtime adalah riwayat append-only untuk perubahan penting selama eksekusi. Klip mencatat event berikut:
+
+- `execution.started` saat `Sesi` dan `Run` berhasil dimulai.
+- `execution.completed` saat eksekusi selesai dengan status `completed`.
+- `execution.failed` saat eksekusi berakhir dengan status `failed`.
+- `execution.cancelled` saat eksekusi dibatalkan.
+
+Event start dan event terminal ditulis dalam transaksi yang sama dengan perubahan state eksekusi. Jika transaksi gagal, perubahan state dan event ikut dibatalkan. Event disimpan lokal di SQLite dan dapat dibaca berdasarkan `Pekerjaan`.
 
 ## Keamanan proses
 
