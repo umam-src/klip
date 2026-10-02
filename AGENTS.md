@@ -60,3 +60,4 @@ CI harus hemat menit:
 - Pertahankan pemeriksaan `gofmt -l .` di CI agar format tidak kembali rusak.
 - Benchmark memori tidak dijalankan pada setiap CI karena hasilnya sensitif terhadap lingkungan runner; jalankan saat investigasi optimasi dan bandingkan pada lingkungan yang konsisten.
 - Pada test table-driven, setiap kasus harus mengisi seluruh parameter yang memengaruhi perilaku yang diuji; jangan memakai nilai contoh dari kasus lain untuk skenario kosong/tidak terkonfigurasi.
+- Linker flag release hanya boleh mengatur simbol yang benar-benar ada di binary; jangan menambahkan `-X` versi tanpa variable string target karena release build harus dapat diverifikasi lintas platform.
