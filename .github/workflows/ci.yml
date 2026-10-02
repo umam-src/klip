@@ -1,0 +1,60 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.25'
+          cache: true
+
+      - name: Test
+        run: go test ./...
+
+      - name: Build and check binary size
+        run: |
+          mkdir -p dist
+          go build -trimpath -ldflags='-s -w' -o dist/klip ./cmd/klip
+          size=$(stat -c '%s' dist/klip)
+          echo "binary_bytes=$size"
+          if [ "$size" -gt 524288000 ]; then
+            echo "Binary melebihi batas keras 500 MB."
+            exit 1
+          fi
+          if [ "$size" -ge 52428800 ]; then
+            echo "Peringatan: binary >= 50 MB; optimasi diperlukan."
+          fi
+
+  release-build:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.25'
+          cache: true
+
+      - name: Build Linux release
+        run: |
+          mkdir -p dist
+          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -ldflags='-s -w' -o dist/klip-linux-amd64 ./cmd/klip
