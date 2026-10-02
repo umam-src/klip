@@ -108,10 +108,10 @@ func TestExecutorRejectsTaskFromAnotherJob(t *testing.T) {
 	repo := storage.NewRepository(db)
 	createExecutionFixture(t, ctx, repo)
 	if err := repo.CreatePekerjaan(ctx, domain.Pekerjaan{
-		ID:        "pekerjaan-2",
-		RuangID:   "ruang-1",
-		Title:     "Pekerjaan lain",
-		Status:    domain.StatusReady,
+		ID:      "pekerjaan-2",
+		RuangID: "ruang-1",
+		Title:   "Pekerjaan lain",
+		Status:  domain.StatusReady,
 	}); err != nil {
 		t.Fatalf("CreatePekerjaan() error = %v", err)
 	}
