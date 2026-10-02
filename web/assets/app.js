@@ -52,6 +52,7 @@
       $('#workspace-title').textContent = state.ruang.name;
       $('#workspace').hidden = false; $('#agent-detail').hidden = true; $('#job-detail').hidden = true; $('#task-detail').hidden = true;
       await Promise.all([loadAgents(), loadJobs()]);
+      await loadApprovalQueue();
       $('#workspace').scrollIntoView({ behavior: 'smooth', block: 'start' });
     } catch (_) { list.insertAdjacentHTML('beforeend', empty('Ruang tidak dapat dibuka.')); }
   }
@@ -81,6 +82,59 @@
       target.innerHTML = jobs.length ? jobs.map((job) => `<button class="item item-button" type="button" data-job="${escapeHTML(job.id)}"><strong>${escapeHTML(job.title)}</strong><span>Status · ${escapeHTML(job.status)}</span></button>`).join('') : empty('Belum ada pekerjaan.');
       target.querySelectorAll('[data-job]').forEach((button) => button.addEventListener('click', () => openJob(button.dataset.job, jobs)));
     } catch (_) { target.innerHTML = empty('Pekerjaan belum dapat dimuat.'); }
+  }
+
+  async function loadApprovalQueue() {
+    const target = $('#approval-list');
+    if (!target || !state.ruang) return;
+    target.innerHTML = empty('Memuat antrean...');
+    try {
+      const jobs = await request(`/api/v1/ruang/${encodeURIComponent(state.ruang.id)}/pekerjaan`);
+      const entries = [];
+      await Promise.all(jobs.map(async (job) => {
+        const jobApprovals = await request(`/api/v1/pekerjaan/${encodeURIComponent(job.id)}/approval`);
+        for (const approval of Array.isArray(jobApprovals) ? jobApprovals : []) {
+          if (approval.status === 'pending') entries.push({ approval, pekerjaan: job, tugas: null });
+        }
+        const tasks = await request(`/api/v1/pekerjaan/${encodeURIComponent(job.id)}/tugas`);
+        await Promise.all(tasks.map(async (task) => {
+          const approvals = await request(`/api/v1/tugas/${encodeURIComponent(task.id)}/approval`);
+          for (const approval of Array.isArray(approvals) ? approvals : []) {
+            if (approval.status === 'pending') entries.push({ approval, pekerjaan: job, tugas: task });
+          }
+        }));
+      }));
+      entries.sort((a, b) => String(a.approval.created_at || '').localeCompare(String(b.approval.created_at || '')));
+      target.innerHTML = entries.length ? entries.map(renderApproval).join('') : empty('Tidak ada persetujuan yang menunggu.');
+      target.querySelectorAll('[data-approval-action]').forEach((button) => button.addEventListener('click', () => decideApproval(button.dataset.approvalAction, button.dataset.approvalId)));
+    } catch (_) {
+      target.innerHTML = empty('Antrean persetujuan belum dapat dimuat.');
+    }
+  }
+
+  function renderApproval(entry) {
+    const { approval, pekerjaan, tugas } = entry;
+    const target = tugas ? `Tugas · ${tugas.title}` : `Pekerjaan · ${pekerjaan.title}`;
+    const created = approval.created_at ? new Date(approval.created_at).toLocaleString('id-ID') : '';
+    return `<article class="approval-item item">
+      <div class="approval-head"><strong>${escapeHTML(target)}</strong><time datetime="${escapeHTML(approval.created_at || '')}">${escapeHTML(created)}</time></div>
+      <p>${escapeHTML(approval.reason || 'Tidak ada catatan.')}</p>
+      <div class="form-actions">
+        <button class="button primary small" type="button" data-approval-id="${escapeHTML(approval.id)}" data-approval-action="approve">Setujui</button>
+        <button class="button small" type="button" data-approval-id="${escapeHTML(approval.id)}" data-approval-action="reject">Tolak</button>
+      </div>
+    </article>`;
+  }
+
+  async function decideApproval(action, approvalID) {
+    let reason = '';
+    if (action === 'reject') {
+      reason = window.prompt('Alasan penolakan (opsional):', '') ?? '';
+    }
+    try {
+      await send(`/api/v1/approval/${encodeURIComponent(approvalID)}/${action}`, reason ? { reason } : {});
+      await loadApprovalQueue();
+    } catch (_) { alert('Persetujuan belum dapat diproses.'); }
   }
 
   async function openJob(pekerjaanID, jobs) {
@@ -193,12 +247,12 @@
     });
     $('#job-form').addEventListener('submit', async (event) => {
       event.preventDefault(); const form = new FormData(event.currentTarget);
-      try { await send(`/api/v1/ruang/${encodeURIComponent(state.ruang.id)}/pekerjaan`, { id: id(), title: form.get('title') }); event.currentTarget.reset(); event.currentTarget.hidden = true; await loadJobs(); }
+      try { await send(`/api/v1/ruang/${encodeURIComponent(state.ruang.id)}/pekerjaan`, { id: id(), title: form.get('title') }); event.currentTarget.reset(); event.currentTarget.hidden = true; await loadJobs(); await loadApprovalQueue(); }
       catch (_) { alert('Pekerjaan belum dapat disimpan.'); }
     });
     $('#task-form').addEventListener('submit', async (event) => {
       event.preventDefault(); const form = new FormData(event.currentTarget);
-      try { await send(`/api/v1/pekerjaan/${encodeURIComponent(state.pekerjaan.id)}/tugas`, { id: id(), title: form.get('title'), position: 0 }); event.currentTarget.reset(); event.currentTarget.hidden = true; await loadTasks(); }
+      try { await send(`/api/v1/pekerjaan/${encodeURIComponent(state.pekerjaan.id)}/tugas`, { id: id(), title: form.get('title'), position: 0 }); event.currentTarget.reset(); event.currentTarget.hidden = true; await loadTasks(); await loadApprovalQueue(); }
       catch (_) { alert('Tugas belum dapat disimpan.'); }
     });
     $('#comment-form').addEventListener('submit', async (event) => {
@@ -206,7 +260,7 @@
       const form = new FormData(event.currentTarget);
       const body = String(form.get('body') || '').trim();
       if (!body || !state.tugas) return;
-      const submit = event.currentTarget.querySelector('button[type="submit"]');
+      const submit = event.currentTarget.querySelector('button[type="submit"]);
       submit.disabled = true;
       try {
         await send(`/api/v1/tugas/${encodeURIComponent(state.tugas.id)}/komentar`, { id: id(), parent_id: state.komentarParentID || undefined, body });
@@ -223,6 +277,7 @@
   $('#back-to-workspace').addEventListener('click', () => { $('#job-detail').hidden = true; $('#workspace').hidden = false; $('#workspace').scrollIntoView({ behavior: 'smooth' }); });
   $('#back-to-job').addEventListener('click', () => { $('#task-detail').hidden = true; $('#job-detail').hidden = false; $('#job-detail').scrollIntoView({ behavior: 'smooth', block: 'start' }); });
   $('#refresh-comments').addEventListener('click', loadComments);
+  $('#refresh-approvals').addEventListener('click', loadApprovalQueue);
   $('#cancel-reply').addEventListener('click', clearReply);
   refresh.addEventListener('click', loadSpaces);
   bindForms();
