@@ -45,6 +45,7 @@ func (a *App) handlePekerjaanApproval(w http.ResponseWriter, r *http.Request) {
 			writeStorageError(w, err)
 			return
 		}
+		a.auditAction(r.Context(), approval.PekerjaanID, nil, domain.EventApprovalCreated)
 		created, err := a.repo.GetApproval(r.Context(), approval.ID)
 		if err != nil {
 			writeError(w, http.StatusInternalServerError, "approval berhasil dibuat tetapi gagal dibaca")
@@ -94,6 +95,7 @@ func (a *App) handleTugasApproval(w http.ResponseWriter, r *http.Request) {
 			writeStorageError(w, err)
 			return
 		}
+		a.auditAction(r.Context(), approval.PekerjaanID, approval.TugasID, domain.EventApprovalCreated)
 		created, err := a.repo.GetApproval(r.Context(), approval.ID)
 		if err != nil {
 			writeError(w, http.StatusInternalServerError, "approval berhasil dibuat tetapi gagal dibaca")
@@ -136,5 +138,6 @@ func (a *App) handleApprovalDecision(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusInternalServerError, "approval berhasil diputuskan tetapi gagal dibaca")
 		return
 	}
+	a.auditAction(r.Context(), approval.PekerjaanID, approval.TugasID, domain.EventApprovalDecided)
 	writeJSON(w, http.StatusOK, approval)
 }
