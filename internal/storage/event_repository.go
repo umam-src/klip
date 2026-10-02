@@ -79,7 +79,7 @@ func appendEvent(ctx context.Context, exec interface {
 	}
 	if event.AgenID != nil {
 		agentID := string(*event.AgenID)
-		agentID = agentID
+		agenID = agentID
 	}
 	if _, err := exec.ExecContext(ctx, `
 		INSERT INTO event (id, pekerjaan_id, tugas_id, sesi_id, run_id, agen_id, type, message, created_at)
