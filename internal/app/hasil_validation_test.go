@@ -7,7 +7,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/umam-src/klip/internal/ai"
 	"github.com/umam-src/klip/internal/config"
 	"github.com/umam-src/klip/internal/domain"
 	"github.com/umam-src/klip/internal/storage"
@@ -44,13 +43,12 @@ func TestHandlerHasilRejectsCrossJobTask(t *testing.T) {
 	defer db.Close()
 
 	repo := storage.NewRepository(db)
-	created := domain.Ruang{ID: "ruang-1", Name: "Ruang"}
-	if err := repo.CreateRuang(ctx, created); err != nil {
+	if err := repo.CreateRuang(ctx, domain.Ruang{ID: "ruang-1", Name: "Ruang"}); err != nil {
 		t.Fatal(err)
 	}
 	for _, job := range []domain.Pekerjaan{
-		{ID: "pekerjaan-1", RuangID: created.ID, Title: "Satu", Status: domain.StatusReady},
-		{ID: "pekerjaan-2", RuangID: created.ID, Title: "Dua", Status: domain.StatusReady},
+		{ID: "pekerjaan-1", RuangID: "ruang-1", Title: "Satu", Status: domain.StatusReady},
+		{ID: "pekerjaan-2", RuangID: "ruang-1", Title: "Dua", Status: domain.StatusReady},
 	} {
 		if err := repo.CreatePekerjaan(ctx, job); err != nil {
 			t.Fatal(err)
@@ -68,5 +66,3 @@ func TestHandlerHasilRejectsCrossJobTask(t *testing.T) {
 		t.Fatalf("status = %d, want %d; body = %s", res.Code, http.StatusBadRequest, res.Body.String())
 	}
 }
-
-var _ ai.AIProvider = fakeProvider{}
