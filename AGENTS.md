@@ -64,3 +64,5 @@ CI harus hemat menit:
 - Pada test table-driven, setiap kasus harus mengisi seluruh parameter yang memengaruhi perilaku yang diuji; jangan memakai nilai contoh dari kasus lain untuk skenario kosong/tidak terkonfigurasi.
 - Linker flag release hanya boleh mengatur simbol yang benar-benar ada di binary; jangan menambahkan `-X` versi tanpa variable string target karena release build harus dapat diverifikasi lintas platform.
 - CI dapat menghemat runner minutes dengan `concurrency.cancel-in-progress`, tetapi jangan menggantinya dengan filter path yang berisiko membuat required check tidak pernah muncul.
+- Migrasi skema harus idempotent: skema instalasi baru dan database lama harus dapat melewati pemeriksaan kolom/index yang sama tanpa menjalankan `ALTER TABLE` dua kali.
+- Relasi hierarki baru harus memvalidasi batas domain sebelum menulis foreign key; untuk hubungan induk-anak agen, parent harus berada di ruang yang sama dan operasi awal tidak boleh membuka jalur siklus.
