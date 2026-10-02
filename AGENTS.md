@@ -37,6 +37,8 @@ Ukuran yang diperhatikan:
 
 Ukuran source code dan ukuran clone repository bukan metrik utama untuk batas aplikasi.
 
+Benchmark memori idle menggunakan heap sebagai metrik portabel. Jangan menyamakan heap dengan RSS dan jangan membuat batas keras dari satu hasil benchmark tanpa pembanding yang konsisten.
+
 ## AI provider
 
 Core Klip harus menggunakan interface provider. Adapter provider berada di luar domain inti. Local AI harus dapat digunakan tanpa akun cloud.
@@ -56,3 +58,4 @@ CI harus hemat menit:
 
 - Jangan menganggap perubahan Go sudah terformat hanya karena perubahan kecil; sebelum push, jalankan `gofmt -w` pada file Go yang disentuh.
 - Pertahankan pemeriksaan `gofmt -l .` di CI agar format tidak kembali rusak.
+- Benchmark memori tidak dijalankan pada setiap CI karena hasilnya sensitif terhadap lingkungan runner; jalankan saat investigasi optimasi dan bandingkan pada lingkungan yang konsisten.
