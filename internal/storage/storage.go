@@ -1,11 +1,11 @@
 package storage
 
 import (
-    "context"
-    "database/sql"
-    "fmt"
+	"context"
+	"database/sql"
+	"fmt"
 
-    _ "modernc.org/sqlite"
+	_ "modernc.org/sqlite"
 )
 
 const schemaVersion = 1
@@ -95,64 +95,64 @@ CREATE INDEX IF NOT EXISTS idx_hasil_tugas ON hasil(tugas_id);
 
 // Open membuka database lokal dan memastikan skema minimum Klip tersedia.
 func Open(ctx context.Context, path string) (*sql.DB, error) {
-    db, err := sql.Open("sqlite", path)
-    if err != nil {
-        return nil, fmt.Errorf("buka database: %w", err)
-    }
+	db, err := sql.Open("sqlite", path)
+	if err != nil {
+		return nil, fmt.Errorf("buka database: %w", err)
+	}
 
-    db.SetMaxOpenConns(1)
-    db.SetMaxIdleConns(1)
+	db.SetMaxOpenConns(1)
+	db.SetMaxIdleConns(1)
 
-    if err := configure(ctx, db); err != nil {
-        _ = db.Close()
-        return nil, err
-    }
-    if err := db.PingContext(ctx); err != nil {
-        _ = db.Close()
-        return nil, fmt.Errorf("hubungkan database: %w", err)
-    }
-    if err := migrate(ctx, db); err != nil {
-        _ = db.Close()
-        return nil, err
-    }
-    return db, nil
+	if err := configure(ctx, db); err != nil {
+		_ = db.Close()
+		return nil, err
+	}
+	if err := db.PingContext(ctx); err != nil {
+		_ = db.Close()
+		return nil, fmt.Errorf("hubungkan database: %w", err)
+	}
+	if err := migrate(ctx, db); err != nil {
+		_ = db.Close()
+		return nil, err
+	}
+	return db, nil
 }
 
 func configure(ctx context.Context, db *sql.DB) error {
-    for _, statement := range []string{
-        "PRAGMA foreign_keys = ON",
-        "PRAGMA journal_mode = WAL",
-        "PRAGMA busy_timeout = 5000",
-    } {
-        if _, err := db.ExecContext(ctx, statement); err != nil {
-            return fmt.Errorf("atur SQLite: %w", err)
-        }
-    }
-    return nil
+	for _, statement := range []string{
+		"PRAGMA foreign_keys = ON",
+		"PRAGMA journal_mode = WAL",
+		"PRAGMA busy_timeout = 5000",
+	} {
+		if _, err := db.ExecContext(ctx, statement); err != nil {
+			return fmt.Errorf("atur SQLite: %w", err)
+		}
+	}
+	return nil
 }
 
 func migrate(ctx context.Context, db *sql.DB) error {
-    tx, err := db.BeginTx(ctx, nil)
-    if err != nil {
-        return fmt.Errorf("mulai migrasi: %w", err)
-    }
-    defer tx.Rollback()
+	tx, err := db.BeginTx(ctx, nil)
+	if err != nil {
+		return fmt.Errorf("mulai migrasi: %w", err)
+	}
+	defer tx.Rollback()
 
-    if _, err := tx.ExecContext(ctx, schema); err != nil {
-        return fmt.Errorf("buat skema: %w", err)
-    }
+	if _, err := tx.ExecContext(ctx, schema); err != nil {
+		return fmt.Errorf("buat skema: %w", err)
+	}
 
-    var version int
-    if err := tx.QueryRowContext(ctx, "SELECT COALESCE(MAX(version), 0) FROM schema_migrations").Scan(&version); err != nil {
-        return fmt.Errorf("baca versi skema: %w", err)
-    }
-    if version < schemaVersion {
-        if _, err := tx.ExecContext(ctx, "INSERT INTO schema_migrations(version) VALUES (?)", schemaVersion); err != nil {
-            return fmt.Errorf("catat migrasi: %w", err)
-        }
-    }
-    if err := tx.Commit(); err != nil {
-        return fmt.Errorf("simpan migrasi: %w", err)
-    }
-    return nil
+	var version int
+	if err := tx.QueryRowContext(ctx, "SELECT COALESCE(MAX(version), 0) FROM schema_migrations").Scan(&version); err != nil {
+		return fmt.Errorf("baca versi skema: %w", err)
+	}
+	if version < schemaVersion {
+		if _, err := tx.ExecContext(ctx, "INSERT INTO schema_migrations(version) VALUES (?)", schemaVersion); err != nil {
+			return fmt.Errorf("catat migrasi: %w", err)
+		}
+	}
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("simpan migrasi: %w", err)
+	}
+	return nil
 }
