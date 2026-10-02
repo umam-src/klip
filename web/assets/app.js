@@ -1,5 +1,5 @@
 (() => {
-  const state = { ruang: null, agen: null, pekerjaan: null, tugas: null };
+  const state = { ruang: null, agen: null, pekerjaan: null, tugas: null, komentarParentID: null };
   const $ = (selector) => document.querySelector(selector);
   const list = $('#space-list');
   const refresh = $('#refresh');
@@ -47,7 +47,7 @@
       const spaces = await request('/api/v1/ruang');
       state.ruang = spaces.find((space) => space.id === ruangID);
       if (!state.ruang) throw new Error('ruang tidak ditemukan');
-      state.agen = null; state.pekerjaan = null; state.tugas = null;
+      state.agen = null; state.pekerjaan = null; state.tugas = null; state.komentarParentID = null;
       $('#workspace-label').textContent = `Ruang · ${state.ruang.name}`;
       $('#workspace-title').textContent = state.ruang.name;
       $('#workspace').hidden = false; $('#agent-detail').hidden = true; $('#job-detail').hidden = true; $('#task-detail').hidden = true;
@@ -86,7 +86,7 @@
   async function openJob(pekerjaanID, jobs) {
     state.pekerjaan = jobs.find((job) => job.id === pekerjaanID);
     if (!state.pekerjaan) return;
-    state.tugas = null;
+    state.tugas = null; state.komentarParentID = null;
     try {
       $('#job-title').textContent = state.pekerjaan.title;
       $('#workspace').hidden = true; $('#agent-detail').hidden = true; $('#job-detail').hidden = false; $('#task-detail').hidden = true;
@@ -104,13 +104,80 @@
     } catch (_) { target.innerHTML = empty('Tugas belum dapat dimuat.'); }
   }
 
-  function openTask(tugasID, tasks) {
+  async function openTask(tugasID, tasks) {
     state.tugas = tasks.find((task) => task.id === tugasID);
     if (!state.tugas) return;
+    state.komentarParentID = null;
     $('#task-title').textContent = state.tugas.title;
     $('#task-detail-card').innerHTML = `<dl>${detail('Judul', state.tugas.title)}${detail('Status', state.tugas.status)}${detail('Posisi', state.tugas.position)}${detail('Tugas induk', state.tugas.parent_id)}${detail('ID', state.tugas.id)}</dl>`;
+    clearReply();
     $('#workspace').hidden = true; $('#agent-detail').hidden = true; $('#job-detail').hidden = true; $('#task-detail').hidden = false;
+    await loadComments();
     $('#task-detail').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function commentDepth(comment, commentsByID) {
+    let depth = 0;
+    const seen = new Set();
+    let parentID = comment.parent_id;
+    while (parentID && !seen.has(parentID)) {
+      seen.add(parentID);
+      const parent = commentsByID.get(parentID);
+      if (!parent) break;
+      depth += 1;
+      parentID = parent.parent_id;
+    }
+    return Math.min(depth, 4);
+  }
+
+  function renderComments(comments) {
+    const target = $('#comment-list');
+    if (!Array.isArray(comments) || !comments.length) {
+      target.innerHTML = empty('Belum ada komentar.');
+      return;
+    }
+    const commentsByID = new Map(comments.map((comment) => [comment.id, comment]));
+    target.innerHTML = comments.map((comment) => {
+      const depth = commentDepth(comment, commentsByID);
+      const parent = comment.parent_id ? commentsByID.get(comment.parent_id) : null;
+      const context = parent ? `Membalas: ${escapeHTML(parent.body.slice(0, 100))}` : '';
+      const created = comment.created_at ? new Date(comment.created_at).toLocaleString('id-ID') : '';
+      return `<article class="comment" style="--comment-depth:${depth}">
+        <div class="comment-meta"><strong>Komentar</strong><time datetime="${escapeHTML(comment.created_at || '')}">${escapeHTML(created)}</time></div>
+        ${context ? `<div class="comment-context">${context}</div>` : ''}
+        <p>${escapeHTML(comment.body)}</p>
+        <button class="button small" type="button" data-reply="${escapeHTML(comment.id)}">Balas</button>
+      </article>`;
+    }).join('');
+    target.querySelectorAll('[data-reply]').forEach((button) => button.addEventListener('click', () => beginReply(button.dataset.reply, commentsByID)));
+  }
+
+  async function loadComments() {
+    const target = $('#comment-list');
+    target.innerHTML = empty('Memuat komentar...');
+    try {
+      const comments = await request(`/api/v1/tugas/${encodeURIComponent(state.tugas.id)}/komentar`);
+      renderComments(comments);
+    } catch (_) {
+      target.innerHTML = empty('Komentar belum dapat dimuat.');
+    }
+  }
+
+  function beginReply(commentID, commentsByID) {
+    const parent = commentsByID.get(commentID);
+    if (!parent) return;
+    state.komentarParentID = parent.id;
+    $('#replying-to').textContent = `Membalas: ${parent.body.slice(0, 120)}`;
+    $('#replying-to').hidden = false;
+    $('#cancel-reply').hidden = false;
+    $('#comment-form textarea').focus();
+  }
+
+  function clearReply() {
+    state.komentarParentID = null;
+    const context = $('#replying-to');
+    if (context) { context.textContent = ''; context.hidden = true; }
+    $('#cancel-reply').hidden = true;
   }
 
   function bindForms() {
@@ -134,12 +201,29 @@
       try { await send(`/api/v1/pekerjaan/${encodeURIComponent(state.pekerjaan.id)}/tugas`, { id: id(), title: form.get('title'), position: 0 }); event.currentTarget.reset(); event.currentTarget.hidden = true; await loadTasks(); }
       catch (_) { alert('Tugas belum dapat disimpan.'); }
     });
+    $('#comment-form').addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const form = new FormData(event.currentTarget);
+      const body = String(form.get('body') || '').trim();
+      if (!body || !state.tugas) return;
+      const submit = event.currentTarget.querySelector('button[type="submit"]');
+      submit.disabled = true;
+      try {
+        await send(`/api/v1/tugas/${encodeURIComponent(state.tugas.id)}/komentar`, { id: id(), parent_id: state.komentarParentID || undefined, body });
+        event.currentTarget.reset();
+        clearReply();
+        await loadComments();
+      } catch (_) { alert('Komentar belum dapat disimpan.'); }
+      finally { submit.disabled = false; }
+    });
   }
 
   $('#back-to-spaces').addEventListener('click', () => { $('#workspace').hidden = true; $('#agent-detail').hidden = true; $('#job-detail').hidden = true; $('#task-detail').hidden = true; $('#ruang').scrollIntoView({ behavior: 'smooth' }); });
   $('#back-to-workspace-from-agent').addEventListener('click', () => { $('#agent-detail').hidden = true; $('#workspace').hidden = false; $('#workspace').scrollIntoView({ behavior: 'smooth', block: 'start' }); });
   $('#back-to-workspace').addEventListener('click', () => { $('#job-detail').hidden = true; $('#workspace').hidden = false; $('#workspace').scrollIntoView({ behavior: 'smooth' }); });
   $('#back-to-job').addEventListener('click', () => { $('#task-detail').hidden = true; $('#job-detail').hidden = false; $('#job-detail').scrollIntoView({ behavior: 'smooth', block: 'start' }); });
+  $('#refresh-comments').addEventListener('click', loadComments);
+  $('#cancel-reply').addEventListener('click', clearReply);
   refresh.addEventListener('click', loadSpaces);
   bindForms();
   loadSpaces();
