@@ -61,7 +61,26 @@ type AIProvider interface {
 }
 ```
 
-Adapter dapat ditambahkan secara terpisah. Routing menentukan provider dan model tanpa mengubah domain pekerjaan.
+Klip saat ini menyediakan adapter `ollama` dan `openai-compatible`. Routing menentukan provider dan model tanpa mengubah domain pekerjaan.
+
+## Konfigurasi lokal
+
+Konfigurasi awal memakai JSON agar tidak menambah dependency parser. Berkasnya berada di direktori data Klip sebagai `config.json`.
+
+Contoh minimal untuk Ollama:
+
+```json
+{
+  "listen": "127.0.0.1:8787",
+  "ai": {
+    "provider": "ollama",
+    "base_url": "http://127.0.0.1:11434",
+    "model": "nama-model-lokal"
+  }
+}
+```
+
+API key hanya diperlukan untuk endpoint yang memang memerlukannya. Rahasia tidak ditulis ke log.
 
 ## Offline-first
 
@@ -73,7 +92,7 @@ Mode dasar harus tetap dapat digunakan tanpa internet untuk:
 - mengelola agen dan pekerjaan;
 - menjalankan operasi yang tidak membutuhkan AI eksternal.
 
-Koneksi internet hanya diperlukan jika pengguna memilih provider yang membutuhkannya.
+Koneksi internet hanya diperlukan jika pengguna memilih provider yang membutuhkannya. Provider lokal seperti Ollama tidak memerlukan koneksi internet setelah model tersedia di mesin pengguna.
 
 ## UI
 
@@ -81,18 +100,13 @@ UI v0.1 memakai HTML yang disajikan dari program dan JavaScript seminimal mungki
 
 ## Penyimpanan
 
-SQLite menjadi penyimpanan default. Data aplikasi berada di direktori pengguna, misalnya:
-
-```text
-~/.klip/
-├── config.toml
-├── klip.db
-├── artifacts/
-├── skills/
-└── logs/
-```
+SQLite menjadi penyimpanan default. Data aplikasi berada di direktori pengguna. Nama lokasi mengikuti sistem operasi, dengan `config.json`, database, dan artefak lokal di dalam direktori data Klip.
 
 Model AI tetap berada di luar paket Klip.
+
+## API lokal awal
+
+Klip menyediakan `POST /api/v1/chat` untuk percobaan AI lokal. Endpoint menerima prompt teks dan mengirimkannya ke provider yang dikonfigurasi. Endpoint hanya diikat ke alamat lokal secara default.
 
 ## Aturan ketergantungan
 
