@@ -14,8 +14,9 @@ type ExecutionRepository interface {
 	FinalizeExecution(ctx context.Context, runID, sesiID domain.ID, tugasID *domain.ID, status domain.Status, exitCode *int, stdout, stderr string, finishedAt time.Time) error
 }
 
-// FinalizeExecution changes all execution state in one SQLite transaction.
-// This prevents a partial finalization where Run, Sesi, and Tugas disagree.
+// FinalizeExecution changes all execution state and records the terminal event
+// in one SQLite transaction. This prevents a partial finalization where Run,
+// Sesi, Tugas, and the runtime event disagree.
 func (r *Repository) FinalizeExecution(ctx context.Context, runID, sesiID domain.ID, tugasID *domain.ID, status domain.Status, exitCode *int, stdout, stderr string, finishedAt time.Time) error {
 	if strings.TrimSpace(string(runID)) == "" || strings.TrimSpace(string(sesiID)) == "" || !isTerminalStatus(status) {
 		return fmt.Errorf("execution: %w", ErrInvalid)
@@ -40,6 +41,36 @@ func (r *Repository) FinalizeExecution(ctx context.Context, runID, sesiID domain
 		if err := finishTugasTx(tx, *tugasID, status, finishedAt); err != nil {
 			return err
 		}
+	}
+
+	var pekerjaanID, agenID domain.ID
+	var eventTugasID sql.NullString
+	if err := tx.QueryRow(`SELECT pekerjaan_id, agen_id, tugas_id FROM run WHERE id = ?`, runID).Scan(&pekerjaanID, &agenID, &eventTugasID); err != nil {
+		if err == sql.ErrNoRows {
+			return ErrNotFound
+		}
+		return fmt.Errorf("baca konteks event execution: %w", err)
+	}
+	var eventTaskID *domain.ID
+	if eventTugasID.Valid {
+		value := domain.ID(eventTugasID.String)
+		eventTaskID = &value
+	}
+	eventType := domain.EventTypeForStatus(status)
+	if eventType == "" {
+		return fmt.Errorf("execution: status event tidak dikenal: %q: %w", status, ErrInvalid)
+	}
+	if err := appendEvent(ctx, tx, domain.Event{
+			PekerjaanID: pekerjaanID,
+			TugasID:     eventTaskID,
+			SesiID:      idPtr(sesiID),
+			RunID:       idPtr(runID),
+			AgenID:      idPtr(agenID),
+			Type:        eventType,
+			Message:     "Eksekusi selesai dengan status " + string(status),
+			CreatedAt:   finishedAt,
+		}); err != nil {
+		return err
 	}
 	if err := tx.Commit(); err != nil {
 		return fmt.Errorf("commit execution: %w", err)
