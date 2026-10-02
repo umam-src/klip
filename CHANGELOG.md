@@ -26,6 +26,7 @@ Format mengikuti Keep a Changelog dan versi mengikuti Semantic Versioning.
 - Validasi nama skill digunakan bersama oleh parser skill dan penyimpanan relasi agen.
 - Skema SQLite dinaikkan ke versi 7 untuk menyimpan jadwal dan riwayat scheduler.
 - Pemeriksaan format CI kembali bersih setelah handler scheduler diformat dengan `gofmt`.
+- Penyimpanan hasil menolak direktori induk yang berupa symlink untuk mencegah penulisan keluar dari root hasil.
 
 ### Removed
 - Belum ada.
