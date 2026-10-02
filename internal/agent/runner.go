@@ -10,6 +10,8 @@ import (
 	"time"
 )
 
+const defaultMaxOutputBytes int64 = 1 << 20
+
 var (
 	ErrInvalidCommand = errors.New("perintah tidak valid")
 	ErrTimedOut       = errors.New("proses melewati batas waktu")
@@ -45,19 +47,22 @@ func (r Runner) Run(ctx context.Context, command Command) (Result, error) {
 	cmd.Dir = command.Dir
 	cmd.Env = command.Env
 
+	maxOutput := r.MaxOutputBytes
+	if maxOutput <= 0 {
+		maxOutput = defaultMaxOutputBytes
+	}
 	var stdout, stderr bytes.Buffer
-	cmd.Stdout = &limitedWriter{dst: &stdout, max: r.MaxOutputBytes}
-	cmd.Stderr = &limitedWriter{dst: &stderr, max: r.MaxOutputBytes}
+	cmd.Stdout = &limitedWriter{dst: &stdout, max: maxOutput}
+	cmd.Stderr = &limitedWriter{dst: &stderr, max: maxOutput}
 
 	err := cmd.Run()
 	finished := time.Now().UTC()
-	result := Result{
-		ExitCode: cmd.ProcessState.ExitCode(),
-		Stdout:   stdout.String(),
-		Stderr:   stderr.String(),
-		Started:  started,
-		Finished: finished,
+	result := Result{Started: started, Finished: finished}
+	if cmd.ProcessState != nil {
+		result.ExitCode = cmd.ProcessState.ExitCode()
 	}
+	result.Stdout = stdout.String()
+	result.Stderr = stderr.String()
 
 	if ctx.Err() != nil {
 		if errors.Is(ctx.Err(), context.DeadlineExceeded) {
@@ -77,9 +82,6 @@ type limitedWriter struct {
 }
 
 func (w *limitedWriter) Write(p []byte) (int, error) {
-	if w.max <= 0 {
-		return w.dst.Write(p)
-	}
 	remaining := w.max - int64(w.dst.Len())
 	if remaining <= 0 {
 		return len(p), nil
