@@ -9,6 +9,7 @@ import (
 	"github.com/umam-src/klip/internal/ai"
 	"github.com/umam-src/klip/internal/config"
 	"github.com/umam-src/klip/internal/storage"
+	"github.com/umam-src/klip/web"
 )
 
 type App struct {
@@ -29,6 +30,7 @@ func New(cfg config.Config, provider ai.AIProvider, repos ...*storage.Repository
 
 func (a *App) Handler() http.Handler {
 	mux := http.NewServeMux()
+	mux.Handle("/", web.Handler())
 	mux.HandleFunc("/health", a.handleHealth)
 	mux.HandleFunc("/api/v1/chat", a.handleChat)
 	mux.HandleFunc("/api/v1/ruang", a.handleRuang)
