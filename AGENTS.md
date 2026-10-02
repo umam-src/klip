@@ -51,3 +51,8 @@ CI harus hemat menit:
 - build lintas platform terutama pada release;
 - pemeriksaan ukuran dilakukan setelah build;
 - E2E berat tidak dijalankan tanpa alasan pada setiap perubahan kecil.
+
+## Pelajaran CI
+
+- Jangan menganggap perubahan Go sudah terformat hanya karena perubahan kecil; sebelum push, jalankan `gofmt -w` pada file Go yang disentuh.
+- Pertahankan pemeriksaan `gofmt -l .` di CI agar format tidak kembali rusak.
