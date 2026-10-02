@@ -149,12 +149,11 @@ jobs:
         env:
           GOOS: ${{ matrix.goos }}
           GOARCH: ${{ matrix.goarch }}
-          VERSION: ${{ needs.verify.outputs.version }}
         run: |
           set -euo pipefail
           mkdir -p dist
           name="klip-${GOOS}-${GOARCH}${{ matrix.suffix }}"
-          flags=(-trimpath -buildvcs=false "-ldflags=-s -w -X main.version=${VERSION}")
+          flags=(-trimpath -buildvcs=false "-ldflags=-s -w")
           CGO_ENABLED=0 go build "${flags[@]}" -o "dist/${name}" ./cmd/klip
 
           size=$(stat -c '%s' "dist/${name}" 2>/dev/null || stat -f '%z' "dist/${name}")
