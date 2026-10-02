@@ -33,13 +33,13 @@ type Command struct {
 }
 
 type Result struct {
-	ExitCode       int
-	Stdout         string
-	Stderr         string
+	ExitCode        int
+	Stdout          string
+	Stderr          string
 	StdoutTruncated bool
 	StderrTruncated bool
-	Started        time.Time
-	Finished       time.Time
+	Started         time.Time
+	Finished        time.Time
 }
 
 type Runner struct {
