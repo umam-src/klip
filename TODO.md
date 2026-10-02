@@ -82,10 +82,10 @@ Catatan: `Ruang`, `Agen`, `Sasaran`, `Pekerjaan`, `Tugas`, `Sesi`, dan `Hasil` s
 - [x] Format skill sederhana.
 - [x] Skill lokal.
 - [x] Relasi skill ke agen.
-- [ ] Penyimpanan hasil.
+- [x] Penyimpanan hasil.
 - [x] Validasi nama dan path hasil.
 - [x] Metadata hasil.
-- [ ] Download/view hasil melalui UI.
+- [x] Download/view hasil melalui UI.
 
 ## P1 — Scheduler
 
