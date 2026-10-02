@@ -11,6 +11,8 @@ Format mengikuti Keep a Changelog dan versi mengikuti Semantic Versioning.
 - Fondasi i18n dengan `id-ID` sebagai locale default.
 - Endpoint status koneksi provider AI lokal.
 - Event runtime untuk mencatat awal dan akhir eksekusi secara lokal.
+- Format `SKILL.md` sederhana untuk instruksi skill lokal.
+- Loader skill lokal dengan batas ukuran, validasi nama, penolakan tautan simbolik, dan urutan deterministik.
 
 ### Changed
 - Konfigurasi sekarang menyimpan locale secara eksplisit dan menormalkan locale yang belum didukung ke `id-ID`.
