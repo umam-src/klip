@@ -10,9 +10,11 @@ Format mengikuti Keep a Changelog dan versi mengikuti Semantic Versioning.
 - CLI dasar untuk menjalankan server, melihat versi, dan membuka bantuan.
 - Fondasi i18n dengan `id-ID` sebagai locale default.
 - Endpoint status koneksi provider AI lokal.
+- Event runtime untuk mencatat awal dan akhir eksekusi secara lokal.
 
 ### Changed
 - Konfigurasi sekarang menyimpan locale secara eksplisit dan menormalkan locale yang belum didukung ke `id-ID`.
+- State `Run`, `Sesi`, dan `Tugas` beserta event runtime diperbarui secara atomik saat memulai dan menyelesaikan eksekusi.
 
 ### Removed
 - Belum ada.
