@@ -57,4 +57,23 @@
       await load(state.ruang);
     } catch (_) { alert('Sasaran belum dapat disimpan.'); }
   });
+
+  $('#job-form')?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    if (!state.ruang) return;
+    const form = new FormData(event.currentTarget);
+    const sasaranID = String(form.get('sasaran_id') || '').trim();
+    try {
+      await request(`/api/v1/ruang/${encodeURIComponent(state.ruang)}/pekerjaan`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: id(), title: form.get('title'), ...(sasaranID ? { sasaran_id: sasaranID } : {}) })
+      });
+      event.currentTarget.reset();
+      event.currentTarget.hidden = true;
+      const refreshButton = $('#refresh');
+      if (refreshButton) refreshButton.click();
+    } catch (_) { alert('Pekerjaan belum dapat disimpan.'); }
+  }, true);
 })();
