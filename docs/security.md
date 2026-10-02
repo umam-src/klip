@@ -25,6 +25,8 @@ Server menggunakan `127.0.0.1` sebagai alamat bawaan. Endpoint yang tersedia pad
 
 Tidak ada endpoint untuk menjalankan program arbitrer. Ketidakhadiran endpoint ini adalah bagian dari desain keamanan, bukan keterbatasan yang boleh dilewati dengan meneruskan parameter proses ke endpoint lain.
 
+Endpoint yang menerima JSON hanya memproses `application/json` bila `Content-Type` diberikan. Ini mencegah permintaan lintas situs sederhana dengan tipe isi seperti `text/plain` diperlakukan sebagai operasi JSON yang mengubah data.
+
 ## Data lokal
 
 Database menggunakan SQLite lokal dengan foreign key aktif, WAL, dan satu koneksi aktif. Data konfigurasi disimpan dengan izin file yang membatasi akses pada pengguna lokal.
@@ -39,6 +41,6 @@ Beberapa perlindungan sengaja belum diaktifkan karena belum ada alur produk yang
 - audit aktivitas;
 - isolasi proses atau sandbox;
 - autentikasi dan otorisasi HTTP;
-- CSRF untuk alur yang mengubah data melalui browser.
+- kebijakan `Origin` khusus untuk browser.
 
 Sebelum eksekusi proses dibuka melalui HTTP, batas-batas tersebut perlu dirancang sebagai bagian dari alur eksekusi, bukan ditambahkan sebagai tambalan pada endpoint.
