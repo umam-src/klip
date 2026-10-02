@@ -110,18 +110,18 @@ Catatan: `Ruang`, `Agen`, `Sasaran`, `Pekerjaan`, `Tugas`, `Sesi`, dan `Hasil` s
 
 ## P2 — Optimasi
 
-- [ ] Audit dependency.
+- [x] Audit dependency.
 - [ ] Hapus dependency yang tidak diperlukan.
 - [x] Optimasi binary release dasar dengan `-trimpath -ldflags '-s -w'` di CI.
 - [ ] Optimasi static asset.
-- [ ] Uji target binary <50 MiB.
+- [x] Uji target binary <50 MiB.
 - [ ] Uji Docker image <100 MiB.
 - [x] Hard fail jika binary >100 MiB.
 - [ ] Hard fail Docker image >100 MiB.
 - [ ] Benchmark startup.
 - [ ] Benchmark memory idle.
-- [ ] Benchmark SQLite.
-- [ ] Benchmark concurrent runs.
+- [x] Benchmark SQLite.
+- [x] Benchmark concurrent runs.
 
 ## P2 — CI/CD hemat menit
 
