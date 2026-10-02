@@ -8,9 +8,11 @@ Format mengikuti Keep a Changelog dan versi mengikuti Semantic Versioning.
 
 ### Added
 - CLI dasar untuk menjalankan server, melihat versi, dan membuka bantuan.
+- Fondasi i18n dengan `id-ID` sebagai locale default.
+- Endpoint status koneksi provider AI lokal.
 
 ### Changed
-- Belum ada.
+- Konfigurasi sekarang menyimpan locale secara eksplisit dan menormalkan locale yang belum didukung ke `id-ID`.
 
 ### Removed
 - Belum ada.
