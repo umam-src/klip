@@ -7,21 +7,29 @@ import (
 
 	"github.com/umam-src/klip/internal/ai"
 	"github.com/umam-src/klip/internal/config"
+	"github.com/umam-src/klip/internal/storage"
 )
 
 type App struct {
 	config   config.Config
 	provider ai.AIProvider
+	repo     *storage.Repository
 }
 
-func New(cfg config.Config, provider ai.AIProvider) *App {
-	return &App{config: cfg, provider: provider}
+func New(cfg config.Config, provider ai.AIProvider, repos ...*storage.Repository) *App {
+	var repo *storage.Repository
+	if len(repos) > 0 {
+		repo = repos[0]
+	}
+	return &App{config: cfg, provider: provider, repo: repo}
 }
 
 func (a *App) Handler() http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/health", a.handleHealth)
 	mux.HandleFunc("/api/v1/chat", a.handleChat)
+	mux.HandleFunc("/api/v1/ruang", a.handleRuang)
+	mux.HandleFunc("/api/v1/ruang/", a.handleRuangChild)
 	return mux
 }
 
