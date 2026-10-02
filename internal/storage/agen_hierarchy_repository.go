@@ -10,17 +10,17 @@ import (
 	"github.com/umam-src/klip/internal/domain"
 )
 
-func (r *Repository) CreateAgenWithParent(ctx context.Context, agen domain.Agen) error {
-	if err := validateIDName(agen.ID, agen.Name); err != nil {
+func (r *Repository) CreateAgenWithParent(ctx context.Context, agent domain.Agen) error {
+	if err := validateIDName(agent.ID, agent.Name); err != nil {
 		return fmt.Errorf("agen: %w", err)
 	}
-	if strings.TrimSpace(string(agen.RuangID)) == "" {
+	if strings.TrimSpace(string(agent.RuangID)) == "" {
 		return fmt.Errorf("agen: ruang wajib diisi: %w", ErrInvalid)
 	}
 	var parentID any
-	if agen.ParentID != nil {
-		value := strings.TrimSpace(string(*agen.ParentID))
-		if value == "" || value == string(agen.ID) {
+	if agent.ParentID != nil {
+		value := strings.TrimSpace(string(*agent.ParentID))
+		if value == "" || value == string(agent.ID) {
 			return fmt.Errorf("agen: parent tidak valid: %w", ErrInvalid)
 		}
 		var parentRuangID string
@@ -31,13 +31,13 @@ func (r *Repository) CreateAgenWithParent(ctx context.Context, agen domain.Agen)
 		if err != nil {
 			return fmt.Errorf("cek parent agen: %w", err)
 		}
-		if parentRuangID != string(agen.RuangID) {
+		if parentRuangID != string(agent.RuangID) {
 			return fmt.Errorf("agen: parent tidak sesuai dengan ruang: %w", ErrInvalid)
 		}
 		parentID = value
 	}
-	created, updated := timestamps(agen.CreatedAt, agen.UpdatedAt)
-	_, err := r.db.ExecContext(ctx, `INSERT INTO agen (id, ruang_id, parent_id, name, description, provider_id, model_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`, agen.ID, agen.RuangID, parentID, agen.Name, agen.Description, agen.ProviderID, agen.ModelID, created, updated)
+	created, updated := timestamps(agent.CreatedAt, agent.UpdatedAt)
+	_, err := r.db.ExecContext(ctx, `INSERT INTO agen (id, ruang_id, parent_id, name, description, provider_id, model_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`, agent.ID, agent.RuangID, parentID, agent.Name, agent.Description, agent.ProviderID, agent.ModelID, created, updated)
 	if err != nil {
 		return fmt.Errorf("buat agen: %w", err)
 	}
@@ -48,10 +48,10 @@ func (r *Repository) GetAgenWithParent(ctx context.Context, id domain.ID) (domai
 	if strings.TrimSpace(string(id)) == "" {
 		return domain.Agen{}, fmt.Errorf("agen: %w", ErrInvalid)
 	}
-	var agen domain.Agen
+	var agent domain.Agen
 	var parentID sql.NullString
 	var created, updated string
-	err := r.db.QueryRowContext(ctx, `SELECT id, ruang_id, parent_id, name, description, provider_id, model_id, created_at, updated_at FROM agen WHERE id = ?`, id).Scan(&agen.ID, &agen.RuangID, &parentID, &agen.Name, &agen.Description, &agen.ProviderID, &agen.ModelID, &created, &updated)
+	err := r.db.QueryRowContext(ctx, `SELECT id, ruang_id, parent_id, name, description, provider_id, model_id, created_at, updated_at FROM agen WHERE id = ?`, id).Scan(&agent.ID, &agent.RuangID, &parentID, &agent.Name, &agent.Description, &agent.ProviderID, &agent.ModelID, &created, &updated)
 	if errors.Is(err, sql.ErrNoRows) {
 		return domain.Agen{}, ErrNotFound
 	}
@@ -63,13 +63,13 @@ func (r *Repository) GetAgenWithParent(ctx context.Context, id domain.ID) (domai
 		agent.ParentID = &value
 	}
 	var parseErr error
-	if agen.CreatedAt, parseErr = parseTime(created); parseErr != nil {
+	if agent.CreatedAt, parseErr = parseTime(created); parseErr != nil {
 		return domain.Agen{}, parseErr
 	}
-	if agen.UpdatedAt, parseErr = parseTime(updated); parseErr != nil {
+	if agent.UpdatedAt, parseErr = parseTime(updated); parseErr != nil {
 		return domain.Agen{}, parseErr
 	}
-	return agen, nil
+	return agent, nil
 }
 
 func (r *Repository) ListAgenByRuangWithParent(ctx context.Context, ruangID domain.ID) ([]domain.Agen, error) {
@@ -84,10 +84,10 @@ func (r *Repository) ListAgenByRuangWithParent(ctx context.Context, ruangID doma
 
 	var result []domain.Agen
 	for rows.Next() {
-		var agen domain.Agen
+		var agent domain.Agen
 		var parentID sql.NullString
 		var created, updated string
-		if err := rows.Scan(&agen.ID, &agen.RuangID, &parentID, &agen.Name, &agen.Description, &agen.ProviderID, &agen.ModelID, &created, &updated); err != nil {
+		if err := rows.Scan(&agent.ID, &agent.RuangID, &parentID, &agent.Name, &agent.Description, &agent.ProviderID, &agent.ModelID, &created, &updated); err != nil {
 			return nil, fmt.Errorf("baca agen: %w", err)
 		}
 		if parentID.Valid {
@@ -95,13 +95,13 @@ func (r *Repository) ListAgenByRuangWithParent(ctx context.Context, ruangID doma
 			agent.ParentID = &value
 		}
 		var parseErr error
-		if agen.CreatedAt, parseErr = parseTime(created); parseErr != nil {
+		if agent.CreatedAt, parseErr = parseTime(created); parseErr != nil {
 			return nil, parseErr
 		}
-		if agen.UpdatedAt, parseErr = parseTime(updated); parseErr != nil {
+		if agent.UpdatedAt, parseErr = parseTime(updated); parseErr != nil {
 			return nil, parseErr
 		}
-		result = append(result, agen)
+		result = append(result, agent)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, fmt.Errorf("baca daftar agen: %w", err)
