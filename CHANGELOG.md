@@ -12,18 +12,22 @@ Format mengikuti Keep a Changelog dan versi mengikuti Semantic Versioning.
 - Target binary dan Docker image yang terukur.
 - Prinsip local-first dan free-first untuk AI.
 - Bahasa Indonesia sebagai bahasa default.
+- Domain inti Klip: Ruang, Agen, Sasaran, Pekerjaan, Tugas, Sesi, dan Hasil.
+- Penyimpanan SQLite tanpa kebutuhan CGO.
+- Bootstrap skema database dan pengujian dasar.
 
 ### Changed
-- Belum ada.
+- Fondasi aplikasi kini membuka database lokal saat dijalankan.
 
 ### Removed
 - Belum ada.
 
 ### Fixed
-- Belum ada.
+- Konfigurasi SQLite dipisahkan dari transaksi migrasi agar WAL dapat diaktifkan dengan benar.
 
 ### Security
-- Belum ada.
+- Database lokal menggunakan direktori aplikasi dengan permission direktori privat.
+- Server HTTP tetap hanya bind ke localhost.
 
 ## [0.1.0] - 2026-10-02
 
