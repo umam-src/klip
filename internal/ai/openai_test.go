@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 )
 
@@ -30,6 +31,32 @@ func TestOpenAICompatibleChat(t *testing.T) {
 	}
 	if got.Content != "Halo dari AI lokal" {
 		t.Fatalf("content = %q", got.Content)
+	}
+}
+
+func TestOpenAICompatibleStream(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/v1/chat/completions" {
+			t.Fatalf("path = %s", r.URL.Path)
+		}
+		w.Header().Set("Content-Type", "text/event-stream")
+		_, _ = w.Write([]byte("data: {\"model\":\"local-model\",\"choices\":[{\"delta\":{\"content\":\"Halo \"}}]}\n\n"))
+		_, _ = w.Write([]byte("data: {\"model\":\"local-model\",\"choices\":[{\"delta\":{\"content\":\"dunia\"}}]}\n\n"))
+		_, _ = w.Write([]byte("data: [DONE]\n\n"))
+	}))
+	defer server.Close()
+
+	provider := &OpenAICompatible{BaseURL: server.URL}
+	var got strings.Builder
+	err := provider.Stream(context.Background(), ChatRequest{Model: "local-model"}, func(chunk ChatResponse) error {
+		got.WriteString(chunk.Content)
+		return nil
+	})
+	if err != nil {
+		t.Fatalf("Stream() error = %v", err)
+	}
+	if got.String() != "Halo dunia" {
+		t.Fatalf("content = %q", got.String())
 	}
 }
 
