@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"testing"
+	"time"
 
 	"github.com/umam-src/klip/internal/domain"
 	"github.com/umam-src/klip/internal/storage"
@@ -70,6 +71,74 @@ func TestExecutorMarksTaskFailed(t *testing.T) {
 	}
 	if tugas.Status != domain.StatusFailed {
 		t.Fatalf("task status = %q, want %q", tugas.Status, domain.StatusFailed)
+	}
+}
+
+func TestExecutorMarksTaskFailedOnTimeout(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Millisecond)
+	defer cancel()
+
+	db, err := storage.Open(context.Background(), ":memory:")
+	if err != nil {
+		t.Fatalf("Open() error = %v", err)
+	}
+	defer db.Close()
+
+	repo := storage.NewRepository(db)
+	createExecutionFixture(t, context.Background(), repo)
+	if err := repo.CreateTugas(context.Background(), domain.Tugas{ID: "tugas-1", PekerjaanID: "pekerjaan-1", Title: "Perintah lambat", Status: domain.StatusReady, Position: 0}); err != nil {
+		t.Fatalf("CreateTugas() error = %v", err)
+	}
+
+	program, args := testCommand("sleep")
+	result, err := (Executor{Repo: repo}).Execute(ctx, ExecutionRequest{PekerjaanID: "pekerjaan-1", TugasID: idPtr("tugas-1"), AgenID: "agen-1", Program: program, Arguments: args})
+	if !errors.Is(err, ErrTimedOut) {
+		t.Fatalf("Execute() error = %v, want ErrTimedOut", err)
+	}
+	if result.Run.Status != domain.StatusFailed || result.Sesi.Status != domain.StatusFailed {
+		t.Fatalf("statuses = sesi:%q run:%q", result.Sesi.Status, result.Run.Status)
+	}
+
+	tugas, err := repo.GetTugas(context.Background(), "tugas-1")
+	if err != nil {
+		t.Fatalf("GetTugas() error = %v", err)
+	}
+	if tugas.Status != domain.StatusFailed {
+		t.Fatalf("task status = %q, want %q", tugas.Status, domain.StatusFailed)
+	}
+}
+
+func TestExecutorMarksTaskCancelledOnCancellation(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	db, err := storage.Open(context.Background(), ":memory:")
+	if err != nil {
+		t.Fatalf("Open() error = %v", err)
+	}
+	defer db.Close()
+
+	repo := storage.NewRepository(db)
+	createExecutionFixture(t, context.Background(), repo)
+	if err := repo.CreateTugas(context.Background(), domain.Tugas{ID: "tugas-1", PekerjaanID: "pekerjaan-1", Title: "Perintah dibatalkan", Status: domain.StatusReady, Position: 0}); err != nil {
+		t.Fatalf("CreateTugas() error = %v", err)
+	}
+
+	program, args := testCommand("hello")
+	result, err := (Executor{Repo: repo}).Execute(ctx, ExecutionRequest{PekerjaanID: "pekerjaan-1", TugasID: idPtr("tugas-1"), AgenID: "agen-1", Program: program, Arguments: args})
+	if !errors.Is(err, ErrCancelled) {
+		t.Fatalf("Execute() error = %v, want ErrCancelled", err)
+	}
+	if result.Run.Status != domain.StatusCancelled || result.Sesi.Status != domain.StatusCancelled {
+		t.Fatalf("statuses = sesi:%q run:%q", result.Sesi.Status, result.Run.Status)
+	}
+
+	tugas, err := repo.GetTugas(context.Background(), "tugas-1")
+	if err != nil {
+		t.Fatalf("GetTugas() error = %v", err)
+	}
+	if tugas.Status != domain.StatusCancelled {
+		t.Fatalf("task status = %q, want %q", tugas.Status, domain.StatusCancelled)
 	}
 }
 
