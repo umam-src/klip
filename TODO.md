@@ -22,7 +22,7 @@ Daftar kerja pengembangan. Prioritas: P0 wajib, P1 penting, P2 setelah inti stab
 
 ## P0 — Domain inti
 
-- [ ] Relasi hierarki agen.
+- [x] Relasi hierarki agen.
 - [x] Thread dan komentar tugas.
 - [x] Persetujuan.
 - [x] Activity log.
