@@ -65,12 +65,12 @@ Catatan: `Ruang`, `Agen`, `Sasaran`, `Pekerjaan`, `Tugas`, `Sesi`, dan `Hasil` s
 - [x] Asset UI dibundel ke binary.
 - [x] Daftar ruang dasar.
 - [x] Daftar agen.
-- [ ] Detail agen.
+- [x] Detail agen.
 - [x] Struktur ruang.
 - [ ] Daftar sasaran.
 - [x] Daftar pekerjaan.
 - [x] Daftar tugas.
-- [ ] Detail tugas.
+- [x] Detail tugas.
 - [ ] Thread tugas.
 - [ ] Antrean persetujuan.
 - [ ] Riwayat aktivitas.
