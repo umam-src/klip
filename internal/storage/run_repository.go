@@ -15,6 +15,7 @@ type RunRepository interface {
 	CreateRun(ctx context.Context, run domain.Run) error
 	GetRun(ctx context.Context, id domain.ID) (domain.Run, error)
 	ListRunsByPekerjaan(ctx context.Context, pekerjaanID domain.ID) ([]domain.Run, error)
+	FinishRun(ctx context.Context, id domain.ID, status domain.Status, exitCode *int, stdout, stderr string, finishedAt time.Time) error
 }
 
 func (r *Repository) CreateRun(ctx context.Context, run domain.Run) error {
@@ -120,6 +121,32 @@ func (r *Repository) ListRunsByPekerjaan(ctx context.Context, pekerjaanID domain
 		return nil, fmt.Errorf("baca daftar run: %w", err)
 	}
 	return result, nil
+}
+
+func (r *Repository) FinishRun(ctx context.Context, id domain.ID, status domain.Status, exitCode *int, stdout, stderr string, finishedAt time.Time) error {
+	if strings.TrimSpace(string(id)) == "" || strings.TrimSpace(string(status)) == "" {
+		return fmt.Errorf("run: %w", ErrInvalid)
+	}
+	if finishedAt.IsZero() {
+		finishedAt = time.Now().UTC()
+	}
+	var exit any
+	if exitCode != nil {
+		exit = *exitCode
+	}
+	result, err := r.db.ExecContext(ctx, `
+		UPDATE run
+		SET status = ?, exit_code = ?, stdout = ?, stderr = ?, finished_at = ?
+		WHERE id = ?`,
+		status, exit, stdout, stderr, finishedAt.UTC().Format(time.RFC3339Nano), id,
+	)
+	if err != nil {
+		return fmt.Errorf("selesaikan run: %w", err)
+	}
+	if affected, _ := result.RowsAffected(); affected == 0 {
+		return ErrNotFound
+	}
+	return nil
 }
 
 func decodeRun(run *domain.Run, tugasID sql.NullString, exitCode sql.NullInt64, arguments, started string, finished sql.NullString) error {
