@@ -25,5 +25,8 @@
     return String(value).replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]);
   }
 
-  document.addEventListener('DOMContentLoaded', loadProviderStatus);
+  document.addEventListener('DOMContentLoaded', () => {
+    loadProviderStatus();
+    $('#refresh-provider')?.addEventListener('click', loadProviderStatus);
+  });
 })();
