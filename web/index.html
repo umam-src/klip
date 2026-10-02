@@ -18,7 +18,7 @@
     <section class="hero">
       <p class="eyebrow">Ruang kerja AI lokal</p>
       <h1>Kerjakan dengan lebih teratur.</h1>
-      <p class="lead">Kelola ruang, agen, pekerjaan, dan tugas dari satu tempat. Data tetap berada di perangkatmu.</p>
+      <p class="lead">Kelola ruang, agen, sasaran, pekerjaan, dan tugas dari satu tempat. Data tetap berada di perangkatmu.</p>
       <div class="actions"><a class="button primary" href="#ruang">Mulai bekerja</a><a class="button" href="/health">Periksa layanan</a></div>
     </section>
     <section id="ruang" class="section" aria-labelledby="ruang-title">
@@ -39,9 +39,20 @@
           <div id="agent-list" class="stack"></div>
         </div>
         <div class="panel">
+          <div class="panel-head"><div><h3>Sasaran</h3><p>Hasil yang ingin dicapai dalam ruang.</p></div><button class="button small" type="button" data-toggle="goal-form">Tambah</button></div>
+          <form id="goal-form" class="inline-form" hidden>
+            <input name="title" placeholder="Judul sasaran" required maxlength="160">
+            <button class="button primary small" type="submit">Simpan sasaran</button>
+          </form>
+          <div id="goal-list" class="stack"></div>
+        </div>
+        <div class="panel">
           <div class="panel-head"><div><h3>Pekerjaan</h3><p>Unit kerja utama dalam ruang.</p></div><button class="button small" type="button" data-toggle="job-form">Tambah</button></div>
           <form id="job-form" class="inline-form" hidden>
             <input name="title" placeholder="Judul pekerjaan" required maxlength="160">
+            <select name="sasaran_id" aria-label="Sasaran pekerjaan">
+              <option value="">Tanpa sasaran</option>
+            </select>
             <button class="button primary small" type="submit">Simpan pekerjaan</button>
           </form>
           <div id="job-list" class="stack"></div>
@@ -69,7 +80,7 @@
     </section>
     <section class="section overview" aria-labelledby="overview-title">
       <div class="section-head"><div><p class="eyebrow">Alur</p><h2 id="overview-title">Struktur Klip</h2></div></div>
-      <div class="flow"><article><span>01</span><h3>Agen</h3><p>Worker AI dengan penyedia dan model yang kamu pilih.</p></article><article><span>02</span><h3>Pekerjaan</h3><p>Unit kerja yang dapat dipecah menjadi beberapa tugas.</p></article><article><span>03</span><h3>Tugas</h3><p>Langkah konkret yang dapat dijalankan dan dilacak.</p></article></div>
+      <div class="flow"><article><span>01</span><h3>Agen</h3><p>Worker AI dengan penyedia dan model yang kamu pilih.</p></article><article><span>02</span><h3>Sasaran</h3><p>Hasil yang ingin dicapai dalam ruang kerja.</p></article><article><span>03</span><h3>Pekerjaan</h3><p>Unit kerja yang dapat dipecah menjadi beberapa tugas.</p></article></div>
     </section>
   </main>
   <footer><span>Klip</span><span>Local-first · Bahasa Indonesia</span></footer>
