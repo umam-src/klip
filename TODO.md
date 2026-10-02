@@ -89,12 +89,12 @@ Catatan: `Ruang`, `Agen`, `Sasaran`, `Pekerjaan`, `Tugas`, `Sesi`, dan `Hasil` s
 
 ## P1 — Scheduler
 
-- [ ] Jadwal lokal.
-- [ ] Heartbeat agen.
-- [ ] Job queue sederhana.
-- [ ] Pencegahan duplicate run.
-- [ ] Retry policy.
-- [ ] Riwayat scheduler.
+- [x] Jadwal lokal.
+- [x] Heartbeat agen.
+- [x] Job queue sederhana.
+- [x] Pencegahan duplicate run.
+- [x] Retry policy.
+- [x] Riwayat scheduler.
 
 ## P1 — Data dan keamanan
 
