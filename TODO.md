@@ -14,7 +14,7 @@ Daftar kerja pengembangan. Prioritas: P0 wajib, P1 penting, P2 setelah inti stab
 - [x] Tambahkan CLI dasar.
 - [x] Tambahkan logging.
 - [x] Tambahkan health endpoint.
-- [ ] Tambahkan i18n dengan `id-ID` sebagai default.
+- [x] Tambahkan i18n dengan `id-ID` sebagai default.
 - [x] Pastikan asset UI dibundel lokal, tanpa CDN wajib.
 - [x] Tambahkan build reproducible.
 - [x] Tambahkan pemeriksaan ukuran binary di CI.
@@ -43,7 +43,7 @@ Catatan: `Ruang`, `Agen`, `Sasaran`, `Pekerjaan`, `Tugas`, `Sesi`, dan `Hasil` s
 - [x] Cancellation melalui `context.Context`.
 - [x] Retry terbatas.
 - [x] Pemilihan model melalui konfigurasi/request.
-- [ ] Status koneksi provider.
+- [x] Status koneksi provider.
 - [x] Jangan menyimpan API key ke log.
 
 ## P0 — Runtime agen
