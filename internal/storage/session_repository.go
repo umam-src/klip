@@ -3,6 +3,7 @@ package storage
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -19,7 +20,8 @@ type SesiRepository interface {
 func (r *Repository) CreateSesi(ctx context.Context, sesi domain.Sesi) error {
 	if strings.TrimSpace(string(sesi.ID)) == "" ||
 		strings.TrimSpace(string(sesi.PekerjaanID)) == "" ||
-		strings.TrimSpace(string(sesi.AgenID)) == "" {
+		strings.TrimSpace(string(sesi.AgenID)) == "" ||
+		sesi.Status != domain.StatusRunning {
 		return fmt.Errorf("sesi: %w", ErrInvalid)
 	}
 	started := sesi.StartedAt
@@ -49,7 +51,7 @@ func (r *Repository) GetSesi(ctx context.Context, id domain.ID) (domain.Sesi, er
 		FROM sesi WHERE id = ?`, id).Scan(
 		&sesi.ID, &sesi.PekerjaanID, &sesi.AgenID, &sesi.Status, &started, &finished,
 	)
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		return domain.Sesi{}, ErrNotFound
 	}
 	if err != nil {
@@ -70,8 +72,18 @@ func (r *Repository) GetSesi(ctx context.Context, id domain.ID) (domain.Sesi, er
 }
 
 func (r *Repository) FinishSesi(ctx context.Context, id domain.ID, status domain.Status, finishedAt time.Time) error {
-	if strings.TrimSpace(string(id)) == "" || strings.TrimSpace(string(status)) == "" {
+	if strings.TrimSpace(string(id)) == "" || !isTerminalStatus(status) {
 		return fmt.Errorf("sesi: %w", ErrInvalid)
+	}
+	var current domain.Status
+	if err := r.db.QueryRowContext(ctx, `SELECT status FROM sesi WHERE id = ?`, id).Scan(&current); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return ErrNotFound
+		}
+		return fmt.Errorf("baca status sesi: %w", err)
+	}
+	if current != domain.StatusRunning || !current.CanTransitionTo(status) {
+		return fmt.Errorf("sesi: transisi status %q ke %q tidak diizinkan: %w", current, status, ErrInvalid)
 	}
 	if finishedAt.IsZero() {
 		finishedAt = time.Now().UTC()
@@ -87,4 +99,13 @@ func (r *Repository) FinishSesi(ctx context.Context, id domain.ID, status domain
 		return ErrNotFound
 	}
 	return nil
+}
+
+func isTerminalStatus(status domain.Status) bool {
+	switch status {
+	case domain.StatusCompleted, domain.StatusFailed, domain.StatusCancelled:
+		return true
+	default:
+		return false
+	}
 }
