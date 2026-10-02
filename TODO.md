@@ -4,16 +4,16 @@ Daftar kerja awal untuk mencapai roadmap. Prioritas: P0 wajib, P1 penting, P2 se
 
 ## P0 — Fondasi
 
-- [ ] Inisialisasi modul Go.
-- [ ] Tentukan struktur package internal.
+- [x] Inisialisasi modul Go.
+- [x] Tentukan struktur package internal.
 - [ ] Tambahkan konfigurasi lokal.
-- [ ] Tambahkan SQLite dan migrasi.
-- [ ] Tambahkan HTTP server.
+- [x] Tambahkan SQLite dan migrasi.
+- [x] Tambahkan HTTP server.
 - [ ] Tambahkan template HTML.
 - [ ] Tambahkan CSS ringan tanpa framework UI besar.
 - [ ] Tambahkan CLI dasar.
-- [ ] Tambahkan logging.
-- [ ] Tambahkan health endpoint.
+- [x] Tambahkan logging.
+- [x] Tambahkan health endpoint.
 - [ ] Tambahkan i18n dengan `id-ID` sebagai default.
 - [ ] Pastikan asset UI dibundel lokal, tanpa CDN wajib.
 - [ ] Tambahkan build reproducible.
@@ -24,11 +24,12 @@ Daftar kerja awal untuk mencapai roadmap. Prioritas: P0 wajib, P1 penting, P2 se
 
 - [ ] Model organisasi.
 - [ ] Model pengguna.
-- [ ] Model agen.
+- [x] Model agen.
 - [ ] Relasi hierarki agen.
-- [ ] Model sasaran.
+- [x] Model sasaran.
 - [ ] Model proyek.
-- [ ] Model tugas.
+- [x] Model pekerjaan.
+- [x] Model tugas.
 - [ ] Thread dan komentar tugas.
 - [ ] Persetujuan.
 - [ ] Activity log.
@@ -67,9 +68,9 @@ Daftar kerja awal untuk mencapai roadmap. Prioritas: P0 wajib, P1 penting, P2 se
 - [ ] Dasbor.
 - [ ] Daftar agen.
 - [ ] Detail agen.
-- [ ] Struktur organisasi.
+- [ ] Struktur ruang.
 - [ ] Daftar sasaran.
-- [ ] Daftar proyek.
+- [ ] Daftar pekerjaan.
 - [ ] Daftar tugas.
 - [ ] Detail tugas.
 - [ ] Thread tugas.
@@ -78,15 +79,15 @@ Daftar kerja awal untuk mencapai roadmap. Prioritas: P0 wajib, P1 penting, P2 se
 - [ ] Halaman provider/model.
 - [ ] Pengaturan.
 
-## P1 — Skills dan artifact
+## P1 — Skills dan hasil
 
 - [ ] Format skill sederhana.
 - [ ] Skill lokal.
 - [ ] Relasi skill ke agen.
-- [ ] Penyimpanan artifact.
-- [ ] Validasi nama dan path artifact.
-- [ ] Metadata artifact.
-- [ ] Download/view artifact melalui UI.
+- [ ] Penyimpanan hasil.
+- [ ] Validasi nama dan path hasil.
+- [ ] Metadata hasil.
+- [ ] Download/view hasil melalui UI.
 
 ## P1 — Scheduler
 
@@ -101,9 +102,9 @@ Daftar kerja awal untuk mencapai roadmap. Prioritas: P0 wajib, P1 penting, P2 se
 
 - [ ] Backup database.
 - [ ] Restore database.
-- [ ] Backup artifact.
+- [ ] Backup hasil.
 - [ ] Secret tidak masuk log.
-- [ ] Default bind hanya ke localhost.
+- [x] Default bind hanya ke localhost.
 - [ ] Validasi input HTTP.
 - [ ] Proteksi CSRF jika diperlukan oleh mode UI.
 - [ ] Audit aksi penting.
@@ -143,12 +144,14 @@ Daftar kerja awal untuk mencapai roadmap. Prioritas: P0 wajib, P1 penting, P2 se
 
 ## Dokumentasi
 
-- [ ] README.md Bahasa Indonesia.
-- [ ] CHANGELOG.md Keep a Changelog + SemVer.
-- [ ] CONTRIBUTING.md.
-- [ ] AGENTS.md.
-- [ ] LICENSE MIT.
-- [ ] docs/architecture.md.
+- [x] README.md Bahasa Indonesia.
+- [x] CHANGELOG.md Keep a Changelog + SemVer.
+- [x] CONTRIBUTING.md.
+- [x] AGENTS.md.
+- [x] LICENSE MIT.
+- [x] docs/ARCHITECTURE.md.
+- [x] docs/DOMAIN.md.
+- [x] docs/PARITY.md.
 - [ ] docs/data-model.md.
 - [ ] docs/runtime.md.
 - [ ] docs/providers.md.
