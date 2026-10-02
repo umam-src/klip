@@ -46,11 +46,20 @@ jobs:
           CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
             go build -trimpath -ldflags='-s -w' \
             -o dist/klip-linux-amd64 ./cmd/klip
+
           size=$(stat -c '%s' dist/klip-linux-amd64)
-          echo "binary_bytes=$size"
-          if [ "$size" -gt 524288000 ]; then
-            echo "Binary melebihi batas keras 500 MB."
+          mb=$(awk "BEGIN { printf \"%.2f\", $size / 1024 / 1024 }")
+          echo "Binary: ${mb} MiB (${size} bytes)"
+
+          if [ "$size" -gt 104857600 ]; then
+            echo "Binary melebihi batas keras 100 MiB."
             exit 1
+          fi
+
+          if [ "$size" -ge 52428800 ]; then
+            echo "Peringatan: binary mencapai atau melebihi target 50 MiB."
+          else
+            echo "OK: binary berada di bawah target 50 MiB."
           fi
 
       - name: Publish GitHub Release
