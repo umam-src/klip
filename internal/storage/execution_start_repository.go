@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -34,9 +35,6 @@ func (r *Repository) StartExecution(ctx context.Context, sesi domain.Sesi, run d
 	if sesi.PekerjaanID != run.PekerjaanID || sesi.AgenID != run.AgenID {
 		return ExecutionStart{}, fmt.Errorf("execution: sesi dan run tidak konsisten: %w", ErrInvalid)
 	}
-	if run.TugasID == nil {
-		return r.startExecutionTx(ctx, sesi, run, nil)
-	}
 
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
@@ -44,62 +42,51 @@ func (r *Repository) StartExecution(ctx context.Context, sesi domain.Sesi, run d
 	}
 	defer func() { _ = tx.Rollback() }()
 
-	var taskPekerjaanID domain.ID
-	var current domain.Status
-	if err := tx.QueryRow(`SELECT pekerjaan_id, status FROM tugas WHERE id = ?`, *run.TugasID).Scan(&taskPekerjaanID, &current); err != nil {
-		if err == sql.ErrNoRows {
+	if run.TugasID != nil {
+		var taskPekerjaanID domain.ID
+		var current domain.Status
+		if err := tx.QueryRow(`SELECT pekerjaan_id, status FROM tugas WHERE id = ?`, *run.TugasID).Scan(&taskPekerjaanID, &current); err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				return ExecutionStart{}, ErrNotFound
+			}
+			return ExecutionStart{}, fmt.Errorf("baca tugas execution: %w", err)
+		}
+		if taskPekerjaanID != run.PekerjaanID {
+			return ExecutionStart{}, fmt.Errorf("execution: tugas tidak termasuk pekerjaan: %w", ErrInvalid)
+		}
+		if !current.CanTransitionTo(domain.StatusRunning) {
+			return ExecutionStart{}, fmt.Errorf("execution: tugas berstatus %q tidak dapat dijalankan: %w", current, ErrInvalid)
+		}
+	}
+
+	started := sesi.StartedAt
+	if started.IsZero() {
+		started = run.StartedAt
+	}
+	if started.IsZero() {
+		started = time.Now().UTC()
+	}
+	if err := insertSesiTx(tx, sesi, started); err != nil {
+		return ExecutionStart{}, err
+	}
+	if run.TugasID != nil {
+		result, err := tx.Exec(`UPDATE tugas SET status = ?, updated_at = ? WHERE id = ?`, domain.StatusRunning, started.UTC().Format(time.RFC3339Nano), *run.TugasID)
+		if err != nil {
+			return ExecutionStart{}, fmt.Errorf("mulai tugas: %w", err)
+		}
+		if affected, err := result.RowsAffected(); err != nil {
+			return ExecutionStart{}, fmt.Errorf("cek mulai tugas: %w", err)
+		} else if affected != 1 {
 			return ExecutionStart{}, ErrNotFound
 		}
-		return ExecutionStart{}, fmt.Errorf("baca tugas execution: %w", err)
 	}
-	if taskPekerjaanID != run.PekerjaanID {
-		return ExecutionStart{}, fmt.Errorf("execution: tugas tidak termasuk pekerjaan: %w", ErrInvalid)
-	}
-	if !current.CanTransitionTo(domain.StatusRunning) {
-		return ExecutionStart{}, fmt.Errorf("execution: tugas berstatus %q tidak dapat dijalankan: %w", current, ErrInvalid)
-	}
-
-	started := sesi.StartedAt
-	if started.IsZero() {
-		started = time.Now().UTC()
-	}
-	if err := insertSesiTx(tx, sesi, started); err != nil {
-		return ExecutionStart{}, err
-	}
-	if _, err := tx.Exec(`UPDATE tugas SET status = ?, updated_at = ? WHERE id = ?`, domain.StatusRunning, started.UTC().Format(time.RFC3339Nano), *run.TugasID); err != nil {
-		return ExecutionStart{}, fmt.Errorf("mulai tugas: %w", err)
-	}
-	if err := insertRunTx(tx, run); err != nil {
+	if err := insertRunTx(tx, run, started); err != nil {
 		return ExecutionStart{}, err
 	}
 	if err := tx.Commit(); err != nil {
 		return ExecutionStart{}, fmt.Errorf("commit execution: %w", err)
 	}
-	sesi.StartedAt = started
-	run.StartedAt = started
-	return ExecutionStart{Sesi: sesi, Run: run}, nil
-}
 
-func (r *Repository) startExecutionTx(ctx context.Context, sesi domain.Sesi, run domain.Run, _ *domain.ID) (ExecutionStart, error) {
-	tx, err := r.db.BeginTx(ctx, nil)
-	if err != nil {
-		return ExecutionStart{}, fmt.Errorf("mulai transaksi execution: %w", err)
-	}
-	defer func() { _ = tx.Rollback() }()
-
-	started := sesi.StartedAt
-	if started.IsZero() {
-		started = time.Now().UTC()
-	}
-	if err := insertSesiTx(tx, sesi, started); err != nil {
-		return ExecutionStart{}, err
-	}
-	if err := insertRunTx(tx, run); err != nil {
-		return ExecutionStart{}, err
-	}
-	if err := tx.Commit(); err != nil {
-		return ExecutionStart{}, fmt.Errorf("commit execution: %w", err)
-	}
 	sesi.StartedAt = started
 	run.StartedAt = started
 	return ExecutionStart{Sesi: sesi, Run: run}, nil
@@ -117,14 +104,10 @@ func insertSesiTx(tx *sql.Tx, sesi domain.Sesi, started time.Time) error {
 	return nil
 }
 
-func insertRunTx(tx *sql.Tx, run domain.Run) error {
+func insertRunTx(tx *sql.Tx, run domain.Run, started time.Time) error {
 	arguments, err := json.Marshal(run.Arguments)
 	if err != nil {
 		return fmt.Errorf("run: serialisasi argumen: %w", err)
-	}
-	started := run.StartedAt
-	if started.IsZero() {
-		started = time.Now().UTC()
 	}
 	var tugasID any
 	if run.TugasID != nil {
