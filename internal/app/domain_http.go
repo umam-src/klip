@@ -51,8 +51,8 @@ func (a *App) handleAgen(w http.ResponseWriter, r *http.Request, ruangID domain.
 		items, err := a.repo.ListAgenByRuang(r.Context(), ruangID); if err != nil { writeStorageError(w, err); return }; writeJSON(w, http.StatusOK, items)
 	case http.MethodPost:
 		var req createAgenRequest; if !decodeJSON(w, r, &req) { return }
-		agен := domain.Agen{ID: domain.ID(strings.TrimSpace(req.ID)), RuangID: ruangID, Name: strings.TrimSpace(req.Name), Description: strings.TrimSpace(req.Description), ProviderID: strings.TrimSpace(req.ProviderID), ModelID: strings.TrimSpace(req.ModelID)}
-		if err := a.repo.CreateAgen(r.Context(), agen); err != nil { writeStorageError(w, err); return }; created, err := a.repo.GetAgen(r.Context(), agen.ID); if err != nil { writeError(w, http.StatusInternalServerError, "agen berhasil dibuat tetapi gagal dibaca"); return }; writeJSON(w, http.StatusCreated, created)
+		agent := domain.Agen{ID: domain.ID(strings.TrimSpace(req.ID)), RuangID: ruangID, Name: strings.TrimSpace(req.Name), Description: strings.TrimSpace(req.Description), ProviderID: strings.TrimSpace(req.ProviderID), ModelID: strings.TrimSpace(req.ModelID)}
+		if err := a.repo.CreateAgen(r.Context(), agent); err != nil { writeStorageError(w, err); return }; created, err := a.repo.GetAgen(r.Context(), agent.ID); if err != nil { writeError(w, http.StatusInternalServerError, "agen berhasil dibuat tetapi gagal dibaca"); return }; writeJSON(w, http.StatusCreated, created)
 	default: writeError(w, http.StatusMethodNotAllowed, "metode tidak didukung")
 	}
 }
@@ -94,7 +94,7 @@ func (a *App) handleHasil(w http.ResponseWriter, r *http.Request, pekerjaanID do
 		if hasil.TugasID != nil {
 			tugas, err := a.repo.GetTugas(r.Context(), *hasil.TugasID)
 			if err != nil { writeStorageError(w, err); return }
-			if tugas.PekerjaanID != pekerjaanID { writeError(w, http.StatusBadRequest, "tugas tidak sesuai dengan pekerjaan") ; return }
+			if tugas.PekerjaanID != pekerjaanID { writeError(w, http.StatusBadRequest, "tugas tidak sesuai dengan pekerjaan"); return }
 		}
 		if err := a.repo.CreateHasil(r.Context(), hasil); err != nil { writeStorageError(w, err); return }; created, err := a.repo.GetHasil(r.Context(), hasil.ID); if err != nil { writeError(w, http.StatusInternalServerError, "hasil berhasil dibuat tetapi gagal dibaca"); return }; writeJSON(w, http.StatusCreated, created)
 	default: writeError(w, http.StatusMethodNotAllowed, "metode tidak didukung")
