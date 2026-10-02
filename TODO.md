@@ -104,8 +104,8 @@ Catatan: `Ruang`, `Agen`, `Sasaran`, `Pekerjaan`, `Tugas`, `Sesi`, dan `Hasil` s
 - [x] Secret tidak masuk log.
 - [x] Default bind hanya ke localhost.
 - [x] Validasi dasar input HTTP.
-- [ ] Proteksi CSRF jika diperlukan oleh mode UI.
-- [ ] Audit aksi penting.
+- [x] Tinjau kebutuhan CSRF untuk mode UI saat ini; belum diperlukan karena API tidak memakai cookie sesi dan bind bawaan hanya localhost.
+- [x] Audit aksi penting: approval dibuat/diputuskan dan jadwal dibuat dicatat sebagai event lokal.
 - [x] Dokumentasikan batas keamanan local-first.
 
 ## P2 — Optimasi
