@@ -64,12 +64,12 @@ Catatan: `Ruang`, `Agen`, `Sasaran`, `Pekerjaan`, `Tugas`, `Sesi`, dan `Hasil` s
 - [x] CSS ringan tanpa framework besar.
 - [x] Asset UI dibundel ke binary.
 - [x] Daftar ruang dasar.
-- [ ] Daftar agen.
+- [x] Daftar agen.
 - [ ] Detail agen.
-- [ ] Struktur ruang.
+- [x] Struktur ruang.
 - [ ] Daftar sasaran.
-- [ ] Daftar pekerjaan.
-- [ ] Daftar tugas.
+- [x] Daftar pekerjaan.
+- [x] Daftar tugas.
 - [ ] Detail tugas.
 - [ ] Thread tugas.
 - [ ] Antrean persetujuan.
