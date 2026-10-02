@@ -19,6 +19,7 @@ Format mengikuti Keep a Changelog dan versi mengikuti Semantic Versioning.
 - Aksi buka hasil dari panel Hasil di UI.
 - Jadwal lokal berbasis interval, antrean pekerjaan, pencegahan eksekusi ganda, retry terbatas, heartbeat, dan riwayat scheduler.
 - API lokal untuk membuat, melihat, dan membaca riwayat jadwal.
+- Cadangan berkas hasil lokal dalam arsip `.tar.gz` tanpa mengikuti tautan simbolik.
 
 ### Changed
 - Konfigurasi sekarang menyimpan locale secara eksplisit dan menormalkan locale yang belum didukung ke `id-ID`.
