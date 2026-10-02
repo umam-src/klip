@@ -5,6 +5,7 @@ import (
 	"errors"
 	"runtime"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 )
@@ -33,17 +34,24 @@ func TestRunnerRejectsEmptyProgram(t *testing.T) {
 	}
 }
 
-func TestRunnerCapturesExitFailure(t *testing.T) {
+func TestRunnerClassifiesExitFailure(t *testing.T) {
 	program, args := testCommand("echo-error")
 	result, err := (Runner{}).Run(context.Background(), Command{Program: program, Args: args})
-	if err == nil {
-		t.Fatal("Run() error = nil, want error")
+	if !errors.Is(err, ErrProcessFailed) {
+		t.Fatalf("error = %v, want ErrProcessFailed", err)
 	}
 	if result.ExitCode == 0 {
 		t.Fatal("exit code = 0, want non-zero")
 	}
 	if !strings.Contains(result.Stderr, "echo-error") {
 		t.Fatalf("stderr = %q", result.Stderr)
+	}
+}
+
+func TestRunnerClassifiesStartFailure(t *testing.T) {
+	_, err := (Runner{}).Run(context.Background(), Command{Program: "klip-program-tidak-ada"})
+	if !errors.Is(err, ErrStartFailed) {
+		t.Fatalf("error = %v, want ErrStartFailed", err)
 	}
 }
 
@@ -66,6 +74,35 @@ func TestRunnerLimitsOutput(t *testing.T) {
 	}
 	if len(result.Stdout) != 4 {
 		t.Fatalf("stdout length = %d, want 4", len(result.Stdout))
+	}
+}
+
+func TestRunnerConcurrencyLimit(t *testing.T) {
+	program, args := testCommand("sleep")
+	runner := NewRunner(1, 0)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	var wg sync.WaitGroup
+	start := make(chan struct{})
+	results := make(chan error, 2)
+	for range 2 {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			<-start
+			_, err := runner.Run(ctx, Command{Program: program, Args: args})
+			results <- err
+		}()
+	}
+	close(start)
+	wg.Wait()
+	close(results)
+
+	for err := range results {
+		if err != nil {
+			t.Fatalf("Run() error = %v", err)
+		}
 	}
 }
 
