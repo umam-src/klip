@@ -10,15 +10,15 @@ const (
 )
 
 type Event struct {
-	ID          ID         `json:"id"`
-	PekerjaanID ID         `json:"pekerjaan_id"`
-	TugasID     *ID        `json:"tugas_id,omitempty"`
-	SesiID      *ID        `json:"sesi_id,omitempty"`
-	RunID       *ID        `json:"run_id,omitempty"`
-	AgenID      *ID        `json:"agen_id,omitempty"`
-	Type        string     `json:"type"`
-	Message     string     `json:"message,omitempty"`
-	CreatedAt   time.Time  `json:"created_at"`
+	ID          ID        `json:"id"`
+	PekerjaanID ID        `json:"pekerjaan_id"`
+	TugasID     *ID       `json:"tugas_id,omitempty"`
+	SesiID      *ID       `json:"sesi_id,omitempty"`
+	RunID       *ID       `json:"run_id,omitempty"`
+	AgenID      *ID       `json:"agen_id,omitempty"`
+	Type        string    `json:"type"`
+	Message     string    `json:"message,omitempty"`
+	CreatedAt   time.Time `json:"created_at"`
 }
 
 func EventTypeForStatus(status Status) string {
