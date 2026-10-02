@@ -41,11 +41,16 @@ func (e Executor) Execute(ctx context.Context, request ExecutionRequest) (Execut
 	if request.PekerjaanID == "" || request.AgenID == "" || request.Program == "" {
 		return ExecutionResult{}, fmt.Errorf("executor: %w", storage.ErrInvalid)
 	}
-	if _, err := e.Repo.GetPekerjaan(ctx, request.PekerjaanID); err != nil {
+	pekerjaan, err := e.Repo.GetPekerjaan(ctx, request.PekerjaanID)
+	if err != nil {
 		return ExecutionResult{}, fmt.Errorf("executor: pekerjaan: %w", err)
 	}
-	if _, err := e.Repo.GetAgen(ctx, request.AgenID); err != nil {
+	agen, err := e.Repo.GetAgen(ctx, request.AgenID)
+	if err != nil {
 		return ExecutionResult{}, fmt.Errorf("executor: agen: %w", err)
+	}
+	if agen.RuangID != pekerjaan.RuangID {
+		return ExecutionResult{}, fmt.Errorf("executor: agen tidak termasuk ruang pekerjaan: %w", storage.ErrInvalid)
 	}
 	if request.TugasID != nil {
 		tugas, err := e.Repo.GetTugas(ctx, *request.TugasID)
@@ -54,6 +59,9 @@ func (e Executor) Execute(ctx context.Context, request ExecutionRequest) (Execut
 		}
 		if tugas.PekerjaanID != request.PekerjaanID {
 			return ExecutionResult{}, fmt.Errorf("executor: tugas tidak termasuk pekerjaan: %w", storage.ErrInvalid)
+		}
+		if !tugas.Status.CanTransitionTo(domain.StatusRunning) {
+			return ExecutionResult{}, fmt.Errorf("executor: tugas berstatus %q tidak dapat dijalankan: %w", tugas.Status, storage.ErrInvalid)
 		}
 	}
 
