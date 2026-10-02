@@ -29,11 +29,13 @@ Jika eksekusi terkait `Tugas`, Klip memastikan tugas berada di `Pekerjaan` yang 
 
 ## Pengukuran performa
 
-Benchmark runtime dan SQLite tersedia sebagai baseline lokal. Jalankan:
+Benchmark tersedia sebagai baseline lokal. Jalankan:
 
 ```bash
-go test ./... -run '^$' -bench 'BenchmarkRunner|BenchmarkOpenMemory|BenchmarkSQLiteWriteRead' -benchmem
+go test ./... -run '^$' -bench 'BenchmarkStartupComponents|BenchmarkOpenSQLite' -benchmem
 ```
+
+`BenchmarkStartupComponents` mengukur inisialisasi komponen aplikasi utama menggunakan database memori. `BenchmarkOpenSQLite` mengukur pembukaan dan penutupan database SQLite pada penyimpanan lokal.
 
 Benchmark digunakan untuk membandingkan perubahan runtime, bukan sebagai target angka tetap. Optimasi dilakukan setelah ada hasil pengukuran yang menunjukkan bagian yang memang perlu diperbaiki.
 
