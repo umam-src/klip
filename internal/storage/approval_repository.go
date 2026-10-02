@@ -115,7 +115,7 @@ func (r *Repository) DecideApproval(ctx context.Context, id domain.ID, status do
 	if current.Status != domain.ApprovalPending {
 		return fmt.Errorf("approval: keputusan hanya dapat dilakukan saat pending: %w", ErrInvalid)
 	}
-	now := time.Now().UTC()
+	now := time.Now().UTC().Format(time.RFC3339Nano)
 	_, err = r.db.ExecContext(ctx, `UPDATE approval SET status = ?, reason = ?, updated_at = ?, decided_at = ? WHERE id = ? AND status = ?`, status, strings.TrimSpace(reason), now, now, id, domain.ApprovalPending)
 	if err != nil {
 		return fmt.Errorf("putuskan approval: %w", err)
