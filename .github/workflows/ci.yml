@@ -20,6 +20,15 @@ jobs:
           go-version: '1.25'
           cache: true
 
+      - name: Check formatting
+        run: |
+          files=$(gofmt -l .)
+          if [ -n "$files" ]; then
+            echo "File Go belum diformat dengan gofmt:"
+            echo "$files"
+            exit 1
+          fi
+
       - name: Test
         run: go test ./...
 
