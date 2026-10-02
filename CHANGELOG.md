@@ -47,6 +47,7 @@ Format mengikuti Keep a Changelog dan versi mengikuti Semantic Versioning.
 - Konfigurasi runtime menggunakan `config.json` agar tetap memakai pustaka standar Go.
 - Runtime eksekusi menolak input proses yang mengandung NUL dan direktori kerja relatif.
 - API JSON menolak `Content-Type` non-JSON ketika header tersebut diberikan.
+- Alur rilis mengambil versi dan catatan rilis langsung dari `CHANGELOG.md`.
 
 ### Removed
 - Belum ada.
