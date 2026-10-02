@@ -5,7 +5,6 @@ import (
 	"errors"
 	"net/http"
 	"strings"
-	"time"
 
 	"github.com/umam-src/klip/internal/domain"
 	"github.com/umam-src/klip/internal/storage"
@@ -180,5 +179,3 @@ func writeStorageError(w http.ResponseWriter, err error) {
 		writeError(w, http.StatusInternalServerError, "gagal menyimpan data")
 	}
 }
-
-var _ = time.Time{}
