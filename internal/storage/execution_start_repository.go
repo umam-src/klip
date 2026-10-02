@@ -17,9 +17,10 @@ type ExecutionStart struct {
 	Run  domain.Run
 }
 
-// StartExecution creates the running session and run, and moves the task to
-// running, in one SQLite transaction. The transaction ends before the process
-// is started so it never stays open while external work is running.
+// StartExecution creates the running session and run, moves the task to
+// running, and records the start event in one SQLite transaction.
+// The transaction ends before the process is started so it never stays open
+// while external work is running.
 func (r *Repository) StartExecution(ctx context.Context, sesi domain.Sesi, run domain.Run) (ExecutionStart, error) {
 	if strings.TrimSpace(string(sesi.ID)) == "" ||
 		strings.TrimSpace(string(sesi.PekerjaanID)) == "" ||
@@ -83,6 +84,18 @@ func (r *Repository) StartExecution(ctx context.Context, sesi domain.Sesi, run d
 	if err := insertRunTx(tx, run, started); err != nil {
 		return ExecutionStart{}, err
 	}
+	if err := appendEvent(ctx, tx, domain.Event{
+			PekerjaanID: run.PekerjaanID,
+			TugasID:     run.TugasID,
+			SesiID:      idPtr(sesi.ID),
+			RunID:       idPtr(run.ID),
+			AgenID:      idPtr(run.AgenID),
+			Type:        domain.EventExecutionStarted,
+			Message:     "Eksekusi dimulai",
+			CreatedAt:   started,
+		}); err != nil {
+		return ExecutionStart{}, err
+	}
 	if err := tx.Commit(); err != nil {
 		return ExecutionStart{}, fmt.Errorf("commit execution: %w", err)
 	}
@@ -124,4 +137,8 @@ func insertRunTx(tx *sql.Tx, run domain.Run, started time.Time) error {
 		return fmt.Errorf("buat run: %w", err)
 	}
 	return nil
+}
+
+func idPtr(id domain.ID) *domain.ID {
+	return &id
 }
