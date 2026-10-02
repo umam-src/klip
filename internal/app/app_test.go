@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/umam-src/klip/internal/agent"
 	"github.com/umam-src/klip/internal/ai"
 	"github.com/umam-src/klip/internal/config"
 	"github.com/umam-src/klip/internal/domain"
@@ -97,7 +98,13 @@ func TestAppExecutorWiring(t *testing.T) {
 	})
 
 	program, args := executionTestCommand()
-	result, err := app.executor.Execute(ctx, executionRequest("pekerjaan-exec", "tugas-exec", "agen-exec", program, args))
+	result, err := app.executor.Execute(ctx, agent.ExecutionRequest{
+		PekerjaanID: "pekerjaan-exec",
+		TugasID:     func() *domain.ID { id := domain.ID("tugas-exec"); return &id }(),
+		AgenID:      "agen-exec",
+		Program:     program,
+		Arguments:   args,
+	})
 	if err != nil {
 		t.Fatalf("Execute() error = %v", err)
 	}
@@ -122,27 +129,6 @@ func TestAppExecutorWiring(t *testing.T) {
 	if task.Status != domain.StatusCompleted {
 		t.Fatalf("task status = %q, want %q", task.Status, domain.StatusCompleted)
 	}
-}
-
-func executionRequest(pekerjaanID, tugasID, agenID, program string, args []string) struct {
-	PekerjaanID domain.ID
-	TugasID     *domain.ID
-	AgenID      domain.ID
-	Program     string
-	Arguments   []string
-	Dir         string
-	Env         []string
-} {
-	taskID := domain.ID(tugasID)
-	return struct {
-		PekerjaanID domain.ID
-		TugasID     *domain.ID
-		AgenID      domain.ID
-		Program     string
-		Arguments   []string
-		Dir         string
-		Env         []string
-	}{PekerjaanID: domain.ID(pekerjaanID), TugasID: &taskID, AgenID: domain.ID(agenID), Program: program, Arguments: args}
 }
 
 func executionTestCommand() (string, []string) {
