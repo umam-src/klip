@@ -33,11 +33,13 @@ type Command struct {
 }
 
 type Result struct {
-	ExitCode int
-	Stdout   string
-	Stderr   string
-	Started  time.Time
-	Finished time.Time
+	ExitCode       int
+	Stdout         string
+	Stderr         string
+	StdoutTruncated bool
+	StderrTruncated bool
+	Started        time.Time
+	Finished       time.Time
 }
 
 type Runner struct {
@@ -89,8 +91,10 @@ func (r Runner) Run(ctx context.Context, command Command) (Result, error) {
 		maxOutput = defaultMaxOutputBytes
 	}
 	var stdout, stderr bytes.Buffer
-	cmd.Stdout = &limitedWriter{dst: &stdout, max: maxOutput}
-	cmd.Stderr = &limitedWriter{dst: &stderr, max: maxOutput}
+	stdoutWriter := &limitedWriter{dst: &stdout, max: maxOutput}
+	stderrWriter := &limitedWriter{dst: &stderr, max: maxOutput}
+	cmd.Stdout = stdoutWriter
+	cmd.Stderr = stderrWriter
 
 	err := cmd.Run()
 	finished := time.Now().UTC()
@@ -100,6 +104,8 @@ func (r Runner) Run(ctx context.Context, command Command) (Result, error) {
 	}
 	result.Stdout = stdout.String()
 	result.Stderr = stderr.String()
+	result.StdoutTruncated = stdoutWriter.truncated
+	result.StderrTruncated = stderrWriter.truncated
 
 	if ctx.Err() != nil {
 		if errors.Is(ctx.Err(), context.DeadlineExceeded) {
@@ -118,17 +124,20 @@ func (r Runner) Run(ctx context.Context, command Command) (Result, error) {
 }
 
 type limitedWriter struct {
-	dst *bytes.Buffer
-	max int64
+	dst       *bytes.Buffer
+	max       int64
+	truncated bool
 }
 
 func (w *limitedWriter) Write(p []byte) (int, error) {
 	remaining := w.max - int64(w.dst.Len())
 	if remaining <= 0 {
+		w.truncated = true
 		return len(p), nil
 	}
 	if int64(len(p)) > remaining {
 		_, _ = w.dst.Write(p[:remaining])
+		w.truncated = true
 		return len(p), nil
 	}
 	return w.dst.Write(p)
