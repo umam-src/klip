@@ -61,7 +61,7 @@ Catatan: `Ruang`, `Agen`, `Sasaran`, `Pekerjaan`, `Tugas`, `Sesi`, dan `Hasil` s
 ## P1 — UI
 
 - [x] Dasbor awal lokal.
-- [x] CSS ringan tanpa framework besar.
+- [x] CSS ringan tanpa framework UI besar.
 - [x] Asset UI dibundel lokal.
 - [x] Daftar ruang dasar.
 - [x] Daftar agen.
@@ -100,7 +100,7 @@ Catatan: `Ruang`, `Agen`, `Sasaran`, `Pekerjaan`, `Tugas`, `Sesi`, dan `Hasil` s
 
 - [x] Backup database.
 - [x] Restore database.
-- [ ] Backup hasil.
+- [x] Backup hasil.
 - [x] Secret tidak masuk log.
 - [x] Default bind hanya ke localhost.
 - [x] Validasi dasar input HTTP.
@@ -157,5 +157,4 @@ Catatan: `Ruang`, `Agen`, `Sasaran`, `Pekerjaan`, `Tugas`, `Sesi`, dan `Hasil` s
 - [x] docs/security.md.
 - [x] docs/storage.md.
 - [x] docs/backup.md.
-- [x] docs/release.md.
 - [x] docs/size-budget.md.
