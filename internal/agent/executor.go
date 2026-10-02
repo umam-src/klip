@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/umam-src/klip/internal/domain"
@@ -38,8 +39,8 @@ func (e Executor) Execute(ctx context.Context, request ExecutionRequest) (Execut
 	if e.Repo == nil {
 		return ExecutionResult{}, errors.New("executor: repository wajib diisi")
 	}
-	if request.PekerjaanID == "" || request.AgenID == "" || request.Program == "" {
-		return ExecutionResult{}, fmt.Errorf("executor: %w", storage.ErrInvalid)
+	if err := validateExecutionRequest(request); err != nil {
+		return ExecutionResult{}, err
 	}
 	pekerjaan, err := e.Repo.GetPekerjaan(ctx, request.PekerjaanID)
 	if err != nil {
@@ -124,6 +125,20 @@ func (e Executor) Execute(ctx context.Context, request ExecutionRequest) (Execut
 	sesi.FinishedAt = &finished
 
 	return ExecutionResult{Sesi: sesi, Run: run}, errors.Join(runErr, persistErr)
+}
+
+func validateExecutionRequest(request ExecutionRequest) error {
+	if request.PekerjaanID == "" || request.AgenID == "" || strings.TrimSpace(request.Program) == "" {
+		return fmt.Errorf("executor: %w", storage.ErrInvalid)
+	}
+	values := append([]string{request.Program, request.Dir}, request.Arguments...)
+	values = append(values, request.Env...)
+	for _, value := range values {
+		if strings.ContainsRune(value, '\x00') {
+			return fmt.Errorf("executor: input proses mengandung karakter NUL: %w", storage.ErrInvalid)
+		}
+	}
+	return nil
 }
 
 func classifyStatus(err error) domain.Status {
