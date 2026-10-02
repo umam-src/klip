@@ -28,11 +28,11 @@ type Schedule struct {
 type ScheduleRunStatus string
 
 const (
-	ScheduleRunQueued   ScheduleRunStatus = "queued"
-	ScheduleRunRunning  ScheduleRunStatus = "running"
+	ScheduleRunQueued    ScheduleRunStatus = "queued"
+	ScheduleRunRunning   ScheduleRunStatus = "running"
 	ScheduleRunSucceeded ScheduleRunStatus = "succeeded"
-	ScheduleRunFailed   ScheduleRunStatus = "failed"
-	ScheduleRunSkipped  ScheduleRunStatus = "skipped"
+	ScheduleRunFailed    ScheduleRunStatus = "failed"
+	ScheduleRunSkipped   ScheduleRunStatus = "skipped"
 )
 
 type ScheduleRun struct {
