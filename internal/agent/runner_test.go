@@ -22,6 +22,9 @@ func TestRunnerRun(t *testing.T) {
 	if strings.TrimSpace(result.Stdout) != "hello" {
 		t.Fatalf("stdout = %q", result.Stdout)
 	}
+	if result.StdoutTruncated || result.StderrTruncated {
+		t.Fatal("output unexpectedly marked as truncated")
+	}
 	if result.Finished.Before(result.Started) {
 		t.Fatalf("finished before started")
 	}
@@ -75,6 +78,29 @@ func TestRunnerLimitsOutput(t *testing.T) {
 	if len(result.Stdout) != 4 {
 		t.Fatalf("stdout length = %d, want 4", len(result.Stdout))
 	}
+	if !result.StdoutTruncated {
+		t.Fatal("stdout truncated = false, want true")
+	}
+	if result.StderrTruncated {
+		t.Fatal("stderr truncated = true, want false")
+	}
+}
+
+func TestRunnerLimitsStderr(t *testing.T) {
+	program, args := testCommand("stderr-output")
+	result, err := (Runner{MaxOutputBytes: 4}).Run(context.Background(), Command{Program: program, Args: args})
+	if err != nil {
+		t.Fatalf("Run() error = %v", err)
+	}
+	if len(result.Stderr) != 4 {
+		t.Fatalf("stderr length = %d, want 4", len(result.Stderr))
+	}
+	if !result.StderrTruncated {
+		t.Fatal("stderr truncated = false, want true")
+	}
+	if result.StdoutTruncated {
+		t.Fatal("stdout truncated = true, want false")
+	}
 }
 
 func TestRunnerConcurrencyLimit(t *testing.T) {
@@ -117,6 +143,8 @@ func testCommand(value string) (string, []string) {
 			return "powershell", []string{"-NoProfile", "-Command", "Start-Sleep -Milliseconds 500"}
 		case "output":
 			return "cmd", []string{"/C", "echo", "123456789"}
+		case "stderr-output":
+			return "cmd", []string{"/C", "echo", "123456789", "1>&2"}
 		}
 	}
 
@@ -129,6 +157,8 @@ func testCommand(value string) (string, []string) {
 		return "sleep", []string{"1"}
 	case "output":
 		return "printf", []string{"123456789\n"}
+	case "stderr-output":
+		return "sh", []string{"-c", "printf 123456789 >&2"}
 	default:
 		return "false", nil
 	}
