@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/umam-src/klip/internal/agent"
 	"github.com/umam-src/klip/internal/ai"
 	"github.com/umam-src/klip/internal/config"
 	"github.com/umam-src/klip/internal/storage"
@@ -14,6 +15,7 @@ type App struct {
 	config   config.Config
 	provider ai.AIProvider
 	repo     *storage.Repository
+	executor agent.Executor
 }
 
 func New(cfg config.Config, provider ai.AIProvider, repos ...*storage.Repository) *App {
@@ -21,7 +23,8 @@ func New(cfg config.Config, provider ai.AIProvider, repos ...*storage.Repository
 	if len(repos) > 0 {
 		repo = repos[0]
 	}
-	return &App{config: cfg, provider: provider, repo: repo}
+	executor := agent.Executor{Runner: agent.NewRunner(0, 0), Repo: repo}
+	return &App{config: cfg, provider: provider, repo: repo, executor: executor}
 }
 
 func (a *App) Handler() http.Handler {
