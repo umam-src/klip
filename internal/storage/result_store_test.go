@@ -24,6 +24,29 @@ func TestResultStorePutRead(t *testing.T) {
 	}
 }
 
+func TestResultStoreOpen(t *testing.T) {
+	store, err := NewResultStore(t.TempDir())
+	if err != nil {
+		t.Fatalf("NewResultStore() error = %v", err)
+	}
+	if err := store.Put("pekerjaan-1/hasil.txt", strings.NewReader("halo Klip")); err != nil {
+		t.Fatalf("Put() error = %v", err)
+	}
+	file, err := store.Open("pekerjaan-1/hasil.txt")
+	if err != nil {
+		t.Fatalf("Open() error = %v", err)
+	}
+	defer file.Close()
+
+	got := make([]byte, len("halo Klip"))
+	if _, err := file.Read(got); err != nil {
+		t.Fatalf("Read() error = %v", err)
+	}
+	if string(got) != "halo Klip" {
+		t.Fatalf("Open() content = %q, want %q", got, "halo Klip")
+	}
+}
+
 func TestResultStoreRejectsUnsafePath(t *testing.T) {
 	store, err := NewResultStore(t.TempDir())
 	if err != nil {
