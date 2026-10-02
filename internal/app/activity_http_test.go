@@ -23,6 +23,18 @@ func TestHandlerAktivitasReturnsSafeNewestLimitedHistory(t *testing.T) {
 	defer db.Close()
 
 	repo := storage.NewRepository(db)
+	if err := repo.CreateRuang(ctx, domain.Ruang{ID: "ruang-activity", Name: "Aktivitas"}); err != nil {
+		t.Fatalf("CreateRuang() error = %v", err)
+	}
+	for _, pekerjaan := range []domain.Pekerjaan{
+		{ID: "pekerjaan-activity", RuangID: "ruang-activity", Title: "Pekerjaan Aktivitas"},
+		{ID: "pekerjaan-other", RuangID: "ruang-activity", Title: "Pekerjaan Lain"},
+	} {
+		if err := repo.CreatePekerjaan(ctx, pekerjaan); err != nil {
+			t.Fatalf("CreatePekerjaan(%s) error = %v", pekerjaan.ID, err)
+		}
+	}
+
 	base := time.Date(2026, 10, 2, 10, 0, 0, 0, time.UTC)
 	for _, event := range []domain.Event{
 		{ID: "event-old", PekerjaanID: "pekerjaan-activity", Type: domain.EventExecutionStarted, Message: "prompt rahasia" + " credential-token", CreatedAt: base},
