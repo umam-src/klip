@@ -1,5 +1,9 @@
 # Klip
 
+<p align="center">
+  <img src="assets/klip-icon.svg" alt="Ikon Klip" width="160">
+</p>
+
 Klip adalah aplikasi ringan untuk mengatur pekerjaan berbasis AI.
 
 Klip dibuat dengan pendekatan **lokal terlebih dahulu**. AI yang berjalan di komputer sendiri menjadi pilihan utama. Layanan AI gratis dapat digunakan jika diperlukan, sedangkan layanan berbayar bersifat opsional.
