@@ -52,14 +52,14 @@ jobs:
       - name: Build Linux binary
         run: |
           mkdir -p dist
-          flags="-trimpath -buildvcs=false -ldflags=-s -w"
+          flags=(-trimpath -buildvcs=false '-ldflags=-s -w')
 
           CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
-            go build $flags \
+            go build "${flags[@]}" \
             -o dist/klip-linux-amd64 ./cmd/klip
 
           CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
-            go build $flags \
+            go build "${flags[@]}" \
             -o dist/klip-linux-amd64-repro ./cmd/klip
 
           if ! cmp -s dist/klip-linux-amd64 dist/klip-linux-amd64-repro; then
