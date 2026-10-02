@@ -66,11 +66,11 @@ type Tugas struct {
 }
 
 type Sesi struct {
-	ID          ID        `json:"id"`
-	PekerjaanID ID        `json:"pekerjaan_id"`
-	AgenID      ID        `json:"agen_id"`
-	Status      Status    `json:"status"`
-	StartedAt   time.Time `json:"started_at"`
+	ID          ID         `json:"id"`
+	PekerjaanID ID         `json:"pekerjaan_id"`
+	AgenID      ID         `json:"agen_id"`
+	Status      Status     `json:"status"`
+	StartedAt   time.Time  `json:"started_at"`
 	FinishedAt  *time.Time `json:"finished_at,omitempty"`
 }
 
@@ -82,4 +82,19 @@ type Hasil struct {
 	Name        string    `json:"name"`
 	Path        string    `json:"path"`
 	CreatedAt   time.Time `json:"created_at"`
+}
+
+type Run struct {
+	ID          ID         `json:"id"`
+	PekerjaanID ID         `json:"pekerjaan_id"`
+	TugasID     *ID        `json:"tugas_id,omitempty"`
+	AgenID      ID         `json:"agen_id"`
+	Status      Status     `json:"status"`
+	Program     string     `json:"program"`
+	Arguments   []string   `json:"arguments"`
+	ExitCode    *int       `json:"exit_code,omitempty"`
+	Stdout      string     `json:"stdout"`
+	Stderr      string     `json:"stderr"`
+	StartedAt   time.Time  `json:"started_at"`
+	FinishedAt  *time.Time `json:"finished_at,omitempty"`
 }
