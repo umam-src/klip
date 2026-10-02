@@ -119,7 +119,7 @@ Catatan: `Ruang`, `Agen`, `Sasaran`, `Pekerjaan`, `Tugas`, `Sesi`, dan `Hasil` s
 - [x] Hard fail jika binary >100 MiB.
 - [ ] Hard fail Docker image >100 MiB.
 - [x] Benchmark startup komponen utama.
-- [ ] Benchmark memory idle.
+- [x] Benchmark memory idle.
 - [x] Benchmark SQLite.
 - [x] Benchmark concurrent runs.
 
