@@ -1,6 +1,9 @@
 package ai
 
-import "net/http"
+import (
+	"context"
+	"net/http"
+)
 
 type Ollama struct {
 	BaseURL string
