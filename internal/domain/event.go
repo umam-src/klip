@@ -7,6 +7,9 @@ const (
 	EventExecutionCompleted = "execution.completed"
 	EventExecutionFailed    = "execution.failed"
 	EventExecutionCancelled = "execution.cancelled"
+	EventApprovalCreated    = "approval.created"
+	EventApprovalDecided    = "approval.decided"
+	EventScheduleCreated    = "schedule.created"
 )
 
 type Event struct {
