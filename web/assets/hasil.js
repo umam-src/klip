@@ -42,7 +42,9 @@
     const { hasil, pekerjaan } = item;
     const created = hasil.created_at ? new Date(hasil.created_at).toLocaleString('id-ID') : '';
     const task = hasil.tugas_id ? `Tugas · ${hasil.tugas_id}` : 'Tanpa tugas';
-    return `<article class="item"><div class="approval-head"><strong>${escapeHTML(hasil.name)}</strong><time datetime="${escapeHTML(hasil.created_at || '')}">${escapeHTML(created)}</time></div><span>${escapeHTML(hasil.kind)} · ${escapeHTML(task)}</span><span>${escapeHTML(pekerjaan.title || pekerjaan.id)} · ${escapeHTML(hasil.path)}</span></article>`;
+    const fileURL = `/api/v1/hasil/${encodeURIComponent(hasil.id)}/file`;
+    const file = `<a class="button small" href="${fileURL}" target="_blank" rel="noopener">Buka hasil</a>`;
+    return `<article class="item"><div class="approval-head"><strong>${escapeHTML(hasil.name)}</strong><time datetime="${escapeHTML(hasil.created_at || '')}">${escapeHTML(created)}</time></div><span>${escapeHTML(hasil.kind)} · ${escapeHTML(task)}</span><span>${escapeHTML(pekerjaan.title || pekerjaan.id)} · ${escapeHTML(hasil.path)}</span><div>${file}</div></article>`;
   }
 
   refresh.addEventListener('click', loadResults);
