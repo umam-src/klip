@@ -38,6 +38,9 @@ func (e Executor) Execute(ctx context.Context, request ExecutionRequest) (Execut
 	if e.Repo == nil {
 		return ExecutionResult{}, errors.New("executor: repository wajib diisi")
 	}
+	if e.Runner == nil {
+		return ExecutionResult{}, errors.New("executor: runner wajib diisi")
+	}
 	if request.PekerjaanID == "" || request.AgenID == "" || request.Program == "" {
 		return ExecutionResult{}, fmt.Errorf("executor: %w", storage.ErrInvalid)
 	}
@@ -125,13 +128,7 @@ func (e Executor) Execute(ctx context.Context, request ExecutionRequest) (Execut
 		finished = time.Now().UTC()
 	}
 
-	persistErr := errors.Join(
-		e.Repo.FinishRun(persistCtx, run.ID, status, exitCode, result.Stdout, result.Stderr, finished),
-		e.Repo.FinishSesi(persistCtx, sesi.ID, status, finished),
-	)
-	if request.TugasID != nil {
-		persistErr = errors.Join(persistErr, e.Repo.UpdateTugasStatus(persistCtx, *request.TugasID, status, finished))
-	}
+	persistErr := e.Repo.FinalizeExecution(persistCtx, run.ID, sesi.ID, request.TugasID, status, exitCode, result.Stdout, result.Stderr, finished)
 
 	run.Status = status
 	run.ExitCode = exitCode
