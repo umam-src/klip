@@ -72,7 +72,7 @@ Catatan: `Ruang`, `Agen`, `Sasaran`, `Pekerjaan`, `Tugas`, `Sesi`, dan `Hasil` s
 - [x] Daftar tugas.
 - [x] Detail tugas.
 - [x] Thread tugas.
-- [ ] Antrean persetujuan.
+- [x] Antrean persetujuan.
 - [ ] Riwayat aktivitas.
 - [ ] Halaman provider/model.
 - [ ] Pengaturan.
