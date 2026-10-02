@@ -7,6 +7,17 @@ Format mengikuti Keep a Changelog dan versi mengikuti Semantic Versioning.
 ## [Unreleased]
 
 ### Added
+- Belum ada.
+
+### Changed
+- Belum ada.
+
+### Removed
+- Belum ada.
+
+## [0.1.0] - 2026-10-02
+
+### Added
 - Kerangka roadmap Klip.
 - Target binary dan Docker image yang terukur.
 - Prinsip local-first dan free-first untuk AI.
