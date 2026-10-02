@@ -116,7 +116,7 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p dist
-          flags=(-trimpath -buildvcs=false '-ldflags=-s -w')
+          flags=(-trimpath -buildvcs=false "-ldflags=-s -w -X main.version=${{ steps.changelog.outputs.version }}")
 
           CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
             go build "${flags[@]}" -o dist/klip-linux-amd64 ./cmd/klip

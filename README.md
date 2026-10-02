@@ -24,7 +24,7 @@ Ukuran yang menjadi sasaran adalah ukuran aplikasi yang digunakan, bukan ukuran 
 
 - Binary: target di bawah 50 MB.
 - Docker image: target di bawah 100 MB.
-- 500 MB adalah batas keras untuk artefak runtime.
+- 500 MB adalah batas keras artefak runtime.
 - Model AI tidak termasuk ke dalam binary atau Docker image Klip.
 
 Model dapat dikelola secara terpisah oleh Ollama, llama.cpp, atau layanan AI lain.
@@ -43,7 +43,15 @@ Provider awal yang tersedia adalah Ollama dan endpoint yang kompatibel dengan Op
 
 ## Menjalankan
 
-Saat dijalankan, Klip menggunakan data lokal dan server hanya tersedia dari komputer sendiri secara default.
+Saat dijalankan tanpa perintah, Klip langsung menjalankan server lokal dan menggunakan data lokal. Server hanya tersedia dari komputer sendiri secara default.
+
+```text
+klip
+klip serve --data-dir ./data
+klip serve --listen 127.0.0.1:8788
+klip version
+klip help
+```
 
 Jika model belum dipilih, Klip tetap dapat berjalan untuk fungsi lokal. Untuk mengaktifkan AI, isi model pada `config.json` di direktori data Klip.
 
@@ -64,7 +72,7 @@ Endpoint percobaan AI lokal tersedia di `POST /api/v1/chat`.
 
 ## Status
 
-Klip masih dalam tahap pengembangan awal. Struktur dan fungsi dapat berubah sebelum versi 1.0.
+Klip sudah memiliki rilis awal `0.1.0` dan masih dalam tahap pengembangan. Struktur dan fungsi dapat berubah sebelum versi 1.0.
 
 ## Dokumentasi
 

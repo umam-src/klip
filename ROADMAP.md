@@ -20,8 +20,8 @@ Klip adalah orkestrator AI yang ringan, offline-first, dan mengutamakan AI lokal
 - [x] Fondasi single binary.
 - [x] SQLite lokal.
 - [x] HTTP server lokal.
-- [ ] UI dasar.
-- [ ] CLI dasar.
+- [x] UI dasar.
+- [x] CLI dasar.
 - [x] Konfigurasi lokal.
 - [ ] Sistem i18n dengan `id-ID` sebagai default.
 - [x] Health check dan logging sederhana.
@@ -49,22 +49,22 @@ Klip adalah orkestrator AI yang ringan, offline-first, dan mengutamakan AI lokal
 - [ ] llama.cpp/llama-server adapter khusus.
 - [ ] Streaming respons.
 - [x] Timeout dan pembatalan.
-- [ ] Retry sederhana.
+- [x] Retry sederhana.
 - [x] Pemilihan model.
 - [ ] Status koneksi provider.
 - [x] Konfigurasi endpoint lokal.
 
 ### 0.4 — Runtime agen
 
-- [ ] Eksekusi proses lokal.
+- [x] Eksekusi proses lokal.
 - [ ] Tool execution.
 - [ ] Skills.
 - [ ] Heartbeat.
 - [ ] Scheduler.
-- [ ] Riwayat eksekusi.
-- [ ] Batas waktu.
-- [ ] Batas concurrency.
-- [ ] Artifact.
+- [x] Riwayat eksekusi.
+- [x] Batas waktu.
+- [x] Batas concurrency.
+- [x] Artifact.
 
 ### 0.5 — AI gratis dan provider tambahan
 
@@ -92,22 +92,22 @@ Klip adalah orkestrator AI yang ringan, offline-first, dan mengutamakan AI lokal
 - [ ] Manajemen secret.
 - [ ] Permission dasar.
 - [ ] Audit log.
-- [ ] Validasi path artifact.
-- [ ] Pembatasan proses.
-- [ ] Backup.
-- [ ] Restore.
+- [x] Validasi path artifact.
+- [x] Pembatasan proses.
+- [x] Backup.
+- [x] Restore.
 - [ ] Pengujian migrasi database.
 
 ### 0.8 — Optimasi
 
-- [ ] Ukur ukuran binary secara otomatis.
+- [x] Ukur ukuran binary secara otomatis.
 - [ ] Ukur ukuran Docker image.
-- [ ] Optimasi dependency.
-- [ ] Strip simbol debug untuk release.
+- [x] Audit dependency.
+- [x] Strip simbol debug untuk release.
 - [ ] Optimasi asset UI.
 - [ ] Uji startup time.
 - [ ] Uji memory idle.
-- [ ] Uji penggunaan SQLite.
+- [x] Uji penggunaan SQLite.
 
 ### 0.9 — Kompatibilitas
 
@@ -120,7 +120,7 @@ Klip adalah orkestrator AI yang ringan, offline-first, dan mengutamakan AI lokal
 ### 1.0 — Rilis stabil
 
 - [ ] Regression test lengkap.
-- [ ] Backup/restore teruji.
+- [x] Backup/restore teruji.
 - [ ] Upgrade database teruji.
 - [ ] Release binary lintas platform.
 - [ ] Docker image release.

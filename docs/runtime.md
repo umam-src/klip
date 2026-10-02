@@ -36,15 +36,29 @@ Jika eksekusi terkait `Tugas`, Klip memastikan tugas berada di `Pekerjaan` yang 
 - Transaksi penyimpanan memakai rollback saat terjadi kegagalan sebelum commit.
 - Benchmark memory idle belum dianggap selesai karena belum ada pengukuran RSS/heap jangka panjang yang representatif.
 
+## CLI
+
+Perintah utama Klip tetap sederhana dan tidak membutuhkan dependency tambahan:
+
+```text
+klip
+klip serve --data-dir ./data
+klip serve --listen 127.0.0.1:8788
+klip version
+klip help
+```
+
+Tanpa perintah, Klip menjalankan server seperti perilaku sebelumnya. Opsi `--data-dir` dan `--listen` hanya mengubah nilai untuk proses tersebut dan tidak menulis ulang `config.json`.
+
 ## Pengukuran performa
 
 Benchmark tersedia sebagai baseline lokal. Jalankan:
 
 ```bash
-go test ./... -run '^$' -bench 'BenchmarkStartupComponents|BenchmarkOpenSQLite|BenchmarkRunnerRun' -benchmem
+go test ./... -run '^$' -bench 'BenchmarkStartupComponents|BenchmarkOpenMemory|BenchmarkOpenSQLite|BenchmarkSQLiteWriteRead' -benchmem
 ```
 
-`BenchmarkStartupComponents` mengukur inisialisasi komponen aplikasi utama menggunakan database memori. `BenchmarkOpenSQLite` mengukur pembukaan dan penutupan database SQLite pada penyimpanan lokal. `BenchmarkRunnerRun` mengukur overhead menjalankan proses lokal melalui runner.
+`BenchmarkStartupComponents` mengukur inisialisasi komponen aplikasi utama menggunakan database memori. Benchmark SQLite mengukur pembukaan database memori, pembukaan dan penutupan database lokal, serta operasi tulis-baca sederhana.
 
 Benchmark digunakan untuk membandingkan perubahan runtime, bukan sebagai target angka tetap. Optimasi dilakukan setelah ada hasil pengukuran yang menunjukkan bagian yang memang perlu diperbaiki.
 

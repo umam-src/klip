@@ -11,7 +11,7 @@ Daftar kerja pengembangan. Prioritas: P0 wajib, P1 penting, P2 setelah inti stab
 - [x] Tambahkan HTTP server.
 - [x] Tambahkan template HTML.
 - [x] Tambahkan CSS ringan tanpa framework UI besar.
-- [ ] Tambahkan CLI dasar.
+- [x] Tambahkan CLI dasar.
 - [x] Tambahkan logging.
 - [x] Tambahkan health endpoint.
 - [ ] Tambahkan i18n dengan `id-ID` sebagai default.

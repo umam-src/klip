@@ -7,7 +7,7 @@ Format mengikuti Keep a Changelog dan versi mengikuti Semantic Versioning.
 ## [Unreleased]
 
 ### Added
-- Belum ada.
+- CLI dasar untuk menjalankan server, melihat versi, dan membuka bantuan.
 
 ### Changed
 - Belum ada.
