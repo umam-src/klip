@@ -3,8 +3,9 @@ package skill
 import (
 	"errors"
 	"fmt"
-	"regexp"
 	"strings"
+
+	"github.com/umam-src/klip/internal/domain"
 )
 
 var (
@@ -20,8 +21,6 @@ type Skill struct {
 	Description  string
 	Instructions string
 }
-
-var namePattern = regexp.MustCompile(`^[a-z0-9]+(?:-[a-z0-9]+)*$`)
 
 // Parse membaca satu dokumen SKILL.md tanpa memerlukan parser YAML eksternal.
 // Front matter harus berada di antara dua baris "---" pertama.
@@ -76,7 +75,7 @@ func Parse(content string) (Skill, error) {
 	if name == "" {
 		return Skill{}, fmt.Errorf("%w: name", ErrMissingField)
 	}
-	if !namePattern.MatchString(name) {
+	if !domain.IsValidSkillName(name) {
 		return Skill{}, fmt.Errorf("%w: name harus huruf kecil, angka, dan tanda hubung", ErrInvalidFormat)
 	}
 	if fields["description"] == "" {
