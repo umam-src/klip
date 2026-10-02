@@ -66,3 +66,4 @@ CI harus hemat menit:
 - CI dapat menghemat runner minutes dengan `concurrency.cancel-in-progress`, tetapi jangan menggantinya dengan filter path yang berisiko membuat required check tidak pernah muncul.
 - Migrasi skema harus idempotent: skema instalasi baru dan database lama harus dapat melewati pemeriksaan kolom/index yang sama tanpa menjalankan `ALTER TABLE` dua kali.
 - Relasi hierarki baru harus memvalidasi batas domain sebelum menulis foreign key; untuk hubungan induk-anak agen, parent harus berada di ruang yang sama dan operasi awal tidak boleh membuka jalur siklus.
+- Streaming provider harus menjadi kemampuan opsional agar provider lama tidak dipaksa mengimplementasikan API baru; parsing SSE harus dibatasi ukurannya dan tetap menghormati pembatalan context.
