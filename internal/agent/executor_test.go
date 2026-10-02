@@ -91,3 +91,34 @@ func TestExecutorPersistsFailure(t *testing.T) {
 		t.Fatalf("statuses = sesi:%q run:%q", result.Sesi.Status, result.Run.Status)
 	}
 }
+
+func TestExecutorRejectsInvalidProcessInputBeforeStart(t *testing.T) {
+	ctx := context.Background()
+	db, err := storage.Open(ctx, ":memory:")
+	if err != nil {
+		t.Fatalf("Open() error = %v", err)
+	}
+	defer db.Close()
+
+	repo := storage.NewRepository(db)
+	_ = repo.CreateRuang(ctx, domain.Ruang{ID: "ruang-1", Name: "Proyek"})
+	_ = repo.CreateAgen(ctx, domain.Agen{ID: "agen-1", RuangID: "ruang-1", Name: "Agen"})
+	_ = repo.CreatePekerjaan(ctx, domain.Pekerjaan{ID: "pekerjaan-1", RuangID: "ruang-1", Title: "Input invalid", Status: domain.StatusReady})
+
+	_, err = (Executor{Repo: repo}).Execute(ctx, ExecutionRequest{
+		PekerjaanID: "pekerjaan-1",
+		AgenID:      "agen-1",
+		Program:     "printf\x00",
+	})
+	if !errors.Is(err, storage.ErrInvalid) {
+		t.Fatalf("Execute() error = %v, want storage.ErrInvalid", err)
+	}
+
+	runs, err := repo.ListRunsByPekerjaan(ctx, "pekerjaan-1")
+	if err != nil {
+		t.Fatalf("ListRunsByPekerjaan() error = %v", err)
+	}
+	if len(runs) != 0 {
+		t.Fatalf("runs = %d, want 0", len(runs))
+	}
+}
