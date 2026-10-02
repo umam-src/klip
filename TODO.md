@@ -48,13 +48,13 @@ Catatan: `Ruang`, `Agen`, `Sasaran`, `Pekerjaan`, `Tugas`, `Sesi`, dan `Hasil` s
 
 ## P0 — Runtime agen
 
-- [ ] Model run.
-- [ ] Jalankan proses lokal melalui argv, bukan shell interpolation.
-- [ ] Capture stdout/stderr.
-- [ ] Timeout proses.
-- [ ] Cancellation.
+- [x] Model run.
+- [x] Jalankan proses lokal melalui argv, bukan shell interpolation.
+- [x] Capture stdout/stderr.
+- [x] Timeout proses.
+- [x] Cancellation.
 - [ ] Concurrency limit.
-- [ ] Run history.
+- [x] Run history.
 - [ ] Event runtime.
 - [ ] Error classification.
 
