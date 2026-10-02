@@ -245,20 +245,8 @@ func migrate(ctx context.Context, db *sql.DB) error {
 	if err := tx.QueryRowContext(ctx, "SELECT COALESCE(MAX(version), 0) FROM schema_migrations").Scan(&version); err != nil {
 		return fmt.Errorf("baca versi skema: %w", err)
 	}
-	if version < 8 {
-		if version < 7 {
-			// Database sebelum v7 is not expected to be upgraded in-place here;
-			// the current schema remains the source of truth for fresh installs.
-			version = 7
-		}
-		if version < 8 {
-			if _, err := tx.ExecContext(ctx, "ALTER TABLE agen ADD COLUMN parent_id TEXT REFERENCES agen(id) ON DELETE SET NULL"); err != nil {
-				return fmt.Errorf("migrasi hierarki agen: %w", err)
-			}
-			if _, err := tx.ExecContext(ctx, "CREATE INDEX IF NOT EXISTS idx_agen_parent ON agen(parent_id)"); err != nil {
-				return fmt.Errorf("indeks hierarki agen: %w", err)
-			}
-		}
+	if err := ensureAgenParentColumn(ctx, tx); err != nil {
+		return err
 	}
 	if version < schemaVersion {
 		if _, err := tx.ExecContext(ctx, "INSERT INTO schema_migrations(version) VALUES (?)", schemaVersion); err != nil {
@@ -267,6 +255,41 @@ func migrate(ctx context.Context, db *sql.DB) error {
 	}
 	if err := tx.Commit(); err != nil {
 		return fmt.Errorf("simpan migrasi: %w", err)
+	}
+	return nil
+}
+
+func ensureAgenParentColumn(ctx context.Context, tx *sql.Tx) error {
+	rows, err := tx.QueryContext(ctx, "PRAGMA table_info(agen)")
+	if err != nil {
+		return fmt.Errorf("baca kolom agen: %w", err)
+	}
+	defer rows.Close()
+
+	var found bool
+	for rows.Next() {
+		var cid int
+		var name, columnType string
+		var notNull, primaryKey int
+		var defaultValue sql.NullString
+		if err := rows.Scan(&cid, &name, &columnType, &notNull, &defaultValue, &primaryKey); err != nil {
+			return fmt.Errorf("baca metadata agen: %w", err)
+		}
+		if name == "parent_id" {
+			found = true
+			break
+		}
+	}
+	if err := rows.Err(); err != nil {
+		return fmt.Errorf("baca metadata agen: %w", err)
+	}
+	if !found {
+		if _, err := tx.ExecContext(ctx, "ALTER TABLE agen ADD COLUMN parent_id TEXT REFERENCES agen(id) ON DELETE SET NULL"); err != nil {
+			return fmt.Errorf("migrasi hierarki agen: %w", err)
+		}
+	}
+	if _, err := tx.ExecContext(ctx, "CREATE INDEX IF NOT EXISTS idx_agen_parent ON agen(parent_id)"); err != nil {
+		return fmt.Errorf("indeks hierarki agen: %w", err)
 	}
 	return nil
 }
