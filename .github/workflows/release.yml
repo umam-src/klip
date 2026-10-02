@@ -1,0 +1,192 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - CHANGELOG.md
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Read version and release notes
+        id: changelog
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          VERSION=$(grep -m1 -E '^## \[[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?\]' CHANGELOG.md \
+            | sed -E 's/^## \[//; s/\].*$//') || true
+
+          if [ -z "$VERSION" ]; then
+            echo "::error::CHANGELOG.md tidak memiliki versi SemVer yang siap dirilis."
+            exit 1
+          fi
+
+          TAG="v${VERSION}"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+
+          if [[ "$VERSION" == *-* ]]; then
+            echo "prerelease=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "prerelease=false" >> "$GITHUB_OUTPUT"
+          fi
+
+          awk -v version="$VERSION" '
+            BEGIN { found = 0 }
+            $0 ~ "^## \\[" version "\\]" { found = 1; next }
+            found && /^## \[/ { exit }
+            found { print }
+          ' CHANGELOG.md > release_notes.md
+
+          sed -i '/^[[:space:]]*$/N;/^\n$/D' release_notes.md
+
+          if [ ! -s release_notes.md ]; then
+            echo "::error::Bagian CHANGELOG untuk ${VERSION} kosong."
+            exit 1
+          fi
+
+          echo "Versi: ${VERSION}"
+          echo "----- release notes -----"
+          cat release_notes.md
+
+      - name: Check existing release
+        id: release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          TAG="${{ steps.changelog.outputs.tag }}"
+
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+            echo "GitHub Release ${TAG} sudah ada."
+            exit 0
+          fi
+
+          echo "exists=false" >> "$GITHUB_OUTPUT"
+
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            TAG_SHA=$(git rev-list -n 1 "$TAG")
+            if [ "$TAG_SHA" != "$GITHUB_SHA" ]; then
+              echo "::error::Tag ${TAG} sudah ada tetapi menunjuk ke commit berbeda (${TAG_SHA})."
+              exit 1
+            fi
+          fi
+
+      - name: Setup Go
+        if: steps.release.outputs.exists == 'false'
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.26.x'
+          cache: true
+
+      - name: Verify source
+        if: steps.release.outputs.exists == 'false'
+        run: |
+          files=$(gofmt -l .)
+          if [ -n "$files" ]; then
+            echo "File Go belum diformat dengan gofmt:"
+            echo "$files"
+            exit 1
+          fi
+          go test ./...
+
+      - name: Build Linux binary
+        if: steps.release.outputs.exists == 'false'
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          flags=(-trimpath -buildvcs=false '-ldflags=-s -w')
+
+          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
+            go build "${flags[@]}" -o dist/klip-linux-amd64 ./cmd/klip
+
+          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
+            go build "${flags[@]}" -o dist/klip-linux-amd64-repro ./cmd/klip
+
+          if ! cmp -s dist/klip-linux-amd64 dist/klip-linux-amd64-repro; then
+            echo "::error::Build release tidak reproducible."
+            sha256sum dist/klip-linux-amd64 dist/klip-linux-amd64-repro
+            exit 1
+          fi
+          rm dist/klip-linux-amd64-repro
+
+          size=$(stat -c '%s' dist/klip-linux-amd64)
+          mb=$(awk "BEGIN { printf \"%.2f\", $size / 1024 / 1024 }")
+          echo "Binary: ${mb} MiB (${size} bytes)"
+
+          if [ "$size" -gt 104857600 ]; then
+            echo "::error::Binary melebihi batas keras 100 MiB."
+            exit 1
+          fi
+
+          if [ "$size" -ge 52428800 ]; then
+            echo "::warning::Binary mencapai atau melebihi target 50 MiB."
+          fi
+
+          sha256sum dist/klip-linux-amd64 > dist/SHA256SUMS
+
+      - name: Smoke test release binary
+        if: steps.release.outputs.exists == 'false'
+        shell: bash
+        run: |
+          set -euo pipefail
+          ./dist/klip-linux-amd64 >"$RUNNER_TEMP/klip.log" 2>&1 &
+          pid=$!
+          trap 'kill "$pid" 2>/dev/null || true' EXIT
+
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent --show-error http://127.0.0.1:8787/health >/dev/null; then
+              echo "Smoke test: /health berhasil."
+              exit 0
+            fi
+            if ! kill -0 "$pid" 2>/dev/null; then
+              echo "Klip berhenti sebelum health endpoint siap."
+              cat "$RUNNER_TEMP/klip.log"
+              exit 1
+            fi
+            sleep 0.2
+          done
+
+          echo "Klip tidak merespons /health dalam batas waktu."
+          cat "$RUNNER_TEMP/klip.log"
+          exit 1
+
+      - name: Publish GitHub Release
+        if: steps.release.outputs.exists == 'false'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          TAG="${{ steps.changelog.outputs.tag }}"
+          ARGS=("$TAG" "dist/klip-linux-amd64" "dist/SHA256SUMS" \
+            --title "$TAG" \
+            --notes-file release_notes.md \
+            --target "$GITHUB_SHA")
+
+          if [ "${{ steps.changelog.outputs.prerelease }}" = "true" ]; then
+            ARGS+=(--prerelease)
+          fi
+
+          gh release create "${ARGS[@]}"
