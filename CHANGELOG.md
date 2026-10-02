@@ -14,6 +14,7 @@ Format mengikuti Keep a Changelog dan versi mengikuti Semantic Versioning.
 - Format `SKILL.md` sederhana untuk instruksi skill lokal.
 - Loader skill lokal dengan batas ukuran, validasi nama, penolakan tautan simbolik, dan urutan deterministik.
 - Relasi skill lokal ke agen yang tersimpan di SQLite dengan validasi nama, pencegahan duplikasi, dan penghapusan berantai.
+- Relasi hierarki agen satu induk dalam ruang yang sama, termasuk validasi parent dan API pembuatan serta daftar agen.
 - Penyimpanan berkas hasil lokal dengan batas 16 MiB dan validasi path.
 - Endpoint lokal untuk menyimpan serta membuka berkas hasil.
 - Aksi buka hasil dari panel Hasil di UI.
@@ -27,7 +28,7 @@ Format mengikuti Keep a Changelog dan versi mengikuti Semantic Versioning.
 - Konfigurasi sekarang menyimpan locale secara eksplisit dan menormalkan locale yang belum didukung ke `id-ID`.
 - State `Run`, `Sesi`, dan `Tugas` beserta event runtime diperbarui secara atomik saat memulai dan menyelesaikan eksekusi.
 - Validasi nama skill digunakan bersama oleh parser skill dan penyimpanan relasi agen.
-- Skema SQLite dinaikkan ke versi 7 untuk menyimpan jadwal dan riwayat scheduler.
+- Skema SQLite dinaikkan ke versi 8 untuk menyimpan hubungan induk-anak agen secara lokal.
 - Pemeriksaan format CI kembali bersih setelah handler scheduler diformat dengan `gofmt`.
 - Penyimpanan hasil menolak direktori induk yang berupa symlink untuk mencegah penulisan keluar dari root hasil.
 - Pembacaan hasil HTTP kini streaming agar unduhan hingga 16 MiB tidak perlu dimuat penuh ke memori.
