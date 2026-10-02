@@ -18,6 +18,8 @@ Format mengikuti Keep a Changelog dan versi mengikuti Semantic Versioning.
 - Batas proses berjalan bersamaan pada runner.
 - Klasifikasi kesalahan proses untuk timeout, pembatalan, kegagalan proses, dan kegagalan memulai.
 - Penyimpanan riwayat `Run` di SQLite.
+- Penyimpanan `Sesi` dan penyelesaian status eksekusi.
+- Executor yang menghubungkan Pekerjaan, Sesi, Agen, dan Run.
 - Migrasi skema SQLite versi 2 untuk riwayat eksekusi.
 - Penyimpanan SQLite tanpa kebutuhan CGO.
 - Bootstrap skema database dan pengujian dasar.
