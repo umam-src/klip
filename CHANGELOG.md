@@ -25,6 +25,7 @@ Format mengikuti Keep a Changelog dan versi mengikuti Semantic Versioning.
 - State `Run`, `Sesi`, dan `Tugas` beserta event runtime diperbarui secara atomik saat memulai dan menyelesaikan eksekusi.
 - Validasi nama skill digunakan bersama oleh parser skill dan penyimpanan relasi agen.
 - Skema SQLite dinaikkan ke versi 7 untuk menyimpan jadwal dan riwayat scheduler.
+- Pemeriksaan format CI kembali bersih setelah handler scheduler diformat dengan `gofmt`.
 
 ### Removed
 - Belum ada.
