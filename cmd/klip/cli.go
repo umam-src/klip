@@ -21,15 +21,9 @@ import (
 
 var version = "dev"
 
-func main() {
-	if err := runCLI(os.Args[1:], os.Stdout, os.Stderr); err != nil {
-		log.Fatal(err)
-	}
-}
-
 func runCLI(args []string, stdout, stderr io.Writer) error {
 	if len(args) == 0 {
-		return serve(args, stdout, stderr)
+		return serve(args, stderr)
 	}
 
 	switch args[0] {
@@ -40,13 +34,13 @@ func runCLI(args []string, stdout, stderr io.Writer) error {
 		_, err := fmt.Fprintf(stdout, "klip %s\n", version)
 		return err
 	case "serve":
-		return serve(args[1:], stdout, stderr)
+		return serve(args[1:], stderr)
 	default:
 		return fmt.Errorf("perintah tidak dikenal: %q; gunakan 'klip help'", args[0])
 	}
 }
 
-func serve(args []string, stdout, stderr io.Writer) error {
+func serve(args []string, stderr io.Writer) error {
 	flags := flag.NewFlagSet("klip serve", flag.ContinueOnError)
 	flags.SetOutput(stderr)
 	dataDirFlag := flags.String("data-dir", "", "direktori data Klip")
