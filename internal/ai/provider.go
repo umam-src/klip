@@ -16,7 +16,7 @@ type ChatRequest struct {
 }
 
 type ChatResponse struct {
-	Model  string
+	Model   string
 	Content string
 }
 
