@@ -15,6 +15,7 @@ type OpenAICompatible struct {
 	BaseURL string
 	APIKey  string
 	Client  *http.Client
+	Retry   RetryConfig
 }
 
 type chatRequest struct {
@@ -41,7 +42,12 @@ func (p *OpenAICompatible) Chat(ctx context.Context, req ChatRequest) (ChatRespo
 	if strings.TrimSpace(req.Model) == "" {
 		return ChatResponse{}, fmt.Errorf("model AI kosong")
 	}
+	return retryChat(ctx, p.Retry, func(ctx context.Context) (ChatResponse, error) {
+		return p.chatOnce(ctx, req)
+	})
+}
 
+func (p *OpenAICompatible) chatOnce(ctx context.Context, req ChatRequest) (ChatResponse, error) {
 	payload, err := json.Marshal(chatRequest{
 		Model: req.Model, Messages: req.Messages, Temperature: req.Temperature,
 		MaxTokens: req.MaxTokens, Stream: false,
@@ -75,7 +81,7 @@ func (p *OpenAICompatible) Chat(ctx context.Context, req ChatRequest) (ChatRespo
 		return ChatResponse{}, fmt.Errorf("baca respons AI: %w", err)
 	}
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return ChatResponse{}, fmt.Errorf("provider AI mengembalikan HTTP %d", resp.StatusCode)
+		return ChatResponse{}, providerHTTPError{status: resp.StatusCode}
 	}
 
 	var decoded chatResponse
