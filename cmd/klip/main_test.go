@@ -1,12 +1,23 @@
 package main
 
 import (
-	"os"
+	"context"
 	"testing"
+
+	"github.com/umam-src/klip/internal/app"
+	"github.com/umam-src/klip/internal/config"
+	"github.com/umam-src/klip/internal/storage"
 )
 
-func BenchmarkProcessEnvironment(b *testing.B) {
+func BenchmarkStartupComponents(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		_, _ = os.UserConfigDir()
+		cfg := config.Default(b.TempDir())
+		db, err := storage.Open(context.Background(), ":memory:")
+		if err != nil {
+			b.Fatal(err)
+		}
+		repo := storage.NewRepository(db)
+		_ = app.New(cfg, nil, repo).Handler()
+		_ = db.Close()
 	}
 }
