@@ -49,9 +49,9 @@ func (a *App) handleHealth(w http.ResponseWriter, _ *http.Request) {
 }
 
 type providerStatusResponse struct {
-	Provider  string `json:"provider"`
+	Provider   string `json:"provider"`
 	Configured bool   `json:"configured"`
-	Reachable bool   `json:"reachable"`
+	Reachable  bool   `json:"reachable"`
 }
 
 func (a *App) handleProviderStatus(w http.ResponseWriter, r *http.Request) {
