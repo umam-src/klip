@@ -34,6 +34,18 @@ type PekerjaanRepository interface {
 	ListPekerjaanByRuang(ctx context.Context, ruangID domain.ID) ([]domain.Pekerjaan, error)
 }
 
+type TugasRepository interface {
+	CreateTugas(ctx context.Context, tugas domain.Tugas) error
+	GetTugas(ctx context.Context, id domain.ID) (domain.Tugas, error)
+	ListTugasByPekerjaan(ctx context.Context, pekerjaanID domain.ID) ([]domain.Tugas, error)
+}
+
+type HasilRepository interface {
+	CreateHasil(ctx context.Context, hasil domain.Hasil) error
+	GetHasil(ctx context.Context, id domain.ID) (domain.Hasil, error)
+	ListHasilByPekerjaan(ctx context.Context, pekerjaanID domain.ID) ([]domain.Hasil, error)
+}
+
 type Repository struct {
 	db *sql.DB
 }
@@ -256,6 +268,168 @@ func (r *Repository) ListPekerjaanByRuang(ctx context.Context, ruangID domain.ID
 	}
 	if err := rows.Err(); err != nil {
 		return nil, fmt.Errorf("baca daftar pekerjaan: %w", err)
+	}
+	return result, nil
+}
+
+func (r *Repository) CreateTugas(ctx context.Context, tugas domain.Tugas) error {
+	if err := validateIDName(tugas.ID, tugas.Title); err != nil {
+		return fmt.Errorf("tugas: %w", err)
+	}
+	if strings.TrimSpace(string(tugas.PekerjaanID)) == "" || tugas.Position < 0 {
+		return fmt.Errorf("tugas: pekerjaan wajib diisi dan posisi tidak boleh negatif: %w", ErrInvalid)
+	}
+	var parentID any
+	if tugas.ParentID != nil {
+		parentID = string(*tugas.ParentID)
+	}
+	created, updated := timestamps(tugas.CreatedAt, tugas.UpdatedAt)
+	_, err := r.db.ExecContext(ctx, `INSERT INTO tugas (id, pekerjaan_id, parent_id, title, status, position, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`, tugas.ID, tugas.PekerjaanID, parentID, tugas.Title, tugas.Status, tugas.Position, created, updated)
+	if err != nil {
+		return fmt.Errorf("buat tugas: %w", err)
+	}
+	return nil
+}
+
+func (r *Repository) GetTugas(ctx context.Context, id domain.ID) (domain.Tugas, error) {
+	if strings.TrimSpace(string(id)) == "" {
+		return domain.Tugas{}, fmt.Errorf("tugas: %w", ErrInvalid)
+	}
+	var tugas domain.Tugas
+	var parentID sql.NullString
+	var created, updated string
+	err := r.db.QueryRowContext(ctx, `SELECT id, pekerjaan_id, parent_id, title, status, position, created_at, updated_at FROM tugas WHERE id = ?`, id).Scan(&tugas.ID, &tugas.PekerjaanID, &parentID, &tugas.Title, &tugas.Status, &tugas.Position, &created, &updated)
+	if errors.Is(err, sql.ErrNoRows) {
+		return domain.Tugas{}, ErrNotFound
+	}
+	if err != nil {
+		return domain.Tugas{}, fmt.Errorf("ambil tugas: %w", err)
+	}
+	if parentID.Valid {
+		value := domain.ID(parentID.String)
+		tugas.ParentID = &value
+	}
+	var parseErr error
+	if tugas.CreatedAt, parseErr = parseTime(created); parseErr != nil {
+		return domain.Tugas{}, parseErr
+	}
+	if tugas.UpdatedAt, parseErr = parseTime(updated); parseErr != nil {
+		return domain.Tugas{}, parseErr
+	}
+	return tugas, nil
+}
+
+func (r *Repository) ListTugasByPekerjaan(ctx context.Context, pekerjaanID domain.ID) ([]domain.Tugas, error) {
+	if strings.TrimSpace(string(pekerjaanID)) == "" {
+		return nil, fmt.Errorf("tugas: pekerjaan wajib diisi: %w", ErrInvalid)
+	}
+	rows, err := r.db.QueryContext(ctx, `SELECT id, pekerjaan_id, parent_id, title, status, position, created_at, updated_at FROM tugas WHERE pekerjaan_id = ? ORDER BY position, created_at, id`, pekerjaanID)
+	if err != nil {
+		return nil, fmt.Errorf("daftar tugas: %w", err)
+	}
+	defer rows.Close()
+
+	var result []domain.Tugas
+	for rows.Next() {
+		var tugas domain.Tugas
+		var parentID sql.NullString
+		var created, updated string
+		if err := rows.Scan(&tugas.ID, &tugas.PekerjaanID, &parentID, &tugas.Title, &tugas.Status, &tugas.Position, &created, &updated); err != nil {
+			return nil, fmt.Errorf("baca tugas: %w", err)
+		}
+		if parentID.Valid {
+			value := domain.ID(parentID.String)
+			tugas.ParentID = &value
+		}
+		var parseErr error
+		if tugas.CreatedAt, parseErr = parseTime(created); parseErr != nil {
+			return nil, parseErr
+		}
+		if tugas.UpdatedAt, parseErr = parseTime(updated); parseErr != nil {
+			return nil, parseErr
+		}
+		result = append(result, tugas)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("baca daftar tugas: %w", err)
+	}
+	return result, nil
+}
+
+func (r *Repository) CreateHasil(ctx context.Context, hasil domain.Hasil) error {
+	if strings.TrimSpace(string(hasil.ID)) == "" || strings.TrimSpace(string(hasil.PekerjaanID)) == "" || strings.TrimSpace(hasil.Kind) == "" || strings.TrimSpace(hasil.Name) == "" || strings.TrimSpace(hasil.Path) == "" {
+		return fmt.Errorf("hasil: id, pekerjaan, jenis, nama, dan path wajib diisi: %w", ErrInvalid)
+	}
+	var tugasID any
+	if hasil.TugasID != nil {
+		tugasID = string(*hasil.TugasID)
+	}
+	created := hasil.CreatedAt
+	if created.IsZero() {
+		created = time.Now().UTC()
+	}
+	_, err := r.db.ExecContext(ctx, `INSERT INTO hasil (id, pekerjaan_id, tugas_id, kind, name, path, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)`, hasil.ID, hasil.PekerjaanID, tugasID, hasil.Kind, hasil.Name, hasil.Path, created.UTC().Format(time.RFC3339Nano))
+	if err != nil {
+		return fmt.Errorf("buat hasil: %w", err)
+	}
+	return nil
+}
+
+func (r *Repository) GetHasil(ctx context.Context, id domain.ID) (domain.Hasil, error) {
+	if strings.TrimSpace(string(id)) == "" {
+		return domain.Hasil{}, fmt.Errorf("hasil: %w", ErrInvalid)
+	}
+	var hasil domain.Hasil
+	var tugasID sql.NullString
+	var created string
+	err := r.db.QueryRowContext(ctx, `SELECT id, pekerjaan_id, tugas_id, kind, name, path, created_at FROM hasil WHERE id = ?`, id).Scan(&hasil.ID, &hasil.PekerjaanID, &tugasID, &hasil.Kind, &hasil.Name, &hasil.Path, &created)
+	if errors.Is(err, sql.ErrNoRows) {
+		return domain.Hasil{}, ErrNotFound
+	}
+	if err != nil {
+		return domain.Hasil{}, fmt.Errorf("ambil hasil: %w", err)
+	}
+	if tugasID.Valid {
+		value := domain.ID(tugasID.String)
+		hasil.TugasID = &value
+	}
+	var parseErr error
+	if hasil.CreatedAt, parseErr = parseTime(created); parseErr != nil {
+		return domain.Hasil{}, parseErr
+	}
+	return hasil, nil
+}
+
+func (r *Repository) ListHasilByPekerjaan(ctx context.Context, pekerjaanID domain.ID) ([]domain.Hasil, error) {
+	if strings.TrimSpace(string(pekerjaanID)) == "" {
+		return nil, fmt.Errorf("hasil: pekerjaan wajib diisi: %w", ErrInvalid)
+	}
+	rows, err := r.db.QueryContext(ctx, `SELECT id, pekerjaan_id, tugas_id, kind, name, path, created_at FROM hasil WHERE pekerjaan_id = ? ORDER BY created_at, id`, pekerjaanID)
+	if err != nil {
+		return nil, fmt.Errorf("daftar hasil: %w", err)
+	}
+	defer rows.Close()
+
+	var result []domain.Hasil
+	for rows.Next() {
+		var hasil domain.Hasil
+		var tugasID sql.NullString
+		var created string
+		if err := rows.Scan(&hasil.ID, &hasil.PekerjaanID, &tugasID, &hasil.Kind, &hasil.Name, &hasil.Path, &created); err != nil {
+			return nil, fmt.Errorf("baca hasil: %w", err)
+		}
+		if tugasID.Valid {
+			value := domain.ID(tugasID.String)
+			hasil.TugasID = &value
+		}
+		var parseErr error
+		if hasil.CreatedAt, parseErr = parseTime(created); parseErr != nil {
+			return nil, parseErr
+		}
+		result = append(result, hasil)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("baca daftar hasil: %w", err)
 	}
 	return result, nil
 }
