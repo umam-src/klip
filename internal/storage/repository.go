@@ -17,21 +17,21 @@ var (
 )
 
 type RuangRepository interface {
-	Create(ctx context.Context, ruang domain.Ruang) error
-	Get(ctx context.Context, id domain.ID) (domain.Ruang, error)
-	List(ctx context.Context) ([]domain.Ruang, error)
+	CreateRuang(ctx context.Context, ruang domain.Ruang) error
+	GetRuang(ctx context.Context, id domain.ID) (domain.Ruang, error)
+	ListRuang(ctx context.Context) ([]domain.Ruang, error)
 }
 
 type AgenRepository interface {
-	Create(ctx context.Context, agen domain.Agen) error
-	Get(ctx context.Context, id domain.ID) (domain.Agen, error)
-	ListByRuang(ctx context.Context, ruangID domain.ID) ([]domain.Agen, error)
+	CreateAgen(ctx context.Context, agen domain.Agen) error
+	GetAgen(ctx context.Context, id domain.ID) (domain.Agen, error)
+	ListAgenByRuang(ctx context.Context, ruangID domain.ID) ([]domain.Agen, error)
 }
 
 type PekerjaanRepository interface {
-	Create(ctx context.Context, pekerjaan domain.Pekerjaan) error
-	Get(ctx context.Context, id domain.ID) (domain.Pekerjaan, error)
-	ListByRuang(ctx context.Context, ruangID domain.ID) ([]domain.Pekerjaan, error)
+	CreatePekerjaan(ctx context.Context, pekerjaan domain.Pekerjaan) error
+	GetPekerjaan(ctx context.Context, id domain.ID) (domain.Pekerjaan, error)
+	ListPekerjaanByRuang(ctx context.Context, ruangID domain.ID) ([]domain.Pekerjaan, error)
 }
 
 type Repository struct {
@@ -47,9 +47,7 @@ func (r *Repository) CreateRuang(ctx context.Context, ruang domain.Ruang) error 
 		return fmt.Errorf("ruang: %w", err)
 	}
 	created, updated := timestamps(ruang.CreatedAt, ruang.UpdatedAt)
-	_, err := r.db.ExecContext(ctx, `
-		INSERT INTO ruang (id, name, created_at, updated_at)
-		VALUES (?, ?, ?, ?)`, ruang.ID, ruang.Name, created, updated)
+	_, err := r.db.ExecContext(ctx, `INSERT INTO ruang (id, name, created_at, updated_at) VALUES (?, ?, ?, ?)`, ruang.ID, ruang.Name, created, updated)
 	if err != nil {
 		return fmt.Errorf("buat ruang: %w", err)
 	}
@@ -62,8 +60,7 @@ func (r *Repository) GetRuang(ctx context.Context, id domain.ID) (domain.Ruang, 
 	}
 	var ruang domain.Ruang
 	var created, updated string
-	err := r.db.QueryRowContext(ctx, `SELECT id, name, created_at, updated_at FROM ruang WHERE id = ?`, id).
-		Scan(&ruang.ID, &ruang.Name, &created, &updated)
+	err := r.db.QueryRowContext(ctx, `SELECT id, name, created_at, updated_at FROM ruang WHERE id = ?`, id).Scan(&ruang.ID, &ruang.Name, &created, &updated)
 	if errors.Is(err, sql.ErrNoRows) {
 		return domain.Ruang{}, ErrNotFound
 	}
@@ -117,9 +114,7 @@ func (r *Repository) CreateAgen(ctx context.Context, agen domain.Agen) error {
 		return fmt.Errorf("agen: ruang wajib diisi: %w", ErrInvalid)
 	}
 	created, updated := timestamps(agen.CreatedAt, agen.UpdatedAt)
-	_, err := r.db.ExecContext(ctx, `
-		INSERT INTO agen (id, ruang_id, name, description, provider_id, model_id, created_at, updated_at)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?)`, agen.ID, agen.RuangID, agen.Name, agen.Description, agen.ProviderID, agen.ModelID, created, updated)
+	_, err := r.db.ExecContext(ctx, `INSERT INTO agen (id, ruang_id, name, description, provider_id, model_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`, agen.ID, agen.RuangID, agen.Name, agen.Description, agen.ProviderID, agen.ModelID, created, updated)
 	if err != nil {
 		return fmt.Errorf("buat agen: %w", err)
 	}
@@ -132,8 +127,7 @@ func (r *Repository) GetAgen(ctx context.Context, id domain.ID) (domain.Agen, er
 	}
 	var agen domain.Agen
 	var created, updated string
-	err := r.db.QueryRowContext(ctx, `SELECT id, ruang_id, name, description, provider_id, model_id, created_at, updated_at FROM agen WHERE id = ?`, id).
-		Scan(&agen.ID, &agen.RuangID, &agen.Name, &agen.Description, &agen.ProviderID, &agen.ModelID, &created, &updated)
+	err := r.db.QueryRowContext(ctx, `SELECT id, ruang_id, name, description, provider_id, model_id, created_at, updated_at FROM agen WHERE id = ?`, id).Scan(&agen.ID, &agen.RuangID, &agen.Name, &agen.Description, &agen.ProviderID, &agen.ModelID, &created, &updated)
 	if errors.Is(err, sql.ErrNoRows) {
 		return domain.Agen{}, ErrNotFound
 	}
@@ -194,9 +188,7 @@ func (r *Repository) CreatePekerjaan(ctx context.Context, pekerjaan domain.Peker
 	if pekerjaan.SasaranID != nil {
 		sasaranID = string(*pekerjaan.SasaranID)
 	}
-	_, err := r.db.ExecContext(ctx, `
-		INSERT INTO pekerjaan (id, ruang_id, sasaran_id, title, status, created_at, updated_at)
-		VALUES (?, ?, ?, ?, ?, ?, ?)`, pekerjaan.ID, pekerjaan.RuangID, sasaranID, pekerjaan.Title, pekerjaan.Status, created, updated)
+	_, err := r.db.ExecContext(ctx, `INSERT INTO pekerjaan (id, ruang_id, sasaran_id, title, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)`, pekerjaan.ID, pekerjaan.RuangID, sasaranID, pekerjaan.Title, pekerjaan.Status, created, updated)
 	if err != nil {
 		return fmt.Errorf("buat pekerjaan: %w", err)
 	}
@@ -210,8 +202,7 @@ func (r *Repository) GetPekerjaan(ctx context.Context, id domain.ID) (domain.Pek
 	var pekerjaan domain.Pekerjaan
 	var sasaranID sql.NullString
 	var created, updated string
-	err := r.db.QueryRowContext(ctx, `SELECT id, ruang_id, sasaran_id, title, status, created_at, updated_at FROM pekerjaan WHERE id = ?`, id).
-		Scan(&pekerjaan.ID, &pekerjaan.RuangID, &sasaranID, &pekerjaan.Title, &pekerjaan.Status, &created, &updated)
+	err := r.db.QueryRowContext(ctx, `SELECT id, ruang_id, sasaran_id, title, status, created_at, updated_at FROM pekerjaan WHERE id = ?`, id).Scan(&pekerjaan.ID, &pekerjaan.RuangID, &sasaranID, &pekerjaan.Title, &pekerjaan.Status, &created, &updated)
 	if errors.Is(err, sql.ErrNoRows) {
 		return domain.Pekerjaan{}, ErrNotFound
 	}
