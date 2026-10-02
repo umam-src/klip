@@ -73,17 +73,6 @@ func (e Executor) Execute(ctx context.Context, request ExecutionRequest) (Execut
 		Status:      domain.StatusRunning,
 		StartedAt:   now,
 	}
-	if err := e.Repo.CreateSesi(ctx, sesi); err != nil {
-		return ExecutionResult{}, fmt.Errorf("executor: buat sesi: %w", err)
-	}
-
-	if request.TugasID != nil {
-		if err := e.Repo.UpdateTugasStatus(ctx, *request.TugasID, domain.StatusRunning, now); err != nil {
-			_ = finishSesi(e.Repo, sesi.ID, domain.StatusFailed)
-			return ExecutionResult{}, fmt.Errorf("executor: mulai tugas: %w", err)
-		}
-	}
-
 	run := domain.Run{
 		ID:          newID(),
 		PekerjaanID: request.PekerjaanID,
@@ -94,13 +83,12 @@ func (e Executor) Execute(ctx context.Context, request ExecutionRequest) (Execut
 		Arguments:   append([]string(nil), request.Arguments...),
 		StartedAt:   now,
 	}
-	if err := e.Repo.CreateRun(ctx, run); err != nil {
-		_ = finishSesi(e.Repo, sesi.ID, domain.StatusFailed)
-		if request.TugasID != nil {
-			_ = finishTugas(e.Repo, *request.TugasID, domain.StatusFailed)
-		}
-		return ExecutionResult{}, fmt.Errorf("executor: buat run: %w", err)
+	started, err := e.Repo.StartExecution(ctx, sesi, run)
+	if err != nil {
+		return ExecutionResult{}, fmt.Errorf("executor: mulai execution: %w", err)
 	}
+	sesi = started.Sesi
+	run = started.Run
 
 	result, runErr := e.Runner.Run(ctx, Command{
 		Program: request.Program,
@@ -147,18 +135,6 @@ func classifyStatus(err error) domain.Status {
 	default:
 		return domain.StatusFailed
 	}
-}
-
-func finishSesi(repo *storage.Repository, id domain.ID, status domain.Status) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-	return repo.FinishSesi(ctx, id, status, time.Now().UTC())
-}
-
-func finishTugas(repo *storage.Repository, id domain.ID, status domain.Status) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-	return repo.UpdateTugasStatus(ctx, id, status, time.Now().UTC())
 }
 
 func newID() domain.ID {
