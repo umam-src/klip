@@ -83,7 +83,9 @@ func (s *ResultStore) Put(relPath string, r io.Reader) error {
 	return nil
 }
 
-func (s *ResultStore) Read(relPath string) ([]byte, error) {
+// Open membuka berkas hasil untuk dibaca secara streaming.
+// Pemanggil wajib menutup berkas yang dikembalikan.
+func (s *ResultStore) Open(relPath string) (*os.File, error) {
 	path, err := s.resolve(relPath)
 	if err != nil {
 		return nil, err
@@ -104,7 +106,34 @@ func (s *ResultStore) Read(relPath string) ([]byte, error) {
 	if info.Size() > maxResultSize {
 		return nil, fmt.Errorf("hasil: ukuran berkas tidak valid: %w", ErrInvalid)
 	}
-	data, err := os.ReadFile(path)
+
+	file, err := os.Open(path)
+	if errors.Is(err, os.ErrNotExist) {
+		return nil, ErrNotFound
+	}
+	if err != nil {
+		return nil, fmt.Errorf("hasil: buka berkas: %w", err)
+	}
+	openedInfo, err := file.Stat()
+	if err != nil {
+		_ = file.Close()
+		return nil, fmt.Errorf("hasil: periksa berkas terbuka: %w", err)
+	}
+	if !openedInfo.Mode().IsRegular() || openedInfo.Size() > maxResultSize {
+		_ = file.Close()
+		return nil, fmt.Errorf("hasil: berkas tidak valid: %w", ErrInvalid)
+	}
+	return file, nil
+}
+
+func (s *ResultStore) Read(relPath string) ([]byte, error) {
+	file, err := s.Open(relPath)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	data, err := io.ReadAll(file)
 	if errors.Is(err, os.ErrNotExist) {
 		return nil, ErrNotFound
 	}
