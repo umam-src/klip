@@ -79,7 +79,7 @@ Catatan: `Ruang`, `Agen`, `Sasaran`, `Pekerjaan`, `Tugas`, `Sesi`, dan `Hasil` s
 
 ## P1 — Skills dan hasil
 
-- [ ] Format skill sederhana.
+- [x] Format skill sederhana.
 - [ ] Skill lokal.
 - [ ] Relasi skill ke agen.
 - [ ] Penyimpanan hasil.
