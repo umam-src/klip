@@ -26,11 +26,9 @@ func TestAppendAndListEvents(t *testing.T) {
 	}
 
 	created := time.Date(2026, 10, 2, 12, 0, 0, 0, time.UTC)
-	runID := domain.ID("run-1")
 	event := domain.Event{
 		ID:          "event-1",
 		PekerjaanID: "pekerjaan-1",
-		RunID:       &runID,
 		Type:        domain.EventExecutionStarted,
 		Message:     "Eksekusi dimulai",
 		CreatedAt:   created,
@@ -48,9 +46,6 @@ func TestAppendAndListEvents(t *testing.T) {
 	}
 	if events[0].ID != event.ID || events[0].Type != event.Type || events[0].Message != event.Message {
 		t.Fatalf("event = %+v, want %+v", events[0], event)
-	}
-	if events[0].RunID == nil || *events[0].RunID != runID {
-		t.Fatalf("RunID = %v, want %q", events[0].RunID, runID)
 	}
 	if !events[0].CreatedAt.Equal(created) {
 		t.Fatalf("CreatedAt = %v, want %v", events[0].CreatedAt, created)
