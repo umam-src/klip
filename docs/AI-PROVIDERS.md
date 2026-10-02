@@ -31,6 +31,26 @@ POST /v1/chat/completions
 
 Ini memungkinkan Klip bekerja dengan berbagai server lokal tanpa membuat adapter khusus untuk setiap server.
 
+## Streaming
+
+Provider OpenAI-compatible mendukung streaming Server-Sent Events (SSE) dari endpoint chat. API Klip meneruskan potongan jawaban melalui:
+
+```text
+POST /api/v1/chat
+```
+
+dengan JSON:
+
+```json
+{"prompt":"Halo","stream":true}
+```
+
+Respons menggunakan `text/event-stream`. Setiap event berisi objek `model` dan `content`; aliran ditutup dengan event `data: [DONE]`.
+
+Streaming adalah kemampuan opsional. Provider yang belum mendukungnya mengembalikan `501 Not Implemented` pada permintaan streaming, sementara mode chat biasa tetap tersedia.
+
+Pembatalan request memakai `context.Context`, sehingga koneksi yang dihentikan klien dapat menghentikan pembacaan dari provider.
+
 ## Keamanan
 
 - API key tidak boleh ditulis ke log.
@@ -39,6 +59,6 @@ Ini memungkinkan Klip bekerja dengan berbagai server lokal tanpa membuat adapter
 - Respons dibatasi ukurannya agar provider tidak dapat menghabiskan memori Klip secara tidak sengaja.
 - Jangan menyimpan kredensial dalam source code atau pengujian nyata.
 
-## Batas v0.1
+## Batas saat ini
 
-Streaming, retry terukur, pemilihan provider otomatis, dan fallback multi-provider belum menjadi bagian dari adapter awal. Fitur tersebut ditambahkan setelah kontrak dasar stabil.
+Belum ada fallback multi-provider otomatis atau adapter khusus llama.cpp/llama-server. Adapter khusus hanya ditambahkan jika kebutuhan nyata tidak dapat dipenuhi oleh kontrak OpenAI-compatible.
