@@ -167,7 +167,7 @@ func (s *Scheduler) run(ctx context.Context, schedule domain.Schedule) {
 	attempts := schedule.RetryLimit + 1
 	for attempt := 1; attempt <= attempts; attempt++ {
 		run := domain.ScheduleRun{
-			ID:         fmt.Sprintf("%s-%d-%d", schedule.ID, started.UnixNano(), attempt),
+			ID:         domain.ID(fmt.Sprintf("%s-%d-%d", schedule.ID, started.UnixNano(), attempt)),
 			ScheduleID: schedule.ID,
 			Status:     domain.ScheduleRunRunning,
 			Attempt:    attempt,
