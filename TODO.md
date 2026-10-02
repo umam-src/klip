@@ -131,7 +131,7 @@ Catatan: `Ruang`, `Agen`, `Sasaran`, `Pekerjaan`, `Tugas`, `Sesi`, dan `Hasil` s
 - [ ] Browser E2E tidak dijalankan pada setiap commit jika tidak diperlukan.
 - [x] Size check dilakukan setelah build.
 - [x] Hindari matrix platform berlebihan pada setiap PR.
-- [ ] Cross-platform build pada release.
+- [x] Cross-platform build pada release.
 
 ## P3 — Integrasi tambahan
 
