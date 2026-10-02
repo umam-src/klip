@@ -66,6 +66,22 @@ func (e Executor) Execute(ctx context.Context, request ExecutionRequest) (Execut
 			return ExecutionResult{}, fmt.Errorf("executor: tugas berstatus %q tidak dapat dijalankan: %w", tugas.Status, storage.ErrInvalid)
 		}
 	}
+	approvalStatus, hasApproval, err := e.Repo.ApprovalGate(ctx, request.PekerjaanID, request.TugasID)
+	if err != nil {
+		return ExecutionResult{}, fmt.Errorf("executor: approval: %w", err)
+	}
+	if hasApproval {
+		switch approvalStatus {
+		case domain.ApprovalPending:
+			return ExecutionResult{}, fmt.Errorf("executor: menunggu persetujuan: %w", storage.ErrInvalid)
+		case domain.ApprovalRejected:
+			return ExecutionResult{}, fmt.Errorf("executor: tindakan ditolak: %w", storage.ErrInvalid)
+		case domain.ApprovalApproved:
+			// lanjutkan eksekusi
+		default:
+			return ExecutionResult{}, fmt.Errorf("executor: status approval tidak dikenal: %w", storage.ErrInvalid)
+		}
+	}
 
 	now := time.Now().UTC()
 	sesi := domain.Sesi{
