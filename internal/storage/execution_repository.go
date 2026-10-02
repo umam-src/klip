@@ -31,18 +31,6 @@ func (r *Repository) FinalizeExecution(ctx context.Context, runID, sesiID domain
 	}
 	defer func() { _ = tx.Rollback() }()
 
-	if err := finishRunTx(tx, runID, status, exitCode, stdout, stderr, finishedAt); err != nil {
-		return err
-	}
-	if err := finishSesiTx(tx, sesiID, status, finishedAt); err != nil {
-		return err
-	}
-	if tugasID != nil {
-		if err := finishTugasTx(tx, *tugasID, status, finishedAt); err != nil {
-			return err
-		}
-	}
-
 	var pekerjaanID, agenID domain.ID
 	var eventTugasID sql.NullString
 	if err := tx.QueryRow(`SELECT pekerjaan_id, agen_id, tugas_id FROM run WHERE id = ?`, runID).Scan(&pekerjaanID, &agenID, &eventTugasID); err != nil {
@@ -51,18 +39,35 @@ func (r *Repository) FinalizeExecution(ctx context.Context, runID, sesiID domain
 		}
 		return fmt.Errorf("baca konteks event execution: %w", err)
 	}
-	var eventTaskID *domain.ID
+
+	var actualTugasID *domain.ID
 	if eventTugasID.Valid {
 		value := domain.ID(eventTugasID.String)
-		eventTaskID = &value
+		actualTugasID = &value
 	}
+	if !sameOptionalID(tugasID, actualTugasID) {
+		return fmt.Errorf("execution: tugas tidak sesuai dengan run: %w", ErrInvalid)
+	}
+
+	if err := finishRunTx(tx, runID, status, exitCode, stdout, stderr, finishedAt); err != nil {
+		return err
+	}
+	if err := finishSesiTx(tx, sesiID, status, finishedAt); err != nil {
+		return err
+	}
+	if actualTugasID != nil {
+		if err := finishTugasTx(tx, *actualTugasID, status, finishedAt); err != nil {
+			return err
+		}
+	}
+
 	eventType := domain.EventTypeForStatus(status)
 	if eventType == "" {
 		return fmt.Errorf("execution: status event tidak dikenal: %q: %w", status, ErrInvalid)
 	}
 	if err := appendEvent(ctx, tx, domain.Event{
 		PekerjaanID: pekerjaanID,
-		TugasID:     eventTaskID,
+		TugasID:     actualTugasID,
 		SesiID:      idPtr(sesiID),
 		RunID:       idPtr(runID),
 		AgenID:      idPtr(agenID),
@@ -76,6 +81,13 @@ func (r *Repository) FinalizeExecution(ctx context.Context, runID, sesiID domain
 		return fmt.Errorf("commit execution: %w", err)
 	}
 	return nil
+}
+
+func sameOptionalID(got, want *domain.ID) bool {
+	if got == nil || want == nil {
+		return got == nil && want == nil
+	}
+	return *got == *want
 }
 
 func finishRunTx(tx *sql.Tx, id domain.ID, status domain.Status, exitCode *int, stdout, stderr string, finishedAt time.Time) error {
