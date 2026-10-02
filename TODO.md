@@ -1,12 +1,12 @@
 # TODO Klip
 
-Daftar kerja awal untuk mencapai roadmap. Prioritas: P0 wajib, P1 penting, P2 setelah inti stabil, P3 opsional.
+Daftar kerja pengembangan. Prioritas: P0 wajib, P1 penting, P2 setelah inti stabil, P3 opsional.
 
 ## P0 — Fondasi
 
 - [x] Inisialisasi modul Go.
 - [x] Tentukan struktur package internal.
-- [ ] Tambahkan konfigurasi lokal.
+- [x] Tambahkan konfigurasi lokal.
 - [x] Tambahkan SQLite dan migrasi.
 - [x] Tambahkan HTTP server.
 - [ ] Tambahkan template HTML.
@@ -17,39 +17,34 @@ Daftar kerja awal untuk mencapai roadmap. Prioritas: P0 wajib, P1 penting, P2 se
 - [ ] Tambahkan i18n dengan `id-ID` sebagai default.
 - [ ] Pastikan asset UI dibundel lokal, tanpa CDN wajib.
 - [ ] Tambahkan build reproducible.
-- [ ] Tambahkan pemeriksaan ukuran binary.
+- [x] Tambahkan pemeriksaan ukuran binary di CI.
 - [ ] Tambahkan pemeriksaan ukuran Docker image.
 
 ## P0 — Domain inti
 
-- [ ] Model organisasi.
-- [ ] Model pengguna.
-- [x] Model agen.
 - [ ] Relasi hierarki agen.
-- [x] Model sasaran.
-- [ ] Model proyek.
-- [x] Model pekerjaan.
-- [x] Model tugas.
 - [ ] Thread dan komentar tugas.
 - [ ] Persetujuan.
 - [ ] Activity log.
-- [ ] Repository/service layer untuk setiap domain.
+- [ ] Repository/service layer untuk domain.
 - [ ] Unit test domain.
+
+Catatan: `Ruang`, `Agen`, `Sasaran`, `Pekerjaan`, `Tugas`, `Sesi`, dan `Hasil` sudah memiliki dasar skema. Konsep `Organisasi`, `Pengguna`, dan `Proyek` tidak menjadi syarat fondasi Klip.
 
 ## P0 — AI provider
 
-- [ ] Definisikan interface provider.
-- [ ] Provider HTTP generik.
-- [ ] Dukungan OpenAI-compatible API.
-- [ ] Adapter Ollama.
-- [ ] Adapter llama.cpp/llama-server.
+- [x] Definisikan interface provider.
+- [x] Provider HTTP generik melalui endpoint OpenAI-compatible.
+- [x] Dukungan OpenAI-compatible API.
+- [x] Adapter Ollama.
+- [ ] Adapter llama.cpp/llama-server khusus jika kebutuhan native muncul.
 - [ ] Streaming.
-- [ ] Timeout.
-- [ ] Cancellation.
+- [x] Timeout.
+- [x] Cancellation melalui `context.Context`.
 - [ ] Retry terbatas.
-- [ ] Pemilihan model.
+- [x] Pemilihan model melalui konfigurasi/request.
 - [ ] Status koneksi provider.
-- [ ] Jangan menyimpan API key ke log.
+- [x] Jangan menyimpan API key ke log.
 
 ## P0 — Runtime agen
 
@@ -103,9 +98,9 @@ Daftar kerja awal untuk mencapai roadmap. Prioritas: P0 wajib, P1 penting, P2 se
 - [ ] Backup database.
 - [ ] Restore database.
 - [ ] Backup hasil.
-- [ ] Secret tidak masuk log.
+- [x] Secret tidak masuk log.
 - [x] Default bind hanya ke localhost.
-- [ ] Validasi input HTTP.
+- [x] Validasi dasar input HTTP.
 - [ ] Proteksi CSRF jika diperlukan oleh mode UI.
 - [ ] Audit aksi penting.
 - [ ] Dokumentasikan batas keamanan local-first.
@@ -114,11 +109,12 @@ Daftar kerja awal untuk mencapai roadmap. Prioritas: P0 wajib, P1 penting, P2 se
 
 - [ ] Audit dependency.
 - [ ] Hapus dependency yang tidak diperlukan.
-- [ ] Optimasi binary release.
+- [x] Optimasi binary release dasar dengan `-trimpath -ldflags '-s -w'` di CI.
 - [ ] Optimasi static asset.
-- [ ] Uji binary <50 MB.
+- [ ] Uji target binary <50 MB.
 - [ ] Uji Docker image <100 MB.
-- [ ] Hard fail jika artefak >500 MB.
+- [x] Hard fail jika binary >500 MB.
+- [ ] Hard fail Docker image >500 MB.
 - [ ] Benchmark startup.
 - [ ] Benchmark memory idle.
 - [ ] Benchmark SQLite.
@@ -126,12 +122,12 @@ Daftar kerja awal untuk mencapai roadmap. Prioritas: P0 wajib, P1 penting, P2 se
 
 ## P2 — CI/CD hemat menit
 
-- [ ] Cache Go module dan build cache.
-- [ ] Satu job test utama untuk pull request.
-- [ ] Build release hanya pada tag.
+- [x] Cache Go module dan build cache.
+- [x] Satu job test utama untuk pull request/push utama.
+- [x] Build release hanya pada tag.
 - [ ] Browser E2E tidak dijalankan pada setiap commit jika tidak diperlukan.
-- [ ] Size check dilakukan setelah build.
-- [ ] Hindari matrix platform berlebihan pada setiap PR.
+- [x] Size check dilakukan setelah build.
+- [x] Hindari matrix platform berlebihan pada setiap PR.
 - [ ] Cross-platform build pada release.
 
 ## P3 — Integrasi tambahan
@@ -154,7 +150,7 @@ Daftar kerja awal untuk mencapai roadmap. Prioritas: P0 wajib, P1 penting, P2 se
 - [x] docs/PARITY.md.
 - [ ] docs/data-model.md.
 - [ ] docs/runtime.md.
-- [ ] docs/providers.md.
+- [x] docs/AI-PROVIDERS.md.
 - [ ] docs/security.md.
 - [ ] docs/storage.md.
 - [ ] docs/backup.md.
