@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
+	"mime"
 	"net/http"
 	"strings"
 
@@ -315,6 +316,14 @@ func (a *App) handleHasil(w http.ResponseWriter, r *http.Request, pekerjaanID do
 }
 
 func decodeJSON(w http.ResponseWriter, r *http.Request, value any) bool {
+	if contentType := strings.TrimSpace(r.Header.Get("Content-Type")); contentType != "" {
+		mediaType, _, err := mime.ParseMediaType(contentType)
+		if err != nil || !strings.EqualFold(mediaType, "application/json") {
+			writeError(w, http.StatusUnsupportedMediaType, "content-type harus application/json")
+			return false
+		}
+	}
+
 	decoder := json.NewDecoder(http.MaxBytesReader(w, r.Body, 64<<10))
 	if err := decoder.Decode(value); err != nil {
 		writeError(w, http.StatusBadRequest, "permintaan tidak valid")
