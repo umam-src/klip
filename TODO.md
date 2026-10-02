@@ -55,7 +55,7 @@ Catatan: `Ruang`, `Agen`, `Sasaran`, `Pekerjaan`, `Tugas`, `Sesi`, dan `Hasil` s
 - [x] Cancellation.
 - [x] Concurrency limit.
 - [x] Run history.
-- [ ] Event runtime.
+- [x] Event runtime.
 - [x] Error classification.
 
 ## P1 — UI
