@@ -1,6 +1,7 @@
 package app
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"strings"
@@ -33,6 +34,7 @@ func (a *App) Handler() http.Handler {
 	mux.Handle("/", web.Handler())
 	mux.HandleFunc("/health", a.handleHealth)
 	mux.HandleFunc("/api/v1/chat", a.handleChat)
+	mux.HandleFunc("/api/v1/provider/status", a.handleProviderStatus)
 	mux.HandleFunc("/api/v1/ruang", a.handleRuang)
 	mux.HandleFunc("/api/v1/ruang/{id}/sasaran", a.handleSasaran)
 	mux.HandleFunc("/api/v1/ruang/", a.handleRuangChild)
@@ -43,6 +45,38 @@ func (a *App) Handler() http.Handler {
 func (a *App) handleHealth(w http.ResponseWriter, _ *http.Request) {
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	_, _ = w.Write([]byte("ok\n"))
+}
+
+type providerStatusResponse struct {
+	Provider  string `json:"provider"`
+	Configured bool   `json:"configured"`
+	Reachable bool   `json:"reachable"`
+}
+
+func (a *App) handleProviderStatus(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		writeError(w, http.StatusMethodNotAllowed, "metode tidak didukung")
+		return
+	}
+	status := providerStatusResponse{Provider: a.config.AI.Provider}
+	if a.provider == nil {
+		writeJSON(w, http.StatusServiceUnavailable, status)
+		return
+	}
+	status.Configured = strings.TrimSpace(a.config.AI.Model) != ""
+	checker, ok := a.provider.(ai.HealthChecker)
+	if !ok {
+		writeJSON(w, http.StatusOK, status)
+		return
+	}
+	checkCtx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+	if err := checker.Check(checkCtx); err != nil {
+		writeJSON(w, http.StatusServiceUnavailable, status)
+		return
+	}
+	status.Reachable = true
+	writeJSON(w, http.StatusOK, status)
 }
 
 type chatRequest struct {
