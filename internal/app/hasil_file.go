@@ -44,7 +44,7 @@ func (a *App) handleHasilFile(w http.ResponseWriter, r *http.Request) {
 		}
 		w.WriteHeader(http.StatusNoContent)
 	case http.MethodGet:
-		data, err := a.resultStore.Read(hasil.Path)
+		file, err := a.resultStore.Open(hasil.Path)
 		if errors.Is(err, storage.ErrNotFound) {
 			writeError(w, http.StatusNotFound, "berkas hasil belum tersedia")
 			return
@@ -53,13 +53,30 @@ func (a *App) handleHasilFile(w http.ResponseWriter, r *http.Request) {
 			writeStorageError(w, err)
 			return
 		}
-		contentType := http.DetectContentType(data)
-		if contentType != "" {
-			w.Header().Set("Content-Type", contentType)
+		defer file.Close()
+
+		info, err := file.Stat()
+		if err != nil {
+			writeStorageError(w, err)
+			return
 		}
+		contentType := "application/octet-stream"
+		if info.Size() > 0 {
+			probe := make([]byte, 512)
+			n, readErr := file.Read(probe)
+			if readErr != nil && !errors.Is(readErr, io.EOF) {
+				writeStorageError(w, readErr)
+				return
+			}
+			contentType = http.DetectContentType(probe[:n])
+			if _, err := file.Seek(0, io.SeekStart); err != nil {
+				writeStorageError(w, err)
+				return
+			}
+		}
+		w.Header().Set("Content-Type", contentType)
 		w.Header().Set("Content-Disposition", "inline; filename=\""+strings.ReplaceAll(hasil.Name, "\"", "")+"\"")
-		w.WriteHeader(http.StatusOK)
-		_, _ = w.Write(data)
+		http.ServeContent(w, r, hasil.Name, info.ModTime(), file)
 	default:
 		w.Header().Set("Allow", "GET, PUT")
 		writeError(w, http.StatusMethodNotAllowed, "metode tidak didukung")
