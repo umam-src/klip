@@ -34,6 +34,7 @@ Format mengikuti Keep a Changelog dan versi mengikuti Semantic Versioning.
 - Tinjauan CSRF menetapkan bahwa mode UI lokal saat ini belum memerlukan token karena API tidak memakai cookie sesi dan bind bawaan hanya localhost.
 - Dokumentasi optimasi menjelaskan pengukuran heap idle dan membedakannya dari RSS proses.
 - Test status provider diperbaiki agar skenario provider tanpa model benar-benar menggunakan konfigurasi model kosong.
+- Release sekarang membangun binary Linux amd64, Windows amd64, dan macOS arm64; pengujian sumber tetap dilakukan sekali sebelum build matrix.
 
 ### Removed
 - Belum ada.
