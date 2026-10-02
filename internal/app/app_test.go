@@ -4,11 +4,13 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"runtime"
 	"strings"
 	"testing"
 
 	"github.com/umam-src/klip/internal/ai"
 	"github.com/umam-src/klip/internal/config"
+	"github.com/umam-src/klip/internal/domain"
 	"github.com/umam-src/klip/internal/storage"
 )
 
@@ -58,6 +60,96 @@ func TestHandlerChatRejectsEmptyPrompt(t *testing.T) {
 	if res.Code != http.StatusBadRequest {
 		t.Fatalf("status = %d, want %d", res.Code, http.StatusBadRequest)
 	}
+}
+
+func TestAppExecutorWiring(t *testing.T) {
+	ctx := context.Background()
+	db, err := storage.Open(ctx, ":memory:")
+	if err != nil {
+		t.Fatalf("Open() error = %v", err)
+	}
+	defer db.Close()
+
+	repo := storage.NewRepository(db)
+	app := New(config.Default(t.TempDir()), fakeProvider{}, repo)
+
+	if app.executor.Repo != repo {
+		t.Fatal("executor repository is not wired to app repository")
+	}
+
+	mustCreate := func(name string, fn func() error) {
+		t.Helper()
+		if err := fn(); err != nil {
+			t.Fatalf("create %s: %v", name, err)
+		}
+	}
+	mustCreate("ruang", func() error {
+		return repo.CreateRuang(ctx, domain.Ruang{ID: "ruang-exec", Name: "Ruang Executor"})
+	})
+	mustCreate("agen", func() error {
+		return repo.CreateAgen(ctx, domain.Agen{ID: "agen-exec", RuangID: "ruang-exec", Name: "Agen Executor"})
+	})
+	mustCreate("pekerjaan", func() error {
+		return repo.CreatePekerjaan(ctx, domain.Pekerjaan{ID: "pekerjaan-exec", RuangID: "ruang-exec", Title: "Pekerjaan Executor", Status: domain.StatusDraft})
+	})
+	mustCreate("tugas", func() error {
+		return repo.CreateTugas(ctx, domain.Tugas{ID: "tugas-exec", PekerjaanID: "pekerjaan-exec", Title: "Tugas Executor", Status: domain.StatusReady})
+	})
+
+	program, args := executionTestCommand()
+	result, err := app.executor.Execute(ctx, executionRequest("pekerjaan-exec", "tugas-exec", "agen-exec", program, args))
+	if err != nil {
+		t.Fatalf("Execute() error = %v", err)
+	}
+	if result.Run.Status != domain.StatusCompleted || result.Sesi.Status != domain.StatusCompleted {
+		t.Fatalf("execution statuses = run %q, sesi %q", result.Run.Status, result.Sesi.Status)
+	}
+	if result.Run.Stdout != "klip-test\n" {
+		t.Fatalf("stdout = %q, want %q", result.Run.Stdout, "klip-test\n")
+	}
+
+	stored, err := repo.GetRun(ctx, result.Run.ID)
+	if err != nil {
+		t.Fatalf("GetRun() error = %v", err)
+	}
+	if stored.Status != domain.StatusCompleted || stored.Stdout != "klip-test\n" {
+		t.Fatalf("stored run = status %q, stdout %q", stored.Status, stored.Stdout)
+	}
+	task, err := repo.GetTugas(ctx, "tugas-exec")
+	if err != nil {
+		t.Fatalf("GetTugas() error = %v", err)
+	}
+	if task.Status != domain.StatusCompleted {
+		t.Fatalf("task status = %q, want %q", task.Status, domain.StatusCompleted)
+	}
+}
+
+func executionRequest(pekerjaanID, tugasID, agenID, program string, args []string) struct {
+	PekerjaanID domain.ID
+	TugasID     *domain.ID
+	AgenID      domain.ID
+	Program     string
+	Arguments   []string
+	Dir         string
+	Env         []string
+} {
+	taskID := domain.ID(tugasID)
+	return struct {
+		PekerjaanID domain.ID
+		TugasID     *domain.ID
+		AgenID      domain.ID
+		Program     string
+		Arguments   []string
+		Dir         string
+		Env         []string
+	}{PekerjaanID: domain.ID(pekerjaanID), TugasID: &taskID, AgenID: domain.ID(agenID), Program: program, Arguments: args}
+}
+
+func executionTestCommand() (string, []string) {
+	if runtime.GOOS == "windows" {
+		return "cmd", []string{"/C", "echo klip-test"}
+	}
+	return "printf", []string{"klip-test\\n"}
 }
 
 func TestHandlerDomainFlow(t *testing.T) {
