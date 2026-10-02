@@ -59,3 +59,4 @@ CI harus hemat menit:
 - Jangan menganggap perubahan Go sudah terformat hanya karena perubahan kecil; sebelum push, jalankan `gofmt -w` pada file Go yang disentuh.
 - Pertahankan pemeriksaan `gofmt -l .` di CI agar format tidak kembali rusak.
 - Benchmark memori tidak dijalankan pada setiap CI karena hasilnya sensitif terhadap lingkungan runner; jalankan saat investigasi optimasi dan bandingkan pada lingkungan yang konsisten.
+- Pada test table-driven, setiap kasus harus mengisi seluruh parameter yang memengaruhi perilaku yang diuji; jangan memakai nilai contoh dari kasus lain untuk skenario kosong/tidak terkonfigurasi.
