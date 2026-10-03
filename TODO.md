@@ -28,8 +28,15 @@ Daftar kerja pengembangan. Prioritas: P0 wajib, P1 penting, P2 setelah inti stab
 - [x] Activity log.
 - [x] Repository/service layer untuk domain.
 - [x] Unit test domain.
+- [x] Tetapkan Ruang Kerja sebagai batas domain.
+- [x] Tetapkan Goal sebagai pusat arah kerja.
+- [ ] Hubungkan Pekerjaan ke Goal secara konsisten.
+- [ ] Pastikan Goal turunan tidak dapat menyeberangi Ruang Kerja.
+- [ ] Audit seluruh relasi domain untuk memastikan batas `ruang_id` tidak dapat dilewati.
+- [ ] Tetapkan lifecycle Ruang Kerja `active` dan `archived` pada storage/service.
+- [ ] Tetapkan Execution dan Result/Evidence sebagai jejak yang dapat ditelusuri kembali ke Ruang Kerja dan Goal.
 
-Catatan: `Ruang`, `Agen`, `Sasaran`, `Pekerjaan`, `Tugas`, `Sesi`, dan `Hasil` sudah memiliki dasar skema. Konsep `Organisasi`, `Pengguna`, dan `Proyek` tidak menjadi syarat fondasi Klip.
+Catatan: fondasi saat ini masih memakai istilah dan skema lama seperti `ruang` dan `sasaran`. Bahasa produk memakai **Ruang Kerja** dan **Goal**; perubahan istilah tidak otomatis berarti migrasi tabel. Konsep `Organisasi`, `Pengguna`, dan `Proyek` tidak menjadi syarat fondasi Klip.
 
 ## P0 — AI provider
 
@@ -57,6 +64,9 @@ Catatan: `Ruang`, `Agen`, `Sasaran`, `Pekerjaan`, `Tugas`, `Sesi`, dan `Hasil` s
 - [x] Run history.
 - [x] Event runtime.
 - [x] Error classification.
+- [ ] Bawa konteks Goal ke Runtime tanpa menjadikan Runtime pemilik Goal.
+- [ ] Hubungkan Execution dengan konteks Ruang Kerja, Pekerjaan, Tugas, dan Agen.
+- [ ] Gunakan Result/Evidence sebagai input pembaruan progress Goal.
 
 ## P1 — UI
 
@@ -76,6 +86,8 @@ Catatan: `Ruang`, `Agen`, `Sasaran`, `Pekerjaan`, `Tugas`, `Sesi`, dan `Hasil` s
 - [x] Riwayat aktivitas.
 - [x] Halaman provider/model.
 - [x] Pengaturan.
+- [ ] Selaraskan bahasa UI `Ruang` menjadi `Ruang Kerja` tanpa mengubah nama storage `ruang`.
+- [ ] Selaraskan istilah `Sasaran`/Goal setelah model Goal final ditetapkan.
 
 ## P1 — Skills dan hasil
 
@@ -86,6 +98,7 @@ Catatan: `Ruang`, `Agen`, `Sasaran`, `Pekerjaan`, `Tugas`, `Sesi`, dan `Hasil` s
 - [x] Validasi nama dan path hasil.
 - [x] Metadata hasil.
 - [x] Download/view hasil melalui UI.
+- [ ] Kaitkan hasil kerja dengan Execution dan konteks Goal.
 
 ## P1 — Scheduler
 
@@ -95,6 +108,7 @@ Catatan: `Ruang`, `Agen`, `Sasaran`, `Pekerjaan`, `Tugas`, `Sesi`, dan `Hasil` s
 - [x] Pencegahan duplicate run.
 - [x] Retry policy.
 - [x] Riwayat scheduler.
+- [ ] Pastikan scheduler tidak membuat eksekusi lintas Ruang Kerja.
 
 ## P1 — Data dan keamanan
 
@@ -107,6 +121,7 @@ Catatan: `Ruang`, `Agen`, `Sasaran`, `Pekerjaan`, `Tugas`, `Sesi`, dan `Hasil` s
 - [x] Tinjau kebutuhan CSRF untuk mode UI saat ini; belum diperlukan karena API tidak memakai cookie sesi dan bind bawaan hanya localhost.
 - [x] Audit aksi penting: approval dibuat/diputuskan dan jadwal dibuat dicatat sebagai event lokal.
 - [x] Dokumentasikan batas keamanan local-first.
+- [ ] Jadikan Ruang Kerja sebagai unit backup/export yang eksplisit bila export/import diperluas.
 
 ## P2 — Optimasi
 
