@@ -18,7 +18,72 @@ type EventRepository interface {
 }
 
 func (r *Repository) AppendEvent(ctx context.Context, event domain.Event) error {
+	if err := r.validateEventContext(ctx, event); err != nil {
+		return err
+	}
 	return appendEvent(ctx, r.db, event)
+}
+
+func (r *Repository) validateEventContext(ctx context.Context, event domain.Event) error {
+	if strings.TrimSpace(string(event.PekerjaanID)) == "" {
+		return fmt.Errorf("event: pekerjaan wajib diisi: %w", ErrInvalid)
+	}
+
+	pekerjaan, err := r.GetPekerjaan(ctx, event.PekerjaanID)
+	if err != nil {
+		return err
+	}
+
+	if event.TugasID != nil {
+		tugas, err := r.GetTugas(ctx, *event.TugasID)
+		if err != nil {
+			return err
+		}
+		if tugas.PekerjaanID != event.PekerjaanID {
+			return fmt.Errorf("event: tugas tidak sesuai dengan pekerjaan: %w", ErrInvalid)
+		}
+	}
+
+	if event.AgenID != nil {
+		agent, err := r.GetAgen(ctx, *event.AgenID)
+		if err != nil {
+			return err
+		}
+		if agent.RuangID != pekerjaan.RuangID {
+			return fmt.Errorf("event: agen berada di ruang kerja berbeda: %w", ErrInvalid)
+		}
+	}
+
+	if event.SesiID != nil {
+		sesi, err := r.GetSesi(ctx, *event.SesiID)
+		if err != nil {
+			return err
+		}
+		if sesi.PekerjaanID != event.PekerjaanID {
+			return fmt.Errorf("event: sesi tidak sesuai dengan pekerjaan: %w", ErrInvalid)
+		}
+		if event.AgenID != nil && sesi.AgenID != *event.AgenID {
+			return fmt.Errorf("event: sesi tidak sesuai dengan agen: %w", ErrInvalid)
+		}
+	}
+
+	if event.RunID != nil {
+		run, err := r.GetRun(ctx, *event.RunID)
+		if err != nil {
+			return err
+		}
+		if run.PekerjaanID != event.PekerjaanID {
+			return fmt.Errorf("event: run tidak sesuai dengan pekerjaan: %w", ErrInvalid)
+		}
+		if event.TugasID != nil && (run.TugasID == nil || *run.TugasID != *event.TugasID) {
+			return fmt.Errorf("event: run tidak sesuai dengan tugas: %w", ErrInvalid)
+		}
+		if event.AgenID != nil && run.AgenID != *event.AgenID {
+			return fmt.Errorf("event: run tidak sesuai dengan agen: %w", ErrInvalid)
+		}
+	}
+
+	return nil
 }
 
 func (r *Repository) ListEventsByPekerjaan(ctx context.Context, pekerjaanID domain.ID, limit int) ([]domain.Event, error) {
