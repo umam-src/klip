@@ -30,6 +30,52 @@
     return `<div><dt>${escapeHTML(label)}</dt><dd>${escapeHTML(text)}</dd></div>`;
   }
 
+  function agentStatusLabel(status) {
+    return status === 'inactive' ? 'Nonaktif' : 'Aktif';
+  }
+
+  function renderAgentTree(agents) {
+    const byID = new Map(agents.map((agent) => [agent.id, agent]));
+    const children = new Map();
+    const roots = [];
+
+    agents.forEach((agent) => {
+      const parentID = String(agent.parent_id || '').trim();
+      if (parentID && byID.has(parentID) && parentID !== agent.id) {
+        const siblings = children.get(parentID) || [];
+        siblings.push(agent);
+        children.set(parentID, siblings);
+      } else {
+        roots.push(agent);
+      }
+    });
+
+    const rendered = [];
+    const visited = new Set();
+    const visit = (agent, depth) => {
+      if (visited.has(agent.id)) return;
+      visited.add(agent.id);
+      rendered.push(renderAgentItem(agent, depth));
+      for (const child of children.get(agent.id) || []) visit(child, Math.min(depth + 1, 4));
+    };
+
+    roots.forEach((agent) => visit(agent, 0));
+    agents.forEach((agent) => visit(agent, 0));
+    return rendered.join('');
+  }
+
+  function renderAgentItem(agent, depth) {
+    const description = String(agent.description || '').trim();
+    const role = String(agent.role || '').trim() || 'Agen';
+    const status = agentStatusLabel(agent.status);
+    const parent = String(agent.parent_id || '').trim();
+    return `<button class="item item-button agent-item" type="button" data-agent="${escapeHTML(agent.id)}" style="--agent-depth:${depth}" aria-label="Buka Agen ${escapeHTML(agent.name || 'Tanpa nama')}">
+      <span class="agent-main"><strong>${escapeHTML(agent.name || 'Tanpa nama')}</strong><span>${escapeHTML(role)}</span></span>
+      <span class="agent-meta"><span class="agent-status ${agent.status === 'inactive' ? 'inactive' : ''}">${escapeHTML(status)}</span>${parent ? '<span>Di bawah agen lain</span>' : ''}</span>
+      ${description ? `<span class="agent-description">${escapeHTML(description)}</span>` : ''}
+    </button>`;
+  }
+
   async function loadSpaces() {
     refresh.disabled = true;
     try {
@@ -61,7 +107,7 @@
     const target = $('#agent-list');
     try {
       const agents = await request(`/api/v1/ruang/${encodeURIComponent(state.ruang.id)}/agen`);
-      target.innerHTML = agents.length ? agents.map((agent) => `<button class="item item-button" type="button" data-agent="${escapeHTML(agent.id)}"><strong>${escapeHTML(agent.name)}</strong><span>${escapeHTML(agent.provider_id || 'Penyedia belum diatur')}${agent.model_id ? ` · ${escapeHTML(agent.model_id)}` : ''}</span></button>`).join('') : empty('Belum ada agen.');
+      target.innerHTML = agents.length ? renderAgentTree(agents) : empty('Belum ada agen.');
       target.querySelectorAll('[data-agent]').forEach((button) => button.addEventListener('click', () => openAgent(button.dataset.agent, agents)));
     } catch (_) { target.innerHTML = empty('Agen belum dapat dimuat.'); }
   }
@@ -70,7 +116,7 @@
     state.agen = agents.find((agent) => agent.id === agenID);
     if (!state.agen) return;
     $('#agent-title').textContent = state.agen.name;
-    $('#agent-detail-card').innerHTML = `<dl>${detail('Nama', state.agen.name)}${detail('Deskripsi', state.agen.description)}${detail('Penyedia', state.agen.provider_id)}${detail('Model', state.agen.model_id)}${detail('ID', state.agen.id)}</dl>`;
+    $('#agent-detail-card').innerHTML = `<dl>${detail('Nama', state.agen.name)}${detail('Peran', state.agen.role)}${detail('Status', agentStatusLabel(state.agen.status))}${detail('Deskripsi', state.agen.description)}${detail('Penyedia', state.agen.provider_id)}${detail('Model', state.agen.model_id)}${detail('Atasan', state.agen.parent_id)}${detail('ID', state.agen.id)}</dl>`;
     $('#workspace').hidden = true; $('#agent-detail').hidden = false; $('#job-detail').hidden = true; $('#task-detail').hidden = true;
     $('#agent-detail').scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
@@ -260,7 +306,7 @@
       const form = new FormData(event.currentTarget);
       const body = String(form.get('body') || '').trim();
       if (!body || !state.tugas) return;
-      const submit = event.currentTarget.querySelector('button[type="submit"]);
+      const submit = event.currentTarget.querySelector('button[type="submit"]');
       submit.disabled = true;
       try {
         await send(`/api/v1/tugas/${encodeURIComponent(state.tugas.id)}/komentar`, { id: id(), parent_id: state.komentarParentID || undefined, body });
