@@ -65,6 +65,17 @@ func (e Executor) Execute(ctx context.Context, request ExecutionRequest) (Execut
 		if !tugas.Status.CanTransitionTo(domain.StatusRunning) {
 			return ExecutionResult{}, fmt.Errorf("executor: tugas berstatus %q tidak dapat dijalankan: %w", tugas.Status, storage.ErrInvalid)
 		}
+		assignment, assignmentErr := e.Repo.GetTugasAssignment(ctx, *request.TugasID)
+		switch {
+		case assignmentErr == nil && assignment.AgenID != request.AgenID:
+			return ExecutionResult{}, fmt.Errorf("executor: agen bukan pelaksana tugas: %w", storage.ErrInvalid)
+		case assignmentErr == nil:
+			// Agen yang diminta cocok dengan assignment tugas.
+		case errors.Is(assignmentErr, storage.ErrNotFound):
+			// Assignment belum ada; tetap dukung eksekusi eksplisit seperti sebelumnya.
+		default:
+			return ExecutionResult{}, fmt.Errorf("executor: assignment tugas: %w", assignmentErr)
+		}
 	}
 	approvalStatus, hasApproval, err := e.Repo.ApprovalGate(ctx, request.PekerjaanID, request.TugasID)
 	if err != nil {
