@@ -79,6 +79,16 @@ func serve(args []string, stderr io.Writer) error {
 	defer db.Close()
 
 	repo := storage.NewRepository(db)
+	aiSettings, found, err := repo.GetAISettings(ctx)
+	if err != nil {
+		return fmt.Errorf("gagal membaca pengaturan AI: %w", err)
+	}
+	if found {
+		cfg.AI.Provider = aiSettings.Provider
+		cfg.AI.BaseURL = aiSettings.BaseURL
+		cfg.AI.Model = aiSettings.Model
+	}
+
 	provider, err := ai.NewProvider(cfg.AI)
 	if err != nil {
 		log.Printf("AI belum siap: %v", err)
