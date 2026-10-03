@@ -49,6 +49,9 @@ func TestApprovalLifecycle(t *testing.T) {
 	if res := post("/api/v1/tugas/tugas-approval/approval", `{"id":"approval-1","reason":"tindakan berisiko"}`); res.Code != http.StatusCreated {
 		t.Fatalf("create approval: %d %s", res.Code, res.Body.String())
 	}
+	if events, err := repo.ListEventsByProyek(ctx, "proyek-approval", 10); err != nil || len(events) != 0 {
+		t.Fatalf("approval create events = %#v, err = %v; approval bukan peristiwa eksekusi", events, err)
+	}
 	res := post("/api/v1/approval/approval-1/approve", `{}`)
 	if res.Code != http.StatusOK {
 		t.Fatalf("approve: %d %s", res.Code, res.Body.String())
@@ -59,6 +62,9 @@ func TestApprovalLifecycle(t *testing.T) {
 	}
 	if approval.Status != domain.ApprovalApproved || approval.DecidedAt == nil || approval.ProyekID != "proyek-approval" || approval.TugasID == nil {
 		t.Fatalf("approval = %#v", approval)
+	}
+	if events, err := repo.ListEventsByProyek(ctx, "proyek-approval", 10); err != nil || len(events) != 0 {
+		t.Fatalf("approval decision events = %#v, err = %v; approval bukan peristiwa eksekusi", events, err)
 	}
 	if err := repo.DecideApproval(ctx, "approval-1", domain.ApprovalRejected, "late"); err == nil {
 		t.Fatal("expected second decision to fail")
