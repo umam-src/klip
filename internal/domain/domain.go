@@ -17,23 +17,16 @@ const (
 	StatusCancelled Status = "cancelled"
 )
 
+// CanTransitionTo reports whether a domain status can move to the target status.
 func (s Status) CanTransitionTo(next Status) bool {
-	if s == next {
-		return isKnownStatus(s)
-	}
+	if s == next { return isKnownStatus(s) }
 	switch s {
-	case StatusDraft:
-		return next == StatusReady || next == StatusCancelled
-	case StatusReady:
-		return next == StatusRunning || next == StatusBlocked || next == StatusCancelled
-	case StatusRunning:
-		return next == StatusWaiting || next == StatusCompleted || next == StatusFailed || next == StatusCancelled
-	case StatusWaiting:
-		return next == StatusRunning || next == StatusBlocked || next == StatusCancelled
-	case StatusBlocked:
-		return next == StatusReady || next == StatusCancelled
-	default:
-		return false
+	case StatusDraft: return next == StatusReady || next == StatusCancelled
+	case StatusReady: return next == StatusRunning || next == StatusBlocked || next == StatusCancelled
+	case StatusRunning: return next == StatusWaiting || next == StatusCompleted || next == StatusFailed || next == StatusCancelled
+	case StatusWaiting: return next == StatusRunning || next == StatusBlocked || next == StatusCancelled
+	case StatusBlocked: return next == StatusReady || next == StatusCancelled
+	default: return false
 	}
 }
 
@@ -41,78 +34,40 @@ func isKnownStatus(status Status) bool {
 	switch status {
 	case StatusDraft, StatusReady, StatusRunning, StatusWaiting, StatusBlocked, StatusCompleted, StatusFailed, StatusCancelled:
 		return true
-	default:
-		return false
+	default: return false
 	}
 }
 
 type AgenStatus string
-
 const (
-	AgenStatusActive   AgenStatus = "active"
+	AgenStatusActive AgenStatus = "active"
 	AgenStatusInactive AgenStatus = "inactive"
 )
-
-func (s AgenStatus) IsKnown() bool {
-	switch s {
-	case AgenStatusActive, AgenStatusInactive:
-		return true
-	default:
-		return false
-	}
-}
+func (s AgenStatus) IsKnown() bool { return s == AgenStatusActive || s == AgenStatusInactive }
 
 type Ruang struct {
-	ID        ID        `json:"id"`
-	Name      string    `json:"name"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	ID ID `json:"id"`; Name string `json:"name"`; CreatedAt time.Time `json:"created_at"`; UpdatedAt time.Time `json:"updated_at"`
 }
 
 type Agen struct {
-	ID          ID         `json:"id"`
-	RuangID     ID         `json:"ruang_id"`
-	ParentID    *ID        `json:"parent_id,omitempty"`
-	Name        string     `json:"name"`
-	Role        string     `json:"role"`
-	Description string     `json:"description,omitempty"`
-	ProviderID  string     `json:"provider_id,omitempty"`
-	ModelID     string     `json:"model_id,omitempty"`
-	Status      AgenStatus `json:"status"`
-	CreatedAt   time.Time  `json:"created_at"`
-	UpdatedAt   time.Time  `json:"updated_at"`
+	ID ID `json:"id"`; RuangID ID `json:"ruang_id"`; ParentID *ID `json:"parent_id,omitempty"`; Name string `json:"name"`; Role string `json:"role"`; Description string `json:"description,omitempty"`; ProviderID string `json:"provider_id,omitempty"`; ModelID string `json:"model_id,omitempty"`; Status AgenStatus `json:"status"`; CreatedAt time.Time `json:"created_at"`; UpdatedAt time.Time `json:"updated_at"`
 }
 
-// Proyek represents operational work that advances one Goal.
+// Proyek is the native project model. It advances exactly one Goal.
 type Proyek struct {
-	ID          ID        `json:"id"`
-	RuangID     ID        `json:"ruang_id"`
-	GoalID      ID        `json:"goal_id"`
-	Title       string    `json:"title"`
-	Description string    `json:"description"`
-	Status      Status    `json:"status"`
-	CreatedAt   time.Time `json:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at"`
-}
-
-type Tugas struct {
-	ID        ID        `json:"id"`
-	ProyekID  ID        `json:"proyek_id"`
-	ParentID  *ID       `json:"parent_id,omitempty"`
-	Title     string    `json:"title"`
-	Status    Status    `json:"status"`
+	ID ID `json:"id"`
+	RuangID ID `json:"ruang_id"`
+	GoalID ID `json:"goal_id"`
+	Title string `json:"title"`
+	Description string `json:"description"`
+	Status Status `json:"status"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
-type Hasil struct {
-	ID         ID        `json:"id"`
-	RuangID    ID        `json:"ruang_id"`
-	EksekusiID *ID       `json:"eksekusi_id,omitempty"`
-	ProyekID   ID        `json:"proyek_id"`
-	TugasID    *ID       `json:"tugas_id,omitempty"`
-	Kind       string    `json:"kind"`
-	Name       string    `json:"name"`
-	Path       string    `json:"path"`
-	CreatedAt  time.Time `json:"created_at"`
-}
+type Sasaran struct { ID ID `json:"id"`; RuangID ID `json:"ruang_id"`; Title string `json:"title"`; Status Status `json:"status"`; CreatedAt time.Time `json:"created_at"`; UpdatedAt time.Time `json:"updated_at"` }
+type Pekerjaan struct { ID ID `json:"id"`; RuangID ID `json:"ruang_id"`; SasaranID *ID `json:"sasaran_id,omitempty"`; Title string `json:"title"`; Status Status `json:"status"`; CreatedAt time.Time `json:"created_at"`; UpdatedAt time.Time `json:"updated_at"` }
+type Tugas struct { ID ID `json:"id"`; PekerjaanID ID `json:"pekerjaan_id"`; ParentID *ID `json:"parent_id,omitempty"`; Title string `json:"title"`; Status Status `json:"status"`; Position int `json:"position"`; CreatedAt time.Time `json:"created_at"`; UpdatedAt time.Time `json:"updated_at"` }
+type Sesi struct { ID ID `json:"id"`; PekerjaanID ID `json:"pekerjaan_id"`; AgenID ID `json:"agen_id"`; Status Status `json:"status"`; StartedAt time.Time `json:"started_at"`; FinishedAt *time.Time `json:"finished_at,omitempty"` }
+type Hasil struct { ID ID `json:"id"`; PekerjaanID ID `json:"pekerjaan_id"`; TugasID *ID `json:"tugas_id,omitempty"`; Kind string `json:"kind"`; Name string `json:"name"`; Path string `json:"path"`; CreatedAt time.Time `json:"created_at"` }
+type Run struct { ID ID `json:"id"`; PekerjaanID ID `json:"pekerjaan_id"`; TugasID *ID `json:"tugas_id,omitempty"`; AgenID ID `json:"agen_id"`; Status Status `json:"status"`; Program string `json:"program"`; Arguments []string `json:"arguments"`; ExitCode *int `json:"exit_code,omitempty"`; Stdout string `json:"stdout"`; Stderr string `json:"stderr"`; StartedAt time.Time `json:"started_at"`; FinishedAt *time.Time `json:"finished_at,omitempty"` }
