@@ -27,6 +27,7 @@ Format mengikuti Keep a Changelog dan versi mengikuti Semantic Versioning.
 - Penyimpanan pengaturan provider AI, alamat provider, dan model di SQLite.
 - Daftar Agen dalam Ruang kerja yang menampilkan nama, peran, deskripsi singkat, status, dan hierarki.
 - Detail Agen yang menampilkan ringkasan, AI yang digunakan, struktur agen, serta keadaan pekerjaan dan aktivitas yang tersedia.
+- Form Tambah/Edit Agen dengan identitas, peran, deskripsi, atasan, penyedia, dan model.
 
 ### Changed
 - Konfigurasi sekarang menyimpan locale secara eksplisit dan menormalkan locale yang belum didukung ke `id-ID`.
