@@ -12,15 +12,15 @@ func TestSchedulerSubsecondIntervalAdvancesNextRun(t *testing.T) {
 	start := time.Date(2026, time.January, 1, 0, 0, 0, 0, time.UTC)
 	interval := 500 * time.Millisecond
 	repo := &fakeRepo{schedule: domain.Schedule{
-		ID:         "s-subsecond",
-		Name:       "uji sub-detik",
-		RuangID:    "r1",
-		ProyekID:   "p1",
-		AgenID:     "a1",
-		Program:    "true",
-		Interval:   interval,
-		NextRunAt:  start,
-		Status:     domain.ScheduleEnabled,
+		ID:       "s-subsecond",
+		Name:     "uji sub-detik",
+		RuangID:  "r1",
+		ProyekID: "p1",
+		AgenID:   "a1",
+		Program:  "true",
+		Interval: interval,
+		NextRunAt: start,
+		Status:   domain.ScheduleEnabled,
 	}}
 	exec := &fakeExecutor{done: make(chan struct{})}
 	current := start.Add(2 * time.Second)
@@ -44,7 +44,7 @@ func TestSchedulerSubsecondIntervalAdvancesNextRun(t *testing.T) {
 	if next.IsZero() {
 		t.Fatal("next_run_at tidak diperbarui")
 	}
-	if next != start.Add(2500*time.Millisecond) {
+	if next != start.Add(2500 * time.Millisecond) {
 		t.Fatalf("next_run_at = %s, want %s", next, start.Add(2500*time.Millisecond))
 	}
 }
