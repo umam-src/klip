@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"testing"
+	"time"
 
 	"github.com/umam-src/klip/internal/domain"
 	"github.com/umam-src/klip/internal/storage"
@@ -35,7 +36,7 @@ func TestExecutorRequiresAssignedAgentForAssignedTask(t *testing.T) {
 	if err := repo.CreateTugas(ctx, domain.Tugas{ID: "tugas-1", PekerjaanID: "pekerjaan-1", Title: "Tugas", Status: domain.StatusReady}); err != nil {
 		t.Fatalf("CreateTugas() error = %v", err)
 	}
-	if err := repo.AssignTugasToAgen(ctx, "tugas-1", "agen-1", timeNowUTC()); err != nil {
+	if err := repo.AssignTugasToAgen(ctx, "tugas-1", "agen-1", time.Now().UTC()); err != nil {
 		t.Fatalf("AssignTugasToAgen() error = %v", err)
 	}
 
@@ -81,7 +82,7 @@ func TestExecutorRunsAssignedTaskWithMatchingAgent(t *testing.T) {
 	if err := repo.CreateTugas(ctx, domain.Tugas{ID: "tugas-1", PekerjaanID: "pekerjaan-1", Title: "Tugas", Status: domain.StatusReady}); err != nil {
 		t.Fatalf("CreateTugas() error = %v", err)
 	}
-	if err := repo.AssignTugasToAgen(ctx, "tugas-1", "agen-1", timeNowUTC()); err != nil {
+	if err := repo.AssignTugasToAgen(ctx, "tugas-1", "agen-1", time.Now().UTC()); err != nil {
 		t.Fatalf("AssignTugasToAgen() error = %v", err)
 	}
 
@@ -104,8 +105,4 @@ func TestExecutorRunsAssignedTaskWithMatchingAgent(t *testing.T) {
 func ptrID(value string) *domain.ID {
 	id := domain.ID(value)
 	return &id
-}
-
-func timeNowUTC() time.Time {
-	return time.Now().UTC()
 }
