@@ -14,6 +14,10 @@ func (r *Repository) CreateAgenWithParent(ctx context.Context, agent domain.Agen
 	if err := validateAgen(agent); err != nil {
 		return fmt.Errorf("agen: %w", err)
 	}
+	role := strings.TrimSpace(agent.Role)
+	if role == "" {
+		role = "Agen"
+	}
 	var parentID any
 	if agent.ParentID != nil {
 		value := strings.TrimSpace(string(*agent.ParentID))
@@ -38,7 +42,7 @@ func (r *Repository) CreateAgenWithParent(ctx context.Context, agent domain.Agen
 	if status == "" {
 		status = domain.AgenStatusActive
 	}
-	_, err := r.db.ExecContext(ctx, `INSERT INTO agen (id, ruang_id, parent_id, name, role, description, provider_id, model_id, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, agent.ID, agent.RuangID, parentID, agent.Name, agent.Role, agent.Description, agent.ProviderID, agent.ModelID, status, created, updated)
+	_, err := r.db.ExecContext(ctx, `INSERT INTO agen (id, ruang_id, parent_id, name, role, description, provider_id, model_id, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, agent.ID, agent.RuangID, parentID, agent.Name, role, agent.Description, agent.ProviderID, agent.ModelID, status, created, updated)
 	if err != nil {
 		return fmt.Errorf("buat agen: %w", err)
 	}
