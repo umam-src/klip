@@ -26,20 +26,23 @@ func TestHandlerAktivitasReturnsSafeNewestLimitedHistory(t *testing.T) {
 	if err := repo.CreateRuang(ctx, domain.Ruang{ID: "ruang-activity", Name: "Aktivitas"}); err != nil {
 		t.Fatalf("CreateRuang() error = %v", err)
 	}
-	for _, pekerjaan := range []domain.Pekerjaan{
-		{ID: "pekerjaan-activity", RuangID: "ruang-activity", Title: "Pekerjaan Aktivitas"},
-		{ID: "pekerjaan-other", RuangID: "ruang-activity", Title: "Pekerjaan Lain"},
+	if err := repo.CreateGoal(ctx, domain.Goal{ID: "goal-activity", RuangID: "ruang-activity", Title: "Goal Aktivitas"}); err != nil {
+		t.Fatalf("CreateGoal() error = %v", err)
+	}
+	for _, proyek := range []domain.Proyek{
+		{ID: "proyek-activity", RuangID: "ruang-activity", GoalID: "goal-activity", Title: "Proyek Aktivitas"},
+		{ID: "proyek-other", RuangID: "ruang-activity", GoalID: "goal-activity", Title: "Proyek Lain"},
 	} {
-		if err := repo.CreatePekerjaan(ctx, pekerjaan); err != nil {
-			t.Fatalf("CreatePekerjaan(%s) error = %v", pekerjaan.ID, err)
+		if err := repo.CreateProyek(ctx, proyek); err != nil {
+			t.Fatalf("CreateProyek(%s) error = %v", proyek.ID, err)
 		}
 	}
 
 	base := time.Date(2026, 10, 2, 10, 0, 0, 0, time.UTC)
 	for _, event := range []domain.Event{
-		{ID: "event-old", PekerjaanID: "pekerjaan-activity", Type: domain.EventExecutionStarted, Message: "prompt rahasia" + " credential-token", CreatedAt: base},
-		{ID: "event-new", PekerjaanID: "pekerjaan-activity", Type: domain.EventExecutionCompleted, Message: "credential-token", CreatedAt: base.Add(time.Minute)},
-		{ID: "event-other", PekerjaanID: "pekerjaan-other", Type: domain.EventExecutionFailed, Message: "jangan tampil", CreatedAt: base.Add(2 * time.Minute)},
+		{ID: "event-old", RuangID: "ruang-activity", ProyekID: "proyek-activity", Type: domain.EventExecutionStarted, Message: "prompt rahasia credential-token", CreatedAt: base},
+		{ID: "event-new", RuangID: "ruang-activity", ProyekID: "proyek-activity", Type: domain.EventExecutionCompleted, Message: "credential-token", CreatedAt: base.Add(time.Minute)},
+		{ID: "event-other", RuangID: "ruang-activity", ProyekID: "proyek-other", Type: domain.EventExecutionFailed, Message: "jangan tampil", CreatedAt: base.Add(2 * time.Minute)},
 	} {
 		if err := repo.AppendEvent(ctx, event); err != nil {
 			t.Fatalf("AppendEvent(%s) error = %v", event.ID, err)
@@ -47,7 +50,7 @@ func TestHandlerAktivitasReturnsSafeNewestLimitedHistory(t *testing.T) {
 	}
 
 	handler := New(config.Default(t.TempDir()), nil, repo).Handler()
-	req := httptest.NewRequest(http.MethodGet, "/api/v1/pekerjaan/pekerjaan-activity/aktivitas?limit=1", nil)
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/proyek/proyek-activity/aktivitas?limit=1", nil)
 	res := httptest.NewRecorder()
 	handler.ServeHTTP(res, req)
 
@@ -81,7 +84,7 @@ func TestHandlerAktivitasRejectsInvalidLimit(t *testing.T) {
 	repo := storage.NewRepository(db)
 	handler := New(config.Default(t.TempDir()), nil, repo).Handler()
 	for _, value := range []string{"0", "101", "abc"} {
-		req := httptest.NewRequest(http.MethodGet, "/api/v1/pekerjaan/pekerjaan-activity/aktivitas?limit="+value, nil)
+		req := httptest.NewRequest(http.MethodGet, "/api/v1/proyek/proyek-activity/aktivitas?limit="+value, nil)
 		res := httptest.NewRecorder()
 		handler.ServeHTTP(res, req)
 		if res.Code != http.StatusBadRequest {
