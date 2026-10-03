@@ -22,9 +22,14 @@ type updateGoalRequest struct {
 	Status       string `json:"status"`
 }
 
-func (a *App) handleGoal(w http.ResponseWriter, r *http.Request, ruangID domain.ID) {
+func (a *App) handleGoal(w http.ResponseWriter, r *http.Request) {
 	if a.repo == nil {
 		writeError(w, http.StatusServiceUnavailable, "penyimpanan belum siap")
+		return
+	}
+	ruangID := domain.ID(r.PathValue("id"))
+	if ruangID == "" {
+		writeError(w, http.StatusNotFound, "ruang tidak ditemukan")
 		return
 	}
 
