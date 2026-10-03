@@ -34,13 +34,13 @@ Daftar kerja pengembangan. Prioritas: P0 wajib, P1 penting, P2 setelah inti stab
 - [x] Tetapkan kontrak Goal v1: identitas, `ruang_id`, hierarki Goal, judul, deskripsi, lifecycle, dan timestamp.
 - [x] Putuskan bahwa beta belum membutuhkan kompatibilitas database legacy.
 - [x] Tetapkan peta entity dan relasi keseluruhan sebelum remodel schema.
-- [ ] Audit seluruh entity dan kolom legacy sebelum migration baru.
+- [x] Audit seluruh entity dan kolom legacy sebelum migration baru.
 - [ ] Finalisasi kontrak domain v1 berdasarkan model data keseluruhan.
-- [ ] Remodel schema SQLite secara menyeluruh.
-- [ ] Remodel repository/storage mengikuti schema v1.
-- [ ] Remodel service dan API mengikuti Goal-centered model.
+- [x] Remodel schema SQLite secara menyeluruh.
+- [x] Remodel repository/storage mengikuti schema v1.
+- [x] Remodel service dan API mengikuti Goal-centered model.
 - [ ] Remodel UI dan bahasa produk agar konsisten dengan Goal.
-- [ ] Hapus entity `Sasaran`, `sasaran_id`, dan adapter `GoalFromSasaran` setelah persistence baru aktif.
+- [x] Hapus entity `Sasaran`, `sasaran_id`, dan adapter `GoalFromSasaran` setelah persistence baru aktif.
 - [ ] Pastikan Goal parent/child satu Ruang Kerja dan tidak membentuk cycle.
 - [ ] Pastikan Goal → Pekerjaan satu Goal utama dan satu Ruang Kerja.
 - [ ] Pastikan seluruh relasi domain mempertahankan batas `ruang_id`.
@@ -87,17 +87,17 @@ Catatan: `Sasaran` tidak lagi dipertahankan sebagai compatibility layer permanen
 - [x] Asset UI dibundel lokal.
 - [x] Daftar ruang dasar.
 - [x] Daftar agen.
-- [x] Detail agen.
+- [ ] Detail agen: modul `web/assets/agent-detail.js` belum dimuat `index.html`.
 - [x] Struktur ruang.
-- [x] Daftar sasaran.
+- [x] Daftar goal.
 - [x] Daftar pekerjaan.
 - [x] Daftar tugas.
 - [x] Detail tugas.
 - [x] Thread tugas.
 - [x] Antrean persetujuan.
 - [x] Riwayat aktivitas.
-- [x] Halaman provider/model.
-- [x] Pengaturan.
+- [ ] Halaman provider/model: modul `web/assets/provider.js` belum dimuat `index.html`.
+- [ ] Halaman pengaturan: modul `web/assets/settings.js` belum dimuat `index.html`.
 - [ ] Selaraskan bahasa UI `Ruang` menjadi `Ruang Kerja` tanpa mengubah nama storage `ruang`.
 - [ ] Selaraskan istilah `Sasaran` menjadi Goal setelah model Goal final ditetapkan.
 

@@ -32,6 +32,7 @@ Format mengikuti Keep a Changelog dan versi mengikuti Semantic Versioning.
 - Daftar Tugas terkait pada Detail Agen berdasarkan assignment lokal.
 - Kontrak domain Goal v1 dengan identitas, batas Ruang Kerja, hierarki, deskripsi, lifecycle, dan timestamp.
 - Rancangan model data v1 yang mencakup entity inti, relasi, invariant Ruang Kerja, Execution, Event, dan Result/Evidence sebelum remodel database.
+- `.gitignore` agar data lokal, konfigurasi pribadi, rahasia, database, dan hasil build tidak ikut masuk repository.
 
 ### Changed
 - Konfigurasi sekarang menyimpan locale secara eksplisit dan menormalkan locale yang belum didukung ke `id-ID`.
@@ -60,11 +61,12 @@ Format mengikuti Keep a Changelog dan versi mengikuti Semantic Versioning.
 - Penugasan Agen pada Tugas kini disimpan di tabel `penugasan` v1 dan tabel `tugas_agen` tidak lagi dipakai.
 - Penyimpanan hasil menolak path berawalan pemisah direktori atau nama drive di semua sistem operasi.
 - Test lama yang masih memakai Pekerjaan, Sasaran, dan Hasil dimigrasikan ke model v1; penolakan database legacy kini punya test sendiri.
+- CI menjalankan `go vet ./...` sebelum test agar sesuai aturan pengembangan di AGENTS.md.
 - README.md ditulis ulang tanpa istilah teknis; panduan menjalankan, konfigurasi, dan target ukuran dipindahkan ke `docs/penggunaan.md`.
 - Pemegang hak cipta pada LICENSE MIT diubah menjadi "Kontributor Klip".
 
 ### Removed
-- Belum ada.
+- Modul UI lama `sasaran.js`, `aktivitas.js`, dan `hasil.js` yang tidak dimuat dan memanggil endpoint `/sasaran` serta `/pekerjaan` yang sudah dihapus.
 
 ## [0.1.0] - 2026-10-02
 

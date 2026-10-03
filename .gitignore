@@ -1,0 +1,28 @@
+# Data lokal pengguna dan rahasia: jangan pernah masuk repository.
+/data/
+/config.json
+.env
+.env.*
+*.pem
+*.key
+
+# Database SQLite dan berkas pendampingnya.
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+
+# Hasil build dan berkas sementara.
+/dist/
+/klip
+/klip.exe
+*.test
+*.out
+*.log
+
+# Editor dan sistem operasi.
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
