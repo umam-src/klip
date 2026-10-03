@@ -175,11 +175,11 @@ func (s *Scheduler) run(ctx context.Context, schedule domain.Schedule) {
 		}
 		_ = s.repo.CreateScheduleRun(ctx, run)
 		_, err := s.executor.Execute(ctx, agent.ExecutionRequest{
-			PekerjaanID: schedule.PekerjaanID,
-			TugasID:     schedule.TugasID,
-			AgenID:      schedule.AgenID,
-			Program:     schedule.Program,
-			Arguments:   schedule.Arguments,
+			ProyekID:  schedule.ProyekID,
+			TugasID:   schedule.TugasID,
+			AgenID:    schedule.AgenID,
+			Program:   schedule.Program,
+			Arguments: schedule.Arguments,
 		})
 		finished := s.cfg.Now().UTC()
 		if err == nil {
