@@ -13,7 +13,7 @@ import (
 
 type scheduleRequest struct {
 	Name        string     `json:"name"`
-	PekerjaanID domain.ID  `json:"pekerjaan_id"`
+	ProyekID    domain.ID  `json:"proyek_id"`
 	TugasID     *domain.ID `json:"tugas_id,omitempty"`
 	AgenID      domain.ID  `json:"agen_id"`
 	Program     string     `json:"program"`
@@ -24,17 +24,17 @@ type scheduleRequest struct {
 }
 
 type scheduleResponse struct {
-	ID          domain.ID             `json:"id"`
-	Name        string                `json:"name"`
-	PekerjaanID domain.ID             `json:"pekerjaan_id"`
-	TugasID     *domain.ID            `json:"tugas_id,omitempty"`
-	AgenID      domain.ID             `json:"agen_id"`
-	Program     string                `json:"program"`
-	Arguments   []string              `json:"arguments"`
-	IntervalSec int64                 `json:"interval_seconds"`
-	NextRunAt   time.Time             `json:"next_run_at"`
-	Status      domain.ScheduleStatus `json:"status"`
-	RetryLimit  int                   `json:"retry_limit"`
+	ID        domain.ID             `json:"id"`
+	Name      string                `json:"name"`
+	ProyekID  domain.ID             `json:"proyek_id"`
+	TugasID   *domain.ID            `json:"tugas_id,omitempty"`
+	AgenID    domain.ID             `json:"agen_id"`
+	Program   string                `json:"program"`
+	Arguments []string              `json:"arguments"`
+	IntervalSec int64               `json:"interval_seconds"`
+	NextRunAt time.Time             `json:"next_run_at"`
+	Status    domain.ScheduleStatus `json:"status"`
+	RetryLimit int                  `json:"retry_limit"`
 }
 
 func (a *App) handleScheduler(w http.ResponseWriter, r *http.Request) {
@@ -68,7 +68,7 @@ func (a *App) handleScheduler(w http.ResponseWriter, r *http.Request) {
 			writeError(w, http.StatusBadRequest, "jadwal tidak valid")
 			return
 		}
-		a.auditAction(r.Context(), schedule.PekerjaanID, schedule.TugasID, domain.EventScheduleCreated)
+		a.auditAction(r.Context(), schedule.ProyekID, schedule.TugasID, domain.EventScheduleCreated)
 		writeJSON(w, http.StatusCreated, toScheduleResponse(schedule))
 	default:
 		writeError(w, http.StatusMethodNotAllowed, "metode tidak didukung")
@@ -104,7 +104,7 @@ func (a *App) handleSchedulerChild(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *App) newSchedule(req scheduleRequest) (domain.Schedule, error) {
-	if strings.TrimSpace(req.Name) == "" || req.PekerjaanID == "" || req.AgenID == "" || strings.TrimSpace(req.Program) == "" {
+	if strings.TrimSpace(req.Name) == "" || req.ProyekID == "" || req.AgenID == "" || strings.TrimSpace(req.Program) == "" {
 		return domain.Schedule{}, errInvalidSchedule
 	}
 	if req.IntervalSec < 1 || req.IntervalSec > 7*24*60*60 {
@@ -123,19 +123,19 @@ func (a *App) newSchedule(req scheduleRequest) (domain.Schedule, error) {
 	}
 	now := time.Now().UTC()
 	return domain.Schedule{
-		ID:          newScheduleID(),
-		Name:        strings.TrimSpace(req.Name),
-		PekerjaanID: req.PekerjaanID,
-		TugasID:     req.TugasID,
-		AgenID:      req.AgenID,
-		Program:     strings.TrimSpace(req.Program),
-		Arguments:   append([]string(nil), req.Arguments...),
-		Interval:    time.Duration(req.IntervalSec) * time.Second,
-		NextRunAt:   next,
-		Status:      domain.ScheduleEnabled,
-		RetryLimit:  req.RetryLimit,
-		CreatedAt:   now,
-		UpdatedAt:   now,
+		ID:        newScheduleID(),
+		Name:      strings.TrimSpace(req.Name),
+		ProyekID:  req.ProyekID,
+		TugasID:   req.TugasID,
+		AgenID:    req.AgenID,
+		Program:   strings.TrimSpace(req.Program),
+		Arguments: append([]string(nil), req.Arguments...),
+		Interval:  time.Duration(req.IntervalSec) * time.Second,
+		NextRunAt: next,
+		Status:    domain.ScheduleEnabled,
+		RetryLimit: req.RetryLimit,
+		CreatedAt: now,
+		UpdatedAt: now,
 	}, nil
 }
 
@@ -149,17 +149,17 @@ func (e *scheduleError) Error() string { return e.message }
 
 func toScheduleResponse(s domain.Schedule) scheduleResponse {
 	return scheduleResponse{
-		ID:          s.ID,
-		Name:        s.Name,
-		PekerjaanID: s.PekerjaanID,
-		TugasID:     s.TugasID,
-		AgenID:      s.AgenID,
-		Program:     s.Program,
-		Arguments:   s.Arguments,
+		ID:         s.ID,
+		Name:       s.Name,
+		ProyekID:   s.ProyekID,
+		TugasID:    s.TugasID,
+		AgenID:     s.AgenID,
+		Program:    s.Program,
+		Arguments:  s.Arguments,
 		IntervalSec: int64(s.Interval / time.Second),
-		NextRunAt:   s.NextRunAt,
-		Status:      s.Status,
-		RetryLimit:  s.RetryLimit,
+		NextRunAt:  s.NextRunAt,
+		Status:     s.Status,
+		RetryLimit: s.RetryLimit,
 	}
 }
 
