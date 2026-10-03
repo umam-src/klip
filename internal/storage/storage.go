@@ -8,7 +8,7 @@ import (
 	_ "modernc.org/sqlite"
 )
 
-const schemaVersion = 10
+const schemaVersion = 11
 
 const schema = `
 CREATE TABLE IF NOT EXISTS schema_migrations (
@@ -46,66 +46,61 @@ CREATE TABLE IF NOT EXISTS agen_skill (
 );
 CREATE INDEX IF NOT EXISTS idx_agen_skill_name ON agen_skill(skill_name);
 
-CREATE TABLE IF NOT EXISTS sasaran (
+CREATE TABLE IF NOT EXISTS goal (
     id TEXT PRIMARY KEY,
     ruang_id TEXT NOT NULL REFERENCES ruang(id) ON DELETE CASCADE,
+    parent_goal_id TEXT REFERENCES goal(id) ON DELETE SET NULL,
     title TEXT NOT NULL,
+    description TEXT NOT NULL DEFAULT '',
     status TEXT NOT NULL,
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL
 );
-CREATE INDEX IF NOT EXISTS idx_sasaran_ruang ON sasaran(ruang_id);
+CREATE INDEX IF NOT EXISTS idx_goal_ruang ON goal(ruang_id);
+CREATE INDEX IF NOT EXISTS idx_goal_parent ON goal(parent_goal_id);
 
-CREATE TABLE IF NOT EXISTS pekerjaan (
+CREATE TABLE IF NOT EXISTS proyek (
     id TEXT PRIMARY KEY,
     ruang_id TEXT NOT NULL REFERENCES ruang(id) ON DELETE CASCADE,
-    sasaran_id TEXT REFERENCES sasaran(id) ON DELETE SET NULL,
+    goal_id TEXT NOT NULL REFERENCES goal(id) ON DELETE RESTRICT,
     title TEXT NOT NULL,
+    description TEXT NOT NULL DEFAULT '',
     status TEXT NOT NULL,
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL
 );
-CREATE INDEX IF NOT EXISTS idx_pekerjaan_ruang ON pekerjaan(ruang_id);
-CREATE INDEX IF NOT EXISTS idx_pekerjaan_sasaran ON pekerjaan(sasaran_id);
+CREATE INDEX IF NOT EXISTS idx_proyek_ruang ON proyek(ruang_id);
+CREATE INDEX IF NOT EXISTS idx_proyek_goal ON proyek(goal_id);
 
 CREATE TABLE IF NOT EXISTS tugas (
     id TEXT PRIMARY KEY,
-    pekerjaan_id TEXT NOT NULL REFERENCES pekerjaan(id) ON DELETE CASCADE,
+    ruang_id TEXT NOT NULL REFERENCES ruang(id) ON DELETE CASCADE,
+    proyek_id TEXT NOT NULL REFERENCES proyek(id) ON DELETE CASCADE,
     parent_id TEXT REFERENCES tugas(id) ON DELETE SET NULL,
     title TEXT NOT NULL,
     status TEXT NOT NULL,
-    position INTEGER NOT NULL DEFAULT 0,
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL
 );
-CREATE INDEX IF NOT EXISTS idx_tugas_pekerjaan ON tugas(pekerjaan_id);
+CREATE INDEX IF NOT EXISTS idx_tugas_ruang ON tugas(ruang_id);
+CREATE INDEX IF NOT EXISTS idx_tugas_proyek ON tugas(proyek_id);
+CREATE INDEX IF NOT EXISTS idx_tugas_parent ON tugas(parent_id);
 
-CREATE TABLE IF NOT EXISTS sesi (
+CREATE TABLE IF NOT EXISTS penugasan (
     id TEXT PRIMARY KEY,
-    pekerjaan_id TEXT NOT NULL REFERENCES pekerjaan(id) ON DELETE CASCADE,
+    tugas_id TEXT NOT NULL REFERENCES tugas(id) ON DELETE CASCADE,
     agen_id TEXT NOT NULL REFERENCES agen(id) ON DELETE RESTRICT,
-    status TEXT NOT NULL,
-    started_at TEXT NOT NULL,
-    finished_at TEXT
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    UNIQUE (tugas_id, agen_id)
 );
-CREATE INDEX IF NOT EXISTS idx_sesi_pekerjaan ON sesi(pekerjaan_id);
-CREATE INDEX IF NOT EXISTS idx_sesi_agen ON sesi(agen_id);
+CREATE INDEX IF NOT EXISTS idx_penugasan_tugas ON penugasan(tugas_id);
+CREATE INDEX IF NOT EXISTS idx_penugasan_agen ON penugasan(agen_id);
 
-CREATE TABLE IF NOT EXISTS hasil (
+CREATE TABLE IF NOT EXISTS eksekusi (
     id TEXT PRIMARY KEY,
-    pekerjaan_id TEXT NOT NULL REFERENCES pekerjaan(id) ON DELETE CASCADE,
-    tugas_id TEXT REFERENCES tugas(id) ON DELETE SET NULL,
-    kind TEXT NOT NULL,
-    name TEXT NOT NULL,
-    path TEXT NOT NULL,
-    created_at TEXT NOT NULL
-);
-CREATE INDEX IF NOT EXISTS idx_hasil_pekerjaan ON hasil(pekerjaan_id);
-CREATE INDEX IF NOT EXISTS idx_hasil_tugas ON hasil(tugas_id);
-
-CREATE TABLE IF NOT EXISTS run (
-    id TEXT PRIMARY KEY,
-    pekerjaan_id TEXT NOT NULL REFERENCES pekerjaan(id) ON DELETE CASCADE,
+    ruang_id TEXT NOT NULL REFERENCES ruang(id) ON DELETE CASCADE,
+    proyek_id TEXT NOT NULL REFERENCES proyek(id) ON DELETE CASCADE,
     tugas_id TEXT REFERENCES tugas(id) ON DELETE SET NULL,
     agen_id TEXT NOT NULL REFERENCES agen(id) ON DELETE RESTRICT,
     status TEXT NOT NULL,
@@ -117,42 +112,61 @@ CREATE TABLE IF NOT EXISTS run (
     started_at TEXT NOT NULL,
     finished_at TEXT
 );
-CREATE INDEX IF NOT EXISTS idx_run_pekerjaan ON run(pekerjaan_id);
-CREATE INDEX IF NOT EXISTS idx_run_tugas ON run(tugas_id);
-CREATE INDEX IF NOT EXISTS idx_run_agen ON run(agen_id);
-CREATE INDEX IF NOT EXISTS idx_run_status ON run(status);
+CREATE INDEX IF NOT EXISTS idx_eksekusi_ruang ON eksekusi(ruang_id);
+CREATE INDEX IF NOT EXISTS idx_eksekusi_proyek ON eksekusi(proyek_id);
+CREATE INDEX IF NOT EXISTS idx_eksekusi_tugas ON eksekusi(tugas_id);
+CREATE INDEX IF NOT EXISTS idx_eksekusi_agen ON eksekusi(agen_id);
+CREATE INDEX IF NOT EXISTS idx_eksekusi_status ON eksekusi(status);
 
-CREATE TABLE IF NOT EXISTS event (
+CREATE TABLE IF NOT EXISTS hasil (
     id TEXT PRIMARY KEY,
-    pekerjaan_id TEXT NOT NULL REFERENCES pekerjaan(id) ON DELETE CASCADE,
+    ruang_id TEXT NOT NULL REFERENCES ruang(id) ON DELETE CASCADE,
+    execution_id TEXT REFERENCES eksekusi(id) ON DELETE SET NULL,
+    proyek_id TEXT NOT NULL REFERENCES proyek(id) ON DELETE CASCADE,
     tugas_id TEXT REFERENCES tugas(id) ON DELETE SET NULL,
-    sesi_id TEXT REFERENCES sesi(id) ON DELETE CASCADE,
-    run_id TEXT REFERENCES run(id) ON DELETE CASCADE,
+    kind TEXT NOT NULL,
+    name TEXT NOT NULL,
+    path TEXT NOT NULL,
+    created_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_hasil_ruang ON hasil(ruang_id);
+CREATE INDEX IF NOT EXISTS idx_hasil_execution ON hasil(execution_id);
+CREATE INDEX IF NOT EXISTS idx_hasil_proyek ON hasil(proyek_id);
+CREATE INDEX IF NOT EXISTS idx_hasil_tugas ON hasil(tugas_id);
+
+CREATE TABLE IF NOT EXISTS peristiwa (
+    id TEXT PRIMARY KEY,
+    ruang_id TEXT NOT NULL REFERENCES ruang(id) ON DELETE CASCADE,
+    execution_id TEXT NOT NULL REFERENCES eksekusi(id) ON DELETE CASCADE,
+    proyek_id TEXT NOT NULL REFERENCES proyek(id) ON DELETE CASCADE,
+    tugas_id TEXT REFERENCES tugas(id) ON DELETE SET NULL,
     agen_id TEXT REFERENCES agen(id) ON DELETE RESTRICT,
     type TEXT NOT NULL,
     message TEXT NOT NULL DEFAULT '',
     created_at TEXT NOT NULL
 );
-CREATE INDEX IF NOT EXISTS idx_event_pekerjaan_created ON event(pekerjaan_id, created_at DESC, id DESC);
-CREATE INDEX IF NOT EXISTS idx_event_sesi ON event(sesi_id);
-CREATE INDEX IF NOT EXISTS idx_event_run ON event(run_id);
+CREATE INDEX IF NOT EXISTS idx_peristiwa_execution ON peristiwa(execution_id, created_at DESC, id DESC);
+CREATE INDEX IF NOT EXISTS idx_peristiwa_proyek ON peristiwa(proyek_id, created_at DESC, id DESC);
+CREATE INDEX IF NOT EXISTS idx_peristiwa_tugas ON peristiwa(tugas_id);
 
 CREATE TABLE IF NOT EXISTS komentar (
     id TEXT PRIMARY KEY,
-    pekerjaan_id TEXT NOT NULL REFERENCES pekerjaan(id) ON DELETE CASCADE,
+    ruang_id TEXT NOT NULL REFERENCES ruang(id) ON DELETE CASCADE,
+    proyek_id TEXT NOT NULL REFERENCES proyek(id) ON DELETE CASCADE,
     tugas_id TEXT REFERENCES tugas(id) ON DELETE CASCADE,
     parent_id TEXT REFERENCES komentar(id) ON DELETE CASCADE,
     body TEXT NOT NULL,
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL
 );
-CREATE INDEX IF NOT EXISTS idx_komentar_pekerjaan_created ON komentar(pekerjaan_id, created_at, id);
+CREATE INDEX IF NOT EXISTS idx_komentar_proyek_created ON komentar(proyek_id, created_at, id);
 CREATE INDEX IF NOT EXISTS idx_komentar_tugas_created ON komentar(tugas_id, created_at, id);
 CREATE INDEX IF NOT EXISTS idx_komentar_parent ON komentar(parent_id);
 
-CREATE TABLE IF NOT EXISTS approval (
+CREATE TABLE IF NOT EXISTS persetujuan (
     id TEXT PRIMARY KEY,
-    pekerjaan_id TEXT NOT NULL REFERENCES pekerjaan(id) ON DELETE CASCADE,
+    ruang_id TEXT NOT NULL REFERENCES ruang(id) ON DELETE CASCADE,
+    proyek_id TEXT NOT NULL REFERENCES proyek(id) ON DELETE CASCADE,
     tugas_id TEXT REFERENCES tugas(id) ON DELETE CASCADE,
     status TEXT NOT NULL,
     reason TEXT NOT NULL DEFAULT '',
@@ -160,14 +174,15 @@ CREATE TABLE IF NOT EXISTS approval (
     updated_at TEXT NOT NULL,
     decided_at TEXT
 );
-CREATE INDEX IF NOT EXISTS idx_approval_pekerjaan ON approval(pekerjaan_id, created_at DESC, id DESC);
-CREATE INDEX IF NOT EXISTS idx_approval_tugas ON approval(tugas_id, created_at DESC, id DESC);
-CREATE INDEX IF NOT EXISTS idx_approval_status ON approval(status);
+CREATE INDEX IF NOT EXISTS idx_persetujuan_proyek ON persetujuan(proyek_id, created_at DESC, id DESC);
+CREATE INDEX IF NOT EXISTS idx_persetujuan_tugas ON persetujuan(tugas_id, created_at DESC, id DESC);
+CREATE INDEX IF NOT EXISTS idx_persetujuan_status ON persetujuan(status);
 
-CREATE TABLE IF NOT EXISTS schedule (
+CREATE TABLE IF NOT EXISTS jadwal (
     id TEXT PRIMARY KEY,
     name TEXT NOT NULL,
-    pekerjaan_id TEXT NOT NULL REFERENCES pekerjaan(id) ON DELETE CASCADE,
+    ruang_id TEXT NOT NULL REFERENCES ruang(id) ON DELETE CASCADE,
+    proyek_id TEXT NOT NULL REFERENCES proyek(id) ON DELETE CASCADE,
     tugas_id TEXT REFERENCES tugas(id) ON DELETE SET NULL,
     agen_id TEXT NOT NULL REFERENCES agen(id) ON DELETE RESTRICT,
     program TEXT NOT NULL,
@@ -179,19 +194,19 @@ CREATE TABLE IF NOT EXISTS schedule (
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL
 );
-CREATE INDEX IF NOT EXISTS idx_schedule_due ON schedule(status, next_run_at, id);
+CREATE INDEX IF NOT EXISTS idx_jadwal_due ON jadwal(status, next_run_at, id);
 
-CREATE TABLE IF NOT EXISTS schedule_run (
+CREATE TABLE IF NOT EXISTS jadwal_eksekusi (
     id TEXT PRIMARY KEY,
-    schedule_id TEXT NOT NULL REFERENCES schedule(id) ON DELETE CASCADE,
+    jadwal_id TEXT NOT NULL REFERENCES jadwal(id) ON DELETE CASCADE,
     status TEXT NOT NULL,
     attempt INTEGER NOT NULL,
     started_at TEXT NOT NULL,
     finished_at TEXT,
     error TEXT NOT NULL DEFAULT ''
 );
-CREATE INDEX IF NOT EXISTS idx_schedule_run_schedule ON schedule_run(schedule_id, started_at DESC, id DESC);
-CREATE INDEX IF NOT EXISTS idx_schedule_run_status ON schedule_run(status);
+CREATE INDEX IF NOT EXISTS idx_jadwal_eksekusi_jadwal ON jadwal_eksekusi(jadwal_id, started_at DESC, id DESC);
+CREATE INDEX IF NOT EXISTS idx_jadwal_eksekusi_status ON jadwal_eksekusi(status);
 
 CREATE TABLE IF NOT EXISTS pengaturan_ai (
     id INTEGER PRIMARY KEY CHECK (id = 1),
@@ -218,7 +233,7 @@ func Open(ctx context.Context, path string) (*sql.DB, error) {
 	}
 	if err := db.PingContext(ctx); err != nil {
 		_ = db.Close()
-		return nil, fmt.Errorf("hubungkan database: %w", err)
+		return nil, fmt.Errorf("ping database: %w", err)
 	}
 	if err := migrate(ctx, db); err != nil {
 		_ = db.Close()
@@ -228,126 +243,27 @@ func Open(ctx context.Context, path string) (*sql.DB, error) {
 }
 
 func configure(ctx context.Context, db *sql.DB) error {
-	for _, statement := range []string{
-		"PRAGMA foreign_keys = ON",
-		"PRAGMA journal_mode = WAL",
-		"PRAGMA busy_timeout = 5000",
-	} {
-		if _, err := db.ExecContext(ctx, statement); err != nil {
-			return fmt.Errorf("atur SQLite: %w", err)
-		}
+	if _, err := db.ExecContext(ctx, `PRAGMA foreign_keys = ON; PRAGMA journal_mode = WAL; PRAGMA busy_timeout = 5000;`); err != nil {
+		return fmt.Errorf("konfigurasi sqlite: %w", err)
 	}
 	return nil
 }
 
 func migrate(ctx context.Context, db *sql.DB) error {
-	tx, err := db.BeginTx(ctx, nil)
-	if err != nil {
-		return fmt.Errorf("mulai migrasi: %w", err)
+	if _, err := db.ExecContext(ctx, schema); err != nil {
+		return fmt.Errorf("buat skema database: %w", err)
 	}
-	defer tx.Rollback()
-
-	if _, err := tx.ExecContext(ctx, schema); err != nil {
-		return fmt.Errorf("buat skema: %w", err)
-	}
-
 	var version int
-	if err := tx.QueryRowContext(ctx, "SELECT COALESCE(MAX(version), 0) FROM schema_migrations").Scan(&version); err != nil {
+	if err := db.QueryRowContext(ctx, `SELECT COALESCE(MAX(version), 0) FROM schema_migrations`).Scan(&version); err != nil {
 		return fmt.Errorf("baca versi skema: %w", err)
 	}
-	if err := ensureAgenParentColumn(ctx, tx); err != nil {
-		return err
-	}
-	if err := ensureAgenRoleStatusColumns(ctx, tx); err != nil {
-		return err
+	if version > schemaVersion {
+		return fmt.Errorf("versi database %d lebih baru dari aplikasi %d", version, schemaVersion)
 	}
 	if version < schemaVersion {
-		if _, err := tx.ExecContext(ctx, "INSERT INTO schema_migrations(version) VALUES (?)", schemaVersion); err != nil {
-			return fmt.Errorf("catat migrasi: %w", err)
+		if _, err := db.ExecContext(ctx, `INSERT INTO schema_migrations (version) VALUES (?)`, schemaVersion); err != nil {
+			return fmt.Errorf("catat versi skema: %w", err)
 		}
-	}
-	if err := tx.Commit(); err != nil {
-		return fmt.Errorf("simpan migrasi: %w", err)
-	}
-	return nil
-}
-
-func ensureAgenParentColumn(ctx context.Context, tx *sql.Tx) error {
-	rows, err := tx.QueryContext(ctx, "PRAGMA table_info(agen)")
-	if err != nil {
-		return fmt.Errorf("baca kolom agen: %w", err)
-	}
-	defer rows.Close()
-
-	var found bool
-	for rows.Next() {
-		var cid int
-		var name, columnType string
-		var notNull, primaryKey int
-		var defaultValue sql.NullString
-		if err := rows.Scan(&cid, &name, &columnType, &notNull, &defaultValue, &primaryKey); err != nil {
-			return fmt.Errorf("baca metadata agen: %w", err)
-		}
-		if name == "parent_id" {
-			found = true
-			break
-		}
-	}
-	if err := rows.Err(); err != nil {
-		return fmt.Errorf("baca metadata agen: %w", err)
-	}
-	if !found {
-		if _, err := tx.ExecContext(ctx, "ALTER TABLE agen ADD COLUMN parent_id TEXT REFERENCES agen(id) ON DELETE SET NULL"); err != nil {
-			return fmt.Errorf("migrasi hierarki agen: %w", err)
-		}
-	}
-	if _, err := tx.ExecContext(ctx, "CREATE INDEX IF NOT EXISTS idx_agen_parent ON agen(parent_id)"); err != nil {
-		return fmt.Errorf("indeks hierarki agen: %w", err)
-	}
-	return nil
-}
-
-func ensureAgenRoleStatusColumns(ctx context.Context, tx *sql.Tx) error {
-	rows, err := tx.QueryContext(ctx, "PRAGMA table_info(agen)")
-	if err != nil {
-		return fmt.Errorf("baca kolom agen: %w", err)
-	}
-	defer rows.Close()
-
-	foundRole, foundStatus := false, false
-	for rows.Next() {
-		var cid int
-		var name, columnType string
-		var notNull, primaryKey int
-		var defaultValue sql.NullString
-		if err := rows.Scan(&cid, &name, &columnType, &notNull, &defaultValue, &primaryKey); err != nil {
-			return fmt.Errorf("baca metadata agen: %w", err)
-		}
-		switch name {
-		case "role":
-			foundRole = true
-		case "status":
-			foundStatus = true
-		}
-	}
-	if err := rows.Err(); err != nil {
-		return fmt.Errorf("baca metadata agen: %w", err)
-	}
-	if !foundRole {
-		if _, err := tx.ExecContext(ctx, "ALTER TABLE agen ADD COLUMN role TEXT NOT NULL DEFAULT 'Agen'"); err != nil {
-			return fmt.Errorf("migrasi peran agen: %w", err)
-		}
-	}
-	if !foundStatus {
-		if _, err := tx.ExecContext(ctx, "ALTER TABLE agen ADD COLUMN status TEXT NOT NULL DEFAULT 'active'"); err != nil {
-			return fmt.Errorf("migrasi status agen: %w", err)
-		}
-	}
-	if _, err := tx.ExecContext(ctx, "UPDATE agen SET role = 'Agen' WHERE trim(role) = ''"); err != nil {
-		return fmt.Errorf("normalisasi peran agen: %w", err)
-	}
-	if _, err := tx.ExecContext(ctx, "UPDATE agen SET status = 'active' WHERE trim(status) = ''"); err != nil {
-		return fmt.Errorf("normalisasi status agen: %w", err)
 	}
 	return nil
 }
