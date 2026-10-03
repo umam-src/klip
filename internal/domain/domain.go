@@ -78,25 +78,6 @@ type Agen struct {
 	UpdatedAt   time.Time  `json:"updated_at"`
 }
 
-type Proyek struct {
-	ID          ID        `json:"id"`
-	RuangID     ID        `json:"ruang_id"`
-	GoalID      ID        `json:"goal_id"`
-	Title       string    `json:"title"`
-	Description string    `json:"description"`
-	Status      Status    `json:"status"`
-	CreatedAt   time.Time `json:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at"`
-}
-
-type Penugasan struct {
-	ID        ID        `json:"id"`
-	TugasID   ID        `json:"tugas_id"`
-	AgenID    ID        `json:"agen_id"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
-}
-
 type Tugas struct {
 	ID        ID        `json:"id"`
 	RuangID   ID        `json:"ruang_id"`
@@ -106,20 +87,4 @@ type Tugas struct {
 	Status    Status    `json:"status"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
-}
-
-type Eksekusi struct {
-	ID         ID         `json:"id"`
-	RuangID    ID         `json:"ruang_id"`
-	ProyekID   ID         `json:"proyek_id"`
-	TugasID    *ID        `json:"tugas_id,omitempty"`
-	AgenID     ID         `json:"agen_id"`
-	Status     Status     `json:"status"`
-	Program    string     `json:"program"`
-	Arguments  []string   `json:"arguments"`
-	ExitCode   *int       `json:"exit_code,omitempty"`
-	Stdout     string     `json:"stdout,omitempty"`
-	Stderr     string     `json:"stderr,omitempty"`
-	StartedAt  time.Time  `json:"started_at"`
-	FinishedAt *time.Time `json:"finished_at,omitempty"`
 }
