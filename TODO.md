@@ -32,16 +32,23 @@ Daftar kerja pengembangan. Prioritas: P0 wajib, P1 penting, P2 setelah inti stab
 - [x] Tetapkan Goal sebagai pusat arah kerja.
 - [x] Audit model lama `Sasaran` dan relasi `Pekerjaan` terhadap kontrak Goal.
 - [x] Tetapkan kontrak Goal v1: identitas, `ruang_id`, hierarki Goal, judul, deskripsi, lifecycle, dan timestamp.
-- [x] Putuskan pemetaan istilah `Sasaran` → Goal tanpa migrasi kosmetik.
-- [ ] Tentukan aturan Goal induk/anak: `parent_goal_id` wajib berada di Ruang Kerja yang sama.
-- [ ] Tentukan aturan Goal → Pekerjaan: satu Pekerjaan memiliki satu Goal utama dan keduanya harus berada di Ruang Kerja yang sama.
-- [ ] Hubungkan Pekerjaan ke Goal secara konsisten setelah kontrak Goal v1 disepakati.
-- [ ] Pastikan Goal turunan tidak dapat menyeberangi Ruang Kerja.
-- [ ] Audit seluruh relasi domain untuk memastikan batas `ruang_id` tidak dapat dilewati.
-- [ ] Tetapkan lifecycle Ruang Kerja `active` dan `archived` pada storage/service.
-- [ ] Tetapkan Execution dan Result/Evidence sebagai jejak yang dapat ditelusuri kembali ke Ruang Kerja dan Goal.
+- [x] Putuskan bahwa beta belum membutuhkan kompatibilitas database legacy.
+- [x] Tetapkan peta entity dan relasi keseluruhan sebelum remodel schema.
+- [ ] Audit seluruh entity dan kolom legacy sebelum migration baru.
+- [ ] Finalisasi kontrak domain v1 berdasarkan model data keseluruhan.
+- [ ] Remodel schema SQLite secara menyeluruh.
+- [ ] Remodel repository/storage mengikuti schema v1.
+- [ ] Remodel service dan API mengikuti Goal-centered model.
+- [ ] Remodel UI dan bahasa produk agar konsisten dengan Goal.
+- [ ] Hapus entity `Sasaran`, `sasaran_id`, dan adapter `GoalFromSasaran` setelah persistence baru aktif.
+- [ ] Pastikan Goal parent/child satu Ruang Kerja dan tidak membentuk cycle.
+- [ ] Pastikan Goal → Pekerjaan satu Goal utama dan satu Ruang Kerja.
+- [ ] Pastikan seluruh relasi domain mempertahankan batas `ruang_id`.
+- [ ] Pastikan Execution dan Result/Evidence dapat ditelusuri ke Ruang Kerja dan konteks Goal.
+- [ ] Reset/migrate database development setelah schema v1 siap.
+- [ ] Jalankan regression test dan CI penuh setelah remodel.
 
-Catatan: `Sasaran` adalah representasi legacy yang paling dekat dengan Goal. `GoalFromSasaran` sekarang menjadi adapter domain eksplisit yang mempertahankan ID/Ruang, tidak mengarang description/hierarki, dan memetakan status lama secara konservatif. Persistence lama tetap dipertahankan sampai migration Goal benar-benar diperlukan.
+Catatan: `Sasaran` tidak lagi dipertahankan sebagai compatibility layer permanen. Karena Klip belum rilis, schema lama boleh tidak kompatibel. Prioritasnya adalah satu model data yang konsisten sebelum rilis.
 
 ## P0 — AI provider
 
@@ -92,7 +99,7 @@ Catatan: `Sasaran` adalah representasi legacy yang paling dekat dengan Goal. `Go
 - [x] Halaman provider/model.
 - [x] Pengaturan.
 - [ ] Selaraskan bahasa UI `Ruang` menjadi `Ruang Kerja` tanpa mengubah nama storage `ruang`.
-- [ ] Selaraskan istilah `Sasaran`/Goal setelah model Goal final ditetapkan.
+- [ ] Selaraskan istilah `Sasaran` menjadi Goal setelah model Goal final ditetapkan.
 
 ## P1 — Skills dan hasil
 
@@ -127,6 +134,7 @@ Catatan: `Sasaran` adalah representasi legacy yang paling dekat dengan Goal. `Go
 - [x] Audit aksi penting: approval dibuat/diputuskan dan jadwal dibuat dicatat sebagai event lokal.
 - [x] Dokumentasikan batas keamanan local-first.
 - [ ] Jadikan Ruang Kerja sebagai unit backup/export yang eksplisit bila export/import diperluas.
+- [ ] Sesuaikan backup/restore dengan schema v1 setelah remodel.
 
 ## P2 — Optimasi
 
