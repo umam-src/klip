@@ -25,6 +25,7 @@ Format mengikuti Keep a Changelog dan versi mengikuti Semantic Versioning.
 - Audit event lokal untuk pembuatan dan keputusan approval serta pembuatan jadwal.
 - Benchmark heap memori idle aplikasi untuk mendeteksi regresi penggunaan memori.
 - Penyimpanan pengaturan provider AI, alamat provider, dan model di SQLite.
+- Daftar Agen dalam Ruang kerja yang menampilkan nama, peran, deskripsi singkat, status, dan hierarki.
 
 ### Changed
 - Konfigurasi sekarang menyimpan locale secara eksplisit dan menormalkan locale yang belum didukung ke `id-ID`.
@@ -32,6 +33,7 @@ Format mengikuti Keep a Changelog dan versi mengikuti Semantic Versioning.
 - Validasi nama skill digunakan bersama oleh parser skill dan penyimpanan relasi agen.
 - Skema SQLite dinaikkan ke versi 8 untuk menyimpan hubungan induk-anak agen secara lokal.
 - Skema SQLite dinaikkan ke versi 9 untuk menyimpan pengaturan AI yang dipilih pengguna.
+- Skema SQLite dinaikkan ke versi 10 untuk menyimpan peran dan status Agen dengan migrasi yang aman untuk data lama.
 - Pengaturan AI dari database menjadi sumber utama setelah database dibuka; `config.json` tetap menjadi fallback.
 - Pemeriksaan format CI kembali bersih setelah handler scheduler diformat dengan `gofmt`.
 - Penyimpanan hasil menolak direktori induk yang berupa symlink untuk mencegah penulisan keluar dari root hasil.
@@ -42,6 +44,7 @@ Format mengikuti Keep a Changelog dan versi mengikuti Semantic Versioning.
 - Release sekarang membangun binary Linux amd64, Windows amd64, dan macOS arm64; pengujian sumber tetap dilakukan sekali sebelum build matrix.
 - Release build tidak lagi mengandalkan simbol versi linker yang tidak tersedia di binary CLI.
 - CI membatalkan run lama pada ref yang sama saat commit baru masuk dan menggunakan permission workflow minimum untuk mengurangi pemborosan runner tanpa melemahkan pemeriksaan utama.
+- UI Agen menggunakan bahasa pengguna yang lebih ringkas dan tidak menampilkan URL provider atau credential pada daftar Agen.
 
 ### Removed
 - Belum ada.
@@ -78,7 +81,3 @@ Format mengikuti Keep a Changelog dan versi mengikuti Semantic Versioning.
 - Konfigurasi runtime menggunakan `config.json` agar tetap memakai pustaka standar Go.
 - Runtime eksekusi menolak input proses yang mengandung NUL dan direktori kerja relatif.
 - API JSON menolak `Content-Type` non-JSON ketika header tersebut diberikan.
-- Alur rilis mengambil versi dan catatan rilis langsung dari `CHANGELOG.md`.
-
-### Removed
-- Belum ada.
