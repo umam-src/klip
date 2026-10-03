@@ -27,7 +27,15 @@
       <div class="section-head"><div><p class="eyebrow" id="workspace-label">Ruang</p><h2 id="workspace-title">Detail ruang</h2></div><button class="button" type="button" id="back-to-spaces">Semua ruang</button></div>
       <div class="columns">
         <div class="panel"><div class="panel-head"><div><h3>Agen</h3><p>Pelaksana kerja di ruang ini.</p></div><button class="button small" type="button" data-toggle="agent-form">Tambah agen</button></div>
-          <form id="agent-form" class="inline-form" hidden><input name="name" placeholder="Nama agen" required maxlength="120"><input name="provider_id" placeholder="Penyedia, mis. ollama" maxlength="80"><input name="model_id" placeholder="Model, mis. qwen" maxlength="120"><button class="button primary small" type="submit">Simpan agen</button></form><div id="agent-list" class="stack"></div>
+          <form id="agent-form" class="inline-form" hidden>
+            <label>Nama<input name="name" placeholder="Nama agen" required maxlength="120" autocomplete="off"></label>
+            <label>Peran<input name="role" placeholder="Contoh: Peneliti" required maxlength="120" autocomplete="off"></label>
+            <label>Deskripsi<textarea name="description" rows="3" placeholder="Apa yang dikerjakan agen?" maxlength="1000"></textarea></label>
+            <label>Atasan<select name="parent_id" id="agent-parent"><option value="">Tidak ada atasan</option></select></label>
+            <label>Penyedia AI<select name="provider_id" id="agent-provider"><option value="ollama">Ollama</option><option value="openai-compatible">OpenAI-compatible</option></select></label>
+            <label>Model<select name="model_id" id="agent-model"><option value="">Pilih model</option></select></label>
+            <div class="form-actions"><button class="button primary small" type="submit">Simpan agen</button></div>
+          </form><div id="agent-list" class="stack"></div>
         </div>
         <div class="panel"><div class="panel-head"><div><h3>Sasaran</h3><p>Hasil yang ingin dicapai dalam ruang.</p></div><button class="button small" type="button" data-toggle="goal-form">Tambah</button></div>
           <form id="goal-form" class="inline-form" hidden><input name="title" placeholder="Judul sasaran" required maxlength="160"><button class="button primary small" type="submit">Simpan sasaran</button></form><div id="goal-list" class="stack"></div>
