@@ -1,51 +1,143 @@
-# Progres Assignment Agen ke Tugas
+# Model Inti: Goal sebagai Pusat Klip
 
-Status: **Runtime terintegrasi — kontrak UI assignment teruji otomatis; verifikasi browser penuh masih tersisa.**
+Status: **Tahap 7 selesai; desain berikutnya berpusat pada Goal sebelum Runtime AI diperluas.**
 
-## Tahap 7 — Hubungkan Agen dengan pekerjaan
+## Prinsip utama
 
-Assignment menggunakan relasi `tugas_agen` yang dipisahkan dari identitas Agen dan struktur Tugas.
+Klip diarahkan oleh satu pertanyaan utama: **apa yang ingin dicapai?**
 
-### Aturan
+Karena itu `Goal` menjadi pusat model produk. Ruang berfungsi sebagai batas lingkungan, sedangkan Agen, Pekerjaan, Tugas, Skill, Runtime, dan Execution menjadi bagian dari mekanisme untuk mencapai Goal.
 
-- Satu Tugas memiliki paling banyak satu Agen pelaksana pada tahap awal.
-- Assignment tidak mengubah hierarki Agen.
-- Agen dan Pekerjaan Tugas harus berada dalam Ruang yang sama.
-- Assignment dapat diganti atau dilepas tanpa mengubah status Agen maupun status Tugas.
-- Data assignment menyimpan waktu penugasan.
-- Credential dan konfigurasi AI tetap berada di luar relasi assignment.
+```text
+Goal
+ ├── Goal turunan
+ ├── Pekerjaan
+ │    └── Tugas
+ │         └── Assignment → Agen
+ │                              ├── Skill
+ │                              └── Runtime
+ │                                   └── Execution
+ │                                        └── Result / Evidence
+ └── Progress
+```
 
-### Storage yang tersedia
+## Peran entitas
 
-- `AssignTugasToAgen` untuk menetapkan atau mengganti pelaksana.
-- `UnassignTugas` untuk melepas pelaksana.
-- `GetTugasAssignment` untuk membaca assignment satu Tugas.
-- `ListTugasByAgen` untuk menampilkan Tugas yang dikerjakan Agen.
-- Pembuatan tabel assignment bersifat idempotent agar database lama tetap dapat digunakan.
+| Entitas | Peran |
+|---|---|
+| Ruang | Batas lingkungan dan isolasi data. |
+| Goal | Hasil yang ingin dicapai dan arah utama pekerjaan. |
+| Pekerjaan | Bagian besar dari Goal yang dapat dikelola. |
+| Tugas | Tindakan konkret yang dapat dieksekusi. |
+| Agen | Aktor yang bertanggung jawab menjalankan Tugas. |
+| Skill | Kemampuan yang tersedia bagi Agen. |
+| Runtime | Mekanisme yang menjalankan Agen. |
+| Execution | Bukti bahwa suatu tindakan benar-benar dijalankan. |
+| Result / Evidence | Hasil yang dapat digunakan untuk memperbarui kemajuan Goal. |
+| Progress | Gambaran kemajuan Goal berdasarkan pekerjaan dan hasilnya. |
 
-### API yang tersedia
+## Relasi yang dituju
 
-- `GET /api/v1/tugas/{id}/agen` untuk membaca pelaksana.
-- `PUT /api/v1/tugas/{id}/agen` untuk menetapkan atau mengganti pelaksana.
-- `DELETE /api/v1/tugas/{id}/agen` untuk melepas pelaksana.
+```text
+Ruang
+ └── Goal
+      ├── Goal turunan
+      ├── Pekerjaan
+      │    └── Tugas
+      │         └── Agen
+      ├── Agen / responsibility
+      └── Progress
+```
 
-### UI yang tersedia
+Agen tidak menjadi pusat tujuan sistem. Agen memiliki `role`, kemampuan, dan runtime, tetapi tanggung jawabnya berasal dari Goal dan pekerjaan yang diturunkan darinya.
 
-- Form Tugas menyediakan pilihan Agen pelaksana dari Ruang aktif.
-- Tugas baru langsung menyimpan assignment bila Agen dipilih.
-- Daftar Tugas menampilkan pelaksana setelah assignment tersedia.
-- Detail Tugas menampilkan Agen pelaksana.
-- Detail Agen menampilkan Tugas yang ditugaskan kepadanya.
-- Kontrak UI assignment diuji dari aset web yang di-embed agar endpoint dan elemen utama tidak terlepas saat refactor.
+## Model Goal yang direncanakan
 
-### Runtime
+```text
+Goal
+├── id
+├── ruang_id
+├── parent_goal_id
+├── title
+├── description
+├── status
+├── priority
+├── progress
+├── target
+├── deadline
+├── created_at
+└── updated_at
+```
 
-- `Executor.Execute` memeriksa assignment `Tugas → Agen` ketika `TugasID` diberikan.
-- Jika tugas sudah memiliki assignment, Agen yang menjalankan harus sama dengan pelaksana yang tersimpan.
-- Jika Agen tidak cocok, eksekusi dihentikan sebelum run dibuat.
-- Assignment yang belum ada tetap kompatibel dengan eksekusi eksplisit lama.
-- Test runtime mencakup assignment yang cocok dan tidak cocok.
+Relasi Pekerjaan nantinya dapat mengarah langsung ke Goal:
 
-### Belum selesai
+```text
+Goal
+  └── Pekerjaan
+       └── Tugas
+            └── tugas_agen
+                 └── Agen
+```
 
-- Verifikasi UI end-to-end nyata di browser.
+## Prinsip feedback
+
+Klip tidak hanya menghitung Tugas yang selesai. Alur yang dituju adalah:
+
+```text
+Goal
+ ↓
+Pekerjaan
+ ↓
+Tugas
+ ↓
+Execution
+ ↓
+Result / Evidence
+ ↓
+Progress Goal
+```
+
+Dengan model ini sistem dapat menjelaskan dasar kemajuan Goal dari pekerjaan dan hasil yang telah terjadi.
+
+## Hubungan dengan desain Agen
+
+Desain Agen yang dipertahankan untuk tahap berikutnya:
+
+- identitas dan Ruang tetap terpisah dari assignment;
+- hierarki Agen digunakan untuk struktur tanggung jawab;
+- Skill menyatakan kemampuan Agen;
+- Runtime menjadi mekanisme eksekusi;
+- assignment `Tugas → Agen` menentukan pelaksana konkret;
+- permission dan approval tetap menjadi batas governance;
+- budget dan usage dapat ditambahkan ketika Runtime AI membutuhkan pengukuran sumber daya.
+
+Credential dan konfigurasi rahasia tidak menjadi bagian dari assignment.
+
+## Tahap 7 — Assignment Agen ke Tugas
+
+Tahap 7 telah selesai secara fungsional:
+
+- Storage mendukung assign, reassignment, unassign, lintas Ruang, dan daftar Tugas per Agen.
+- API mendukung GET, PUT, dan DELETE assignment beserta validasi error utama.
+- UI menyediakan pemilihan Agen dan menampilkan pelaksana.
+- Kontrak UI dilindungi embedded asset test agar CI tetap ringan.
+- Runtime menolak Agen yang berbeda dari assignment sebelum execution dibuat.
+- Scheduler meneruskan `PekerjaanID`, `TugasID`, dan `AgenID` ke runtime.
+
+Verifikasi browser penuh tidak ditambahkan agar CI tetap ringan; kontrak UI, API, storage, runtime, dan scheduler menjadi verifikasi otomatis tahap ini.
+
+## Arah Tahap 8 — Runtime AI
+
+Sebelum menambah provider atau fitur AI, Runtime harus menerima konteks Goal yang relevan. Prioritas desain:
+
+1. definisikan kontrak Runtime AI tanpa mengunci provider tertentu;
+2. hubungkan `Goal → Pekerjaan → Tugas → Agen → Runtime`;
+3. pertahankan eksekusi lokal dan offline-first bila memungkinkan;
+4. pisahkan konfigurasi runtime dari credential rahasia;
+5. tambahkan usage/cost hanya ketika benar-benar diperlukan;
+6. ukur hasil execution sebagai bahan progress Goal;
+7. pertahankan test terfokus dan CI hemat menit.
+
+## Keputusan desain
+
+Klip **tidak menyalin Paperclip secara penuh**. Konsep yang relevan digunakan sebagai referensi desain, sementara `Ruang` tetap menjadi boundary lokal dan `Goal` menjadi pusat model produk.
