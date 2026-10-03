@@ -70,8 +70,10 @@ func (r *Repository) UpdateEksekusi(ctx context.Context, id domain.ID, status do
 	if strings.TrimSpace(string(id)) == "" {
 		return fmt.Errorf("eksekusi: id wajib diisi: %w", ErrInvalid)
 	}
-	if !isKnownStatus(status) {
-		return fmt.Errorf("eksekusi: status tidak valid: %w", ErrInvalid)
+	switch status {
+	case domain.StatusCompleted, domain.StatusFailed, domain.StatusCancelled:
+	default:
+		return fmt.Errorf("eksekusi: status akhir tidak valid: %w", ErrInvalid)
 	}
 	if finishedAt.IsZero() {
 		return fmt.Errorf("eksekusi: waktu selesai wajib diisi: %w", ErrInvalid)
@@ -159,7 +161,7 @@ func (r *Repository) listEksekusi(ctx context.Context, where string, arg any) ([
 		var tugasID, finished sql.NullString
 		var exit sql.NullInt64
 		var args, started string
-		if err := rows.Scan(&e.ID, &e.RuangID, &e.ProyekID, &tugasID, &e.AgenID, &e.Status, &args, &exit, &e.Stdout, &e.Stderr, &started, &finished); err != nil {
+		if err := rows.Scan(&e.ID, &e.RuangID, &e.ProyekID, &tugasID, &e.AgenID, &e.Status, &e.Program, &args, &exit, &e.Stdout, &e.Stderr, &started, &finished); err != nil {
 			return nil, fmt.Errorf("baca eksekusi: %w", err)
 		}
 		var err error
