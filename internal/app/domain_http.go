@@ -21,9 +21,21 @@ type createAgenRequest struct {
 	ID          string `json:"id"`
 	ParentID    string `json:"parent_id,omitempty"`
 	Name        string `json:"name"`
+	Role        string `json:"role,omitempty"`
 	Description string `json:"description,omitempty"`
 	ProviderID  string `json:"provider_id,omitempty"`
 	ModelID     string `json:"model_id,omitempty"`
+	Status      string `json:"status,omitempty"`
+}
+
+type updateAgenRequest struct {
+	ParentID    string `json:"parent_id,omitempty"`
+	Name        string `json:"name"`
+	Role        string `json:"role"`
+	Description string `json:"description,omitempty"`
+	ProviderID  string `json:"provider_id,omitempty"`
+	ModelID     string `json:"model_id,omitempty"`
+	Status      string `json:"status,omitempty"`
 }
 
 type createPekerjaanRequest struct {
@@ -134,8 +146,22 @@ func (a *App) handlePekerjaanChild(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *App) handleAgen(w http.ResponseWriter, r *http.Request, ruangID domain.ID) {
+	agentID := strings.TrimSpace(r.URL.Query().Get("agent_id"))
 	switch r.Method {
 	case http.MethodGet:
+		if agentID != "" {
+			agent, err := a.repo.GetAgenWithParent(r.Context(), domain.ID(agentID))
+			if err != nil {
+				writeStorageError(w, err)
+				return
+			}
+			if agent.RuangID != ruangID {
+				writeStorageError(w, storage.ErrNotFound)
+				return
+			}
+			writeJSON(w, http.StatusOK, agent)
+			return
+		}
 		items, err := a.repo.ListAgenByRuangWithParent(r.Context(), ruangID)
 		if err != nil {
 			writeStorageError(w, err)
@@ -152,14 +178,20 @@ func (a *App) handleAgen(w http.ResponseWriter, r *http.Request, ruangID domain.
 			id := domain.ID(value)
 			parentID = &id
 		}
+		status := domain.AgenStatus(strings.TrimSpace(req.Status))
+		if status == "" {
+			status = domain.AgenStatusActive
+		}
 		agent := domain.Agen{
 			ID:          domain.ID(strings.TrimSpace(req.ID)),
 			RuangID:     ruangID,
 			ParentID:    parentID,
 			Name:        strings.TrimSpace(req.Name),
+			Role:        strings.TrimSpace(req.Role),
 			Description: strings.TrimSpace(req.Description),
 			ProviderID:  strings.TrimSpace(req.ProviderID),
 			ModelID:     strings.TrimSpace(req.ModelID),
+			Status:      status,
 		}
 		if err := a.repo.CreateAgenWithParent(r.Context(), agent); err != nil {
 			writeStorageError(w, err)
@@ -171,9 +203,64 @@ func (a *App) handleAgen(w http.ResponseWriter, r *http.Request, ruangID domain.
 			return
 		}
 		writeJSON(w, http.StatusCreated, created)
+	case http.MethodPut:
+		if agentID == "" {
+			writeError(w, http.StatusBadRequest, "agent_id wajib diisi")
+			return
+		}
+		a.updateAgen(w, r, domain.ID(agentID), ruangID)
 	default:
 		writeError(w, http.StatusMethodNotAllowed, "metode tidak didukung")
 	}
+}
+
+func (a *App) updateAgen(w http.ResponseWriter, r *http.Request, id, ruangID domain.ID) {
+	current, err := a.repo.GetAgenWithParent(r.Context(), id)
+	if err != nil {
+		writeStorageError(w, err)
+		return
+	}
+	if current.RuangID != ruangID {
+		writeStorageError(w, storage.ErrNotFound)
+		return
+	}
+
+	var req updateAgenRequest
+	if !decodeJSON(w, r, &req) {
+		return
+	}
+	var parentID *domain.ID
+	if value := strings.TrimSpace(req.ParentID); value != "" {
+		parent := domain.ID(value)
+		parentID = &parent
+	}
+	status := domain.AgenStatus(strings.TrimSpace(req.Status))
+	if status == "" {
+		status = current.Status
+	}
+	updated := domain.Agen{
+		ID:          id,
+		RuangID:     ruangID,
+		ParentID:    parentID,
+		Name:        strings.TrimSpace(req.Name),
+		Role:        strings.TrimSpace(req.Role),
+		Description: strings.TrimSpace(req.Description),
+		ProviderID:  strings.TrimSpace(req.ProviderID),
+		ModelID:     strings.TrimSpace(req.ModelID),
+		Status:      status,
+		CreatedAt:   current.CreatedAt,
+		UpdatedAt:   current.UpdatedAt,
+	}
+	if err := a.repo.UpdateAgenWithParent(r.Context(), updated); err != nil {
+		writeStorageError(w, err)
+		return
+	}
+	result, err := a.repo.GetAgenWithParent(r.Context(), id)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "agen berhasil diubah tetapi gagal dibaca")
+		return
+	}
+	writeJSON(w, http.StatusOK, result)
 }
 
 func (a *App) handlePekerjaan(w http.ResponseWriter, r *http.Request, ruangID domain.ID) {
