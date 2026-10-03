@@ -81,7 +81,7 @@ func (a *App) handleHealth(w http.ResponseWriter, _ *http.Request) {
 }
 
 type providerStatusResponse struct { Provider string `json:"provider"`; Configured bool `json:"configured"`; Reachable bool `json:"reachable"` }
-type providerConfigRequest struct { Provider string `json:"provider"`; BaseURL string `json:"base_url"` }
+type providerConfigRequest struct { Provider string `json:"provider"`; BaseURL string `json:"base_url" }
 
 func (a *App) providerForRequest(w http.ResponseWriter, r *http.Request) ai.AIProvider {
 	if r.Method == http.MethodGet { return a.provider }
