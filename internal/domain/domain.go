@@ -85,6 +85,22 @@ type Tugas struct {
 	Position int `json:"position,omitempty"`
 }
 
+type Eksekusi struct {
+	ID ID `json:"id"`
+	RuangID ID `json:"ruang_id"`
+	ProyekID ID `json:"proyek_id"`
+	TugasID *ID `json:"tugas_id,omitempty"`
+	AgenID ID `json:"agen_id"`
+	Status Status `json:"status"`
+	Program string `json:"program"`
+	Arguments []string `json:"arguments"`
+	ExitCode *int `json:"exit_code,omitempty"`
+	Stdout string `json:"stdout,omitempty"`
+	Stderr string `json:"stderr,omitempty"`
+	StartedAt time.Time `json:"started_at"`
+	FinishedAt *time.Time `json:"finished_at,omitempty"`
+}
+
 type Sasaran struct { ID ID `json:"id"`; RuangID ID `json:"ruang_id"`; Title string `json:"title"`; Status Status `json:"status"`; CreatedAt time.Time `json:"created_at"`; UpdatedAt time.Time `json:"updated_at"` }
 type Pekerjaan struct { ID ID `json:"id"`; RuangID ID `json:"ruang_id"`; SasaranID *ID `json:"sasaran_id,omitempty"`; Title string `json:"title"`; Status Status `json:"status"`; CreatedAt time.Time `json:"created_at"`; UpdatedAt time.Time `json:"updated_at"` }
 type Sesi struct { ID ID `json:"id"`; PekerjaanID ID `json:"pekerjaan_id"`; AgenID ID `json:"agen_id"`; Status Status `json:"status"`; StartedAt time.Time `json:"started_at"`; FinishedAt *time.Time `json:"finished_at,omitempty"` }
