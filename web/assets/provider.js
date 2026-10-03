@@ -21,12 +21,55 @@
     }
   }
 
+  async function loadModels() {
+    const select = $('#provider-model');
+    if (!select) return;
+    select.disabled = true;
+    select.innerHTML = '<option value="">Memuat model...</option>';
+    try {
+      const response = await fetch('/api/v1/provider/models', { headers: { Accept: 'application/json' } });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || `request ${response.status}`);
+      const models = Array.isArray(data.models) ? data.models : [];
+      if (models.length === 0) {
+        select.innerHTML = '<option value="">Tidak ada model</option>';
+        return;
+      }
+      select.innerHTML = '<option value="">Pilih model</option>';
+      for (const model of models) {
+        const id = String(model.id || '').trim();
+        if (!id) continue;
+        const option = document.createElement('option');
+        option.value = id;
+        option.textContent = id;
+        select.appendChild(option);
+      }
+      select.disabled = false;
+      select.dispatchEvent(new Event('change'));
+    } catch (error) {
+      select.innerHTML = `<option value="">${escapeHTML(error.message || 'Daftar model belum tersedia')}</option>`;
+    }
+  }
+
+  function applyModelToAgent(model) {
+    const input = document.querySelector('#agent-form [name="model_id"]');
+    if (input) input.value = model;
+  }
+
   function escapeHTML(value) {
     return String(value).replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]);
   }
 
   document.addEventListener('DOMContentLoaded', () => {
     loadProviderStatus();
-    $('#refresh-provider')?.addEventListener('click', loadProviderStatus);
+    loadModels();
+    $('#refresh-provider')?.addEventListener('click', () => {
+      loadProviderStatus();
+      loadModels();
+    });
+    $('#provider-model')?.addEventListener('change', (event) => {
+      const model = event.target.value;
+      if (model) applyModelToAgent(model);
+    });
   });
 })();
