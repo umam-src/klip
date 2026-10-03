@@ -1,15 +1,14 @@
 package app
 
 import (
-	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
-	"github.com/umam-src/klip/internal/ai"
 	"github.com/umam-src/klip/internal/config"
 )
 
@@ -22,7 +21,7 @@ func TestHandlerSettingsUpdate(t *testing.T) {
 	app := New(cfg, fakeProvider{})
 
 	body := `{"provider":"ollama","base_url":"http://127.0.0.1:11434","model":"model-baru"}`
-	req := httptest.NewRequest(http.MethodPut, "/api/v1/settings", stringsReader(body))
+	req := httptest.NewRequest(http.MethodPut, "/api/v1/settings", strings.NewReader(body))
 	res := httptest.NewRecorder()
 	app.Handler().ServeHTTP(res, req)
 	if res.Code != http.StatusOK {
@@ -54,7 +53,7 @@ func TestHandlerSettingsUpdate(t *testing.T) {
 
 func TestHandlerSettingsUpdateRejectsIncompleteRequest(t *testing.T) {
 	app := New(config.Default(t.TempDir()), fakeProvider{})
-	req := httptest.NewRequest(http.MethodPut, "/api/v1/settings", stringsReader(`{"provider":"ollama"}`))
+	req := httptest.NewRequest(http.MethodPut, "/api/v1/settings", strings.NewReader(`{"provider":"ollama"}`))
 	res := httptest.NewRecorder()
 	app.Handler().ServeHTTP(res, req)
 	if res.Code != http.StatusBadRequest {
@@ -68,7 +67,7 @@ func TestHandlerSettingsUpdatePreservesAPIKey(t *testing.T) {
 	cfg.AI.APIKey = "secret-not-logged"
 	app := New(cfg, fakeProvider{})
 
-	req := httptest.NewRequest(http.MethodPut, "/api/v1/settings", stringsReader(`{"provider":"openai-compatible","base_url":"http://127.0.0.1:8080","model":"model-baru"}`))
+	req := httptest.NewRequest(http.MethodPut, "/api/v1/settings", strings.NewReader(`{"provider":"openai-compatible","base_url":"http://127.0.0.1:8080","model":"model-baru"}`))
 	res := httptest.NewRecorder()
 	app.Handler().ServeHTTP(res, req)
 	if res.Code != http.StatusOK {
@@ -79,24 +78,6 @@ func TestHandlerSettingsUpdatePreservesAPIKey(t *testing.T) {
 	}
 }
 
-func stringsReader(value string) *stringReaderValue {
-	return &stringReaderValue{value: value}
-}
-
-type stringReaderValue struct {
-	value string
-	offset int
-}
-
-func (r *stringReaderValue) Read(p []byte) (int, error) {
-	if r.offset >= len(r.value) {
-		return 0, context.Canceled
-	}
-	n := copy(p, r.value[r.offset:])
-	r.offset += n
-	return n, nil
-}
-
 func containsAll(value string, needles ...string) bool {
 	for _, needle := range needles {
 		if !strings.Contains(value, needle) {
@@ -105,5 +86,3 @@ func containsAll(value string, needles ...string) bool {
 	}
 	return true
 }
-
-var _ ai.AIProvider = fakeProvider{}
