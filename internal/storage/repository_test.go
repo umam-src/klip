@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"testing"
+	"time"
 
 	"github.com/umam-src/klip/internal/domain"
 )
@@ -17,38 +18,41 @@ func TestRepositoryCoreEntities(t *testing.T) {
 	defer db.Close()
 
 	repo := NewRepository(db)
-	if err := repo.CreateRuang(ctx, domain.Ruang{ID: "ruang-1", Name: "Ruang"}); err != nil {
+	created := time.Date(2026, 10, 2, 5, 0, 0, 0, time.UTC)
+	updated := created.Add(time.Minute)
+
+	if err := repo.CreateRuang(ctx, domain.Ruang{ID: "ruang-1", Name: "Proyek", CreatedAt: created, UpdatedAt: updated}); err != nil {
 		t.Fatalf("CreateRuang() error = %v", err)
 	}
-	if err := repo.CreateAgen(ctx, domain.Agen{ID: "agen-1", RuangID: "ruang-1", Name: "Pemimpin", Role: "Pemimpin", Status: domain.AgenStatusActive}); err != nil {
+	if err := repo.CreateAgen(ctx, domain.Agen{ID: "agen-1", RuangID: "ruang-1", Name: "Agen Lokal", Role: "Pelaksana", ProviderID: "ollama", ModelID: "qwen", Status: domain.AgenStatusInactive, CreatedAt: created, UpdatedAt: updated}); err != nil {
 		t.Fatalf("CreateAgen() error = %v", err)
 	}
-	if err := repo.CreatePekerjaan(ctx, domain.Pekerjaan{ID: "pekerjaan-1", RuangID: "ruang-1", Title: "Pekerjaan", Status: "open"}); err != nil {
+	if err := repo.CreatePekerjaan(ctx, domain.Pekerjaan{ID: "pekerjaan-1", RuangID: "ruang-1", Title: "Bangun inti", Status: domain.StatusReady, CreatedAt: created, UpdatedAt: updated}); err != nil {
 		t.Fatalf("CreatePekerjaan() error = %v", err)
 	}
+	if err := repo.CreateTugas(ctx, domain.Tugas{ID: "tugas-1", PekerjaanID: "pekerjaan-1", Title: "Langkah pertama", Status: domain.StatusReady, Position: 1, CreatedAt: created, UpdatedAt: updated}); err != nil {
+		t.Fatalf("CreateTugas() error = %v", err)
+	}
 	parent := domain.ID("tugas-1")
-	if err := repo.CreateTugas(ctx, domain.Tugas{ID: parent, PekerjaanID: "pekerjaan-1", Title: "Induk", Status: "open"}); err != nil {
+	if err := repo.CreateTugas(ctx, domain.Tugas{ID: "tugas-2", PekerjaanID: "pekerjaan-1", ParentID: &parent, Title: "Langkah kedua", Status: domain.StatusDraft, Position: 2, CreatedAt: created.Add(time.Second), UpdatedAt: updated.Add(time.Second)}); err != nil {
 		t.Fatalf("CreateTugas(parent) error = %v", err)
 	}
-	if err := repo.CreateTugas(ctx, domain.Tugas{ID: "tugas-2", PekerjaanID: "pekerjaan-1", ParentID: &parent, Title: "Anak", Status: "open", Position: 2}); err != nil {
-		t.Fatalf("CreateTugas(child) error = %v", err)
-	}
-	if err := repo.CreateHasil(ctx, domain.Hasil{ID: "hasil-1", PekerjaanID: "pekerjaan-1", TugasID: &parent, Kind: "file", Name: "hasil", Path: "hasil/hasil.txt"}); err != nil {
+	if err := repo.CreateHasil(ctx, domain.Hasil{ID: "hasil-1", PekerjaanID: "pekerjaan-1", TugasID: &parent, Kind: "file", Name: "hasil.txt", Path: "hasil/hasil.txt", CreatedAt: updated}); err != nil {
 		t.Fatalf("CreateHasil() error = %v", err)
 	}
 
 	ruang, err := repo.GetRuang(ctx, "ruang-1")
-	if err != nil || ruang.Name != "Ruang" {
+	if err != nil || ruang.Name != "Proyek" || !ruang.CreatedAt.Equal(created) || !ruang.UpdatedAt.Equal(updated) {
 		t.Fatalf("GetRuang() = %+v, error = %v", ruang, err)
 	}
 
-	agen, err := repo.GetAgen(ctx, "agen-1")
-	if err != nil || agen.Role != "Pemimpin" || agen.Status != domain.AgenStatusActive {
-		t.Fatalf("GetAgen() = %+v, error = %v", agen, err)
+	agent, err := repo.GetAgen(ctx, "agen-1")
+	if err != nil || agent.RuangID != "ruang-1" || agent.ProviderID != "ollama" || agent.Role != "Pelaksana" || agent.Status != domain.AgenStatusInactive {
+		t.Fatalf("GetAgen() = %+v, error = %v", agent, err)
 	}
 
 	pekerjaan, err := repo.GetPekerjaan(ctx, "pekerjaan-1")
-	if err != nil || pekerjaan.Title != "Pekerjaan" {
+	if err != nil || pekerjaan.Status != domain.StatusReady || pekerjaan.RuangID != "ruang-1" {
 		t.Fatalf("GetPekerjaan() = %+v, error = %v", pekerjaan, err)
 	}
 
@@ -108,32 +112,75 @@ func TestRepositoryForeignKeys(t *testing.T) {
 	defer db.Close()
 
 	repo := NewRepository(db)
-	if err := repo.CreateRuang(ctx, domain.Ruang{ID: "ruang-1", Name: "Ruang"}); err != nil {
-		t.Fatalf("CreateRuang() error = %v", err)
-	}
-	if err := repo.CreateAgen(ctx, domain.Agen{ID: "agen-1", RuangID: "ruang-1", Name: "Agen", Role: "Pelaksana"}); err != nil {
-		t.Fatalf("CreateAgen() error = %v", err)
-	}
-	if err := repo.CreatePekerjaan(ctx, domain.Pekerjaan{ID: "pekerjaan-1", RuangID: "ruang-1", Title: "Pekerjaan", Status: "open"}); err != nil {
-		t.Fatalf("CreatePekerjaan() error = %v", err)
-	}
-	if err := repo.CreateTugas(ctx, domain.Tugas{ID: "tugas-1", PekerjaanID: "pekerjaan-1", Title: "Tugas", Status: "open"}); err != nil {
-		t.Fatalf("CreateTugas() error = %v", err)
-	}
-	if err := repo.CreateHasil(ctx, domain.Hasil{ID: "hasil-1", PekerjaanID: "pekerjaan-1", Kind: "file", Name: "hasil", Path: "hasil/hasil.txt"}); err != nil {
-		t.Fatalf("CreateHasil() error = %v", err)
+	err = repo.CreateAgen(ctx, domain.Agen{ID: "agen-1", RuangID: "missing", Name: "Agen", Role: "Pelaksana"})
+	if err == nil {
+		t.Fatal("CreateAgen() error = nil, want foreign-key error")
 	}
 
-	if err := repo.CreateAgen(ctx, domain.Agen{ID: "agen-invalid", RuangID: "ruang-missing", Name: "Agen", Role: "Pelaksana"}); err == nil {
-		t.Fatal("CreateAgen() error = nil, want foreign key failure")
+	if err = repo.CreateTugas(ctx, domain.Tugas{ID: "tugas-1", PekerjaanID: "missing", Title: "Tugas"}); err == nil {
+		t.Fatal("CreateTugas() error = nil, want foreign-key error")
 	}
-	if err := repo.CreatePekerjaan(ctx, domain.Pekerjaan{ID: "pekerjaan-invalid", RuangID: "ruang-missing", Title: "Pekerjaan", Status: "open"}); err == nil {
-		t.Fatal("CreatePekerjaan() error = nil, want foreign key failure")
+}
+
+func TestRepositoryResultIntegrity(t *testing.T) {
+	ctx := context.Background()
+	db, err := Open(ctx, ":memory:")
+	if err != nil {
+		t.Fatalf("Open() error = %v", err)
 	}
-	if err := repo.CreateTugas(ctx, domain.Tugas{ID: "tugas-invalid", PekerjaanID: "pekerjaan-missing", Title: "Tugas", Status: "open"}); err == nil {
-		t.Fatal("CreateTugas() error = nil, want foreign key failure")
+	defer db.Close()
+
+	repo := NewRepository(db)
+	if err := repo.CreateRuang(ctx, domain.Ruang{ID: "ruang-1", Name: "Ruang"}); err != nil {
+		t.Fatal(err)
 	}
-	if err := repo.CreateHasil(ctx, domain.Hasil{ID: "hasil-invalid", PekerjaanID: "pekerjaan-missing", Kind: "file", Name: "hasil"}); err == nil {
-		t.Fatal("CreateHasil() error = nil, want foreign key failure")
+	for _, job := range []domain.Pekerjaan{
+		{ID: "pekerjaan-1", RuangID: "ruang-1", Title: "Satu"},
+		{ID: "pekerjaan-2", RuangID: "ruang-1", Title: "Dua"},
+	} {
+		if err := repo.CreatePekerjaan(ctx, job); err != nil {
+			t.Fatal(err)
+		}
 	}
+	if err := repo.CreateTugas(ctx, domain.Tugas{ID: "tugas-1", PekerjaanID: "pekerjaan-1", Title: "Tugas"}); err != nil {
+		t.Fatal(err)
+	}
+	if err := repo.CreateTugas(ctx, domain.Tugas{ID: "tugas-2", PekerjaanID: "pekerjaan-2", Title: "Tugas"}); err != nil {
+		t.Fatal(err)
+	}
+
+	valid := domain.Hasil{ID: "hasil-valid", PekerjaanID: "pekerjaan-1", TugasID: domainID("tugas-1"), Kind: "file", Name: "hasil.txt", Path: "hasil/hasil.txt"}
+	if err := repo.CreateHasil(ctx, valid); err != nil {
+		t.Fatalf("valid result rejected: %v", err)
+	}
+
+	for _, result := range []domain.Hasil{
+		{ID: "hasil-abs", PekerjaanID: "pekerjaan-1", Kind: "file", Name: "hasil.txt", Path: "/tmp/hasil.txt"},
+		{ID: "hasil-dot", PekerjaanID: "pekerjaan-1", Kind: "file", Name: "hasil.txt", Path: "./hasil.txt"},
+		{ID: "hasil-parent", PekerjaanID: "pekerjaan-1", Kind: "file", Name: "hasil.txt", Path: "../hasil.txt"},
+		{ID: "hasil-name", PekerjaanID: "pekerjaan-1", Kind: "file", Name: "sub/hasil.txt", Path: "hasil.txt"},
+	} {
+		if err := repo.CreateHasil(ctx, result); !errors.Is(err, ErrInvalid) {
+			t.Errorf("CreateHasil(%q) error = %v, want ErrInvalid", result.Path, err)
+		}
+	}
+
+	crossJob := valid
+	crossJob.ID = "hasil-cross-job"
+	crossJob.PekerjaanID = "pekerjaan-2"
+	if err := repo.CreateHasil(ctx, crossJob); !errors.Is(err, ErrInvalid) {
+		t.Fatalf("cross-job result error = %v, want ErrInvalid", err)
+	}
+
+	missingTask := valid
+	missingTask.ID = "hasil-missing-task"
+	missingTask.TugasID = domainID("missing")
+	if err := repo.CreateHasil(ctx, missingTask); !errors.Is(err, ErrInvalid) {
+		t.Fatalf("missing task result error = %v, want ErrInvalid", err)
+	}
+}
+
+func domainID(value string) *domain.ID {
+	id := domain.ID(value)
+	return &id
 }
