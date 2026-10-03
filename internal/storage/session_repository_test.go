@@ -49,6 +49,35 @@ func TestSesiRepositoryLifecycle(t *testing.T) {
 	}
 }
 
+func TestSesiRepositoryRejectsCrossWorkspaceAgent(t *testing.T) {
+	ctx := context.Background()
+	db, err := Open(ctx, ":memory:")
+	if err != nil {
+		t.Fatalf("Open() error = %v", err)
+	}
+	defer db.Close()
+
+	repo := NewRepository(db)
+	now := time.Now().UTC()
+	if err := repo.CreateRuang(ctx, domain.Ruang{ID: "ruang-sesi-a", Name: "A", CreatedAt: now, UpdatedAt: now}); err != nil {
+		t.Fatal(err)
+	}
+	if err := repo.CreateRuang(ctx, domain.Ruang{ID: "ruang-sesi-b", Name: "B", CreatedAt: now, UpdatedAt: now}); err != nil {
+		t.Fatal(err)
+	}
+	if err := repo.CreateAgen(ctx, domain.Agen{ID: "agen-sesi-b", RuangID: "ruang-sesi-b", Name: "Agen B", CreatedAt: now, UpdatedAt: now}); err != nil {
+		t.Fatal(err)
+	}
+	if err := repo.CreatePekerjaan(ctx, domain.Pekerjaan{ID: "pekerjaan-sesi-a", RuangID: "ruang-sesi-a", Title: "Pekerjaan A", Status: domain.StatusReady, CreatedAt: now, UpdatedAt: now}); err != nil {
+		t.Fatal(err)
+	}
+
+	err = repo.CreateSesi(ctx, domain.Sesi{ID: "sesi-cross", PekerjaanID: "pekerjaan-sesi-a", AgenID: "agen-sesi-b", Status: domain.StatusRunning, StartedAt: now})
+	if !errors.Is(err, ErrInvalid) {
+		t.Fatalf("CreateSesi() error = %v, want ErrInvalid", err)
+	}
+}
+
 func TestSesiRepositoryRejectsInvalidLifecycle(t *testing.T) {
 	ctx := context.Background()
 	db, err := Open(ctx, ":memory:")
