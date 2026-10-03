@@ -62,6 +62,7 @@ func (a *App) Handler() http.Handler {
 	mux.HandleFunc("/api/v1/scheduler/", a.handleSchedulerChild)
 	mux.HandleFunc("/api/v1/ruang", a.handleRuang)
 	mux.HandleFunc("/api/v1/ruang/{id}/sasaran", a.handleSasaran)
+	mux.HandleFunc("/api/v1/ruang/{id}/proyek", a.handleProyek)
 	mux.HandleFunc("/api/v1/ruang/", a.handleRuangChild)
 	mux.HandleFunc("/api/v1/pekerjaan/{id}/komentar", a.handleKomentar)
 	mux.HandleFunc("/api/v1/pekerjaan/{id}/approval", a.handlePekerjaanApproval)
