@@ -41,10 +41,10 @@ Daftar kerja pengembangan. Prioritas: P0 wajib, P1 penting, P2 setelah inti stab
 - [x] Remodel service dan API mengikuti Goal-centered model.
 - [ ] Remodel UI dan bahasa produk agar konsisten dengan Goal.
 - [x] Hapus entity `Sasaran`, `sasaran_id`, dan adapter `GoalFromSasaran` setelah persistence baru aktif.
-- [ ] Pastikan Goal parent/child satu Ruang Kerja dan tidak membentuk cycle.
-- [ ] Pastikan setiap Proyek mengacu ke satu Goal utama dan satu Ruang Kerja.
+- [x] Pastikan Goal parent/child satu Ruang Kerja dan tidak membentuk cycle.
+- [x] Pastikan setiap Proyek mengacu ke satu Goal utama dan satu Ruang Kerja.
 - [ ] Pastikan seluruh relasi domain mempertahankan batas `ruang_id`.
-- [ ] Pastikan Eksekusi dan Hasil Kerja dapat ditelusuri ke Ruang Kerja dan konteks Goal.
+- [x] Pastikan Eksekusi dan Hasil Kerja dapat ditelusuri ke Ruang Kerja dan konteks Goal.
 - [ ] Reset/migrate database development setelah schema v1 siap.
 - [ ] Jalankan regression test dan CI penuh setelah remodel.
 

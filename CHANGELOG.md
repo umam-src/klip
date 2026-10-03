@@ -32,6 +32,7 @@ Format mengikuti Keep a Changelog dan versi mengikuti Semantic Versioning.
 - Kontrak domain Goal v1 dengan identitas, batas Ruang Kerja, hierarki, deskripsi, lifecycle, dan timestamp.
 - Rancangan model data v1 yang mencakup entity inti, relasi, invariant Ruang Kerja, Eksekusi, Peristiwa, dan Hasil Kerja sebelum remodel database.
 - `.gitignore` agar data lokal, konfigurasi pribadi, rahasia, database, dan hasil build tidak ikut masuk repository.
+- Tes regresi yang membuktikan Hasil Kerja dapat ditelusuri ke Eksekusi, Proyek, dan Goal dalam Ruang Kerja yang sama, serta menolak Eksekusi dari Proyek lain, Proyek dari Ruang Kerja lain, dan Eksekusi yang tidak ada.
 
 ### Changed
 - Detail Agen, Status AI, dan Pengaturan kini dimuat di UI. Detail Agen memakai ID ruang aktif, bukan judul halaman, sehingga aman untuk ruang bernama sama.
@@ -73,6 +74,7 @@ Format mengikuti Keep a Changelog dan versi mengikuti Semantic Versioning.
 - Modul UI lama `sasaran.js`, `aktivitas.js`, dan `hasil.js` yang tidak dimuat dan memanggil endpoint `/sasaran` serta `/pekerjaan` yang sudah dihapus.
 
 ### Fixed
+- Hierarki Goal kini menolak siklus (Goal tidak bisa menjadi induk dari leluhurnya sendiri) saat membuat atau mengubah Goal, dengan tes regresi. Tes regresi juga memastikan Proyek wajib mengacu ke satu Goal dan tidak boleh memakai Goal dari Ruang Kerja lain.
 - Pembuatan jadwal (`POST /api/v1/scheduler`) kini mengisi Ruang Kerja dari Proyek. Sebelumnya jadwal yang valid pun selalu ditolak setelah remodel v1. Respons jadwal kini menyertakan `ruang_id`, dan jadwal dengan agen atau tugas dari Ruang lain ditolak, dengan tes regresi.
 
 ## [0.1.0] - 2026-10-02
