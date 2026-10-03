@@ -57,5 +57,3 @@
   observer.observe(workspace, { attributes: true, attributeFilter: ['hidden'] });
   loadActivity();
 })();
-
-import('/assets/agent-detail.js');
