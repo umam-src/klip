@@ -1,10 +1,10 @@
 # Progres Assignment Agen ke Tugas
 
-Status: **Fondasi storage — implementasi bertahap.**
+Status: **UI assignment selesai — verifikasi end-to-end masih tersisa.**
 
 ## Tahap 7 — Hubungkan Agen dengan pekerjaan
 
-Fondasi awal assignment menggunakan relasi `tugas_agen` yang dipisahkan dari identitas Agen dan struktur Tugas.
+Assignment menggunakan relasi `tugas_agen` yang dipisahkan dari identitas Agen dan struktur Tugas.
 
 ### Aturan
 
@@ -23,11 +23,21 @@ Fondasi awal assignment menggunakan relasi `tugas_agen` yang dipisahkan dari ide
 - `ListTugasByAgen` untuk menampilkan Tugas yang dikerjakan Agen.
 - Pembuatan tabel assignment bersifat idempotent agar database lama tetap dapat digunakan.
 
+### API yang tersedia
+
+- `GET /api/v1/tugas/{id}/agen` untuk membaca pelaksana.
+- `PUT /api/v1/tugas/{id}/agen` untuk menetapkan atau mengganti pelaksana.
+- `DELETE /api/v1/tugas/{id}/agen` untuk melepas pelaksana.
+
+### UI yang tersedia
+
+- Form Tugas menyediakan pilihan Agen pelaksana dari Ruang aktif.
+- Tugas baru langsung menyimpan assignment bila Agen dipilih.
+- Daftar Tugas menampilkan pelaksana setelah assignment tersedia.
+- Detail Tugas menampilkan Agen pelaksana.
+- Detail Agen menampilkan Tugas yang ditugaskan kepadanya.
+
 ### Belum selesai
 
-- Endpoint HTTP assignment.
-- Pilihan Agen pada form Tugas.
-- Detail Agen menampilkan Tugas terkait.
-- Detail Tugas menampilkan pelaksana.
 - Integrasi assignment dengan runtime.
-- Verifikasi UI end-to-end.
+- Verifikasi UI end-to-end di browser.
