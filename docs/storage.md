@@ -10,6 +10,19 @@ Klip menyimpan data utama secara lokal menggunakan SQLite. Penyimpanan dirancang
 - WAL digunakan untuk menjaga perilaku baca/tulis yang baik pada penggunaan lokal.
 - Batas waktu tunggu SQLite digunakan agar konflik singkat tidak langsung gagal.
 
+## Pengaturan aplikasi
+
+`klip.db` menjadi sumber utama pengaturan AI yang dapat diubah dari antarmuka, yaitu penyedia, alamat penyedia, dan model.
+
+`config.json` tetap digunakan untuk bootstrap dan fallback. Urutannya:
+
+1. `data_dir` dan `listen` dibaca dari `config.json`, lalu memakai nilai bawaan jika tidak tersedia.
+2. Setelah database ditemukan, pengaturan AI dari database dipakai jika sudah tersimpan.
+3. Jika database belum memiliki pengaturan AI, nilai AI dari `config.json` dipakai.
+4. Jika keduanya tidak tersedia, nilai bawaan aplikasi dipakai.
+
+Kunci API tidak dipindahkan oleh pengaturan AI ini; nilai tersebut tetap berasal dari konfigurasi yang dibaca saat mulai.
+
 ## Migrasi
 
 Skema memiliki versi dan tabel `schema_migrations`. Perubahan skema harus dilakukan melalui migrasi yang dapat dijalankan berulang tanpa merusak database yang sudah ada.
