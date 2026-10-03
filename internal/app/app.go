@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -149,19 +150,68 @@ type settingsResponse struct {
 	APIKeySet bool   `json:"api_key_set"`
 }
 
+type settingsUpdateRequest struct {
+	Provider string `json:"provider"`
+	BaseURL  string `json:"base_url"`
+	Model    string `json:"model"`
+}
+
 func (a *App) handleSettings(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
+	switch r.Method {
+	case http.MethodGet:
+		writeJSON(w, http.StatusOK, settingsResponse{
+			DataDir:   a.config.DataDir,
+			Listen:    a.config.Listen,
+			Locale:    a.config.Locale,
+			Provider:  a.config.AI.Provider,
+			BaseURL:   a.config.AI.BaseURL,
+			Model:     a.config.AI.Model,
+			APIKeySet: strings.TrimSpace(a.config.AI.APIKey) != "",
+		})
+	case http.MethodPut:
+		a.updateSettings(w, r)
+	default:
 		writeError(w, http.StatusMethodNotAllowed, "metode tidak didukung")
+	}
+}
+
+func (a *App) updateSettings(w http.ResponseWriter, r *http.Request) {
+	var req settingsUpdateRequest
+	if !decodeJSON(w, r, &req) {
 		return
 	}
+	req.Provider = strings.TrimSpace(req.Provider)
+	req.BaseURL = strings.TrimSpace(req.BaseURL)
+	req.Model = strings.TrimSpace(req.Model)
+	if req.Provider == "" || req.BaseURL == "" || req.Model == "" {
+		writeError(w, http.StatusBadRequest, "penyedia, alamat, dan model wajib diisi")
+		return
+	}
+
+	updated := a.config
+	updated.AI.Provider = req.Provider
+	updated.AI.BaseURL = req.BaseURL
+	updated.AI.Model = req.Model
+	provider, err := ai.NewProvider(updated.AI)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "konfigurasi penyedia AI tidak valid")
+		return
+	}
+	configPath := filepath.Join(updated.DataDir, "config.json")
+	if err := config.Save(configPath, updated); err != nil {
+		writeError(w, http.StatusInternalServerError, "gagal menyimpan pengaturan")
+		return
+	}
+	a.config = updated
+	a.provider = provider
 	writeJSON(w, http.StatusOK, settingsResponse{
-		DataDir:   a.config.DataDir,
-		Listen:    a.config.Listen,
-		Locale:    a.config.Locale,
-		Provider:  a.config.AI.Provider,
-		BaseURL:   a.config.AI.BaseURL,
-		Model:     a.config.AI.Model,
-		APIKeySet: strings.TrimSpace(a.config.AI.APIKey) != "",
+		DataDir:   updated.DataDir,
+		Listen:    updated.Listen,
+		Locale:    updated.Locale,
+		Provider:  updated.AI.Provider,
+		BaseURL:   updated.AI.BaseURL,
+		Model:     updated.AI.Model,
+		APIKeySet: strings.TrimSpace(updated.AI.APIKey) != "",
 	})
 }
 
