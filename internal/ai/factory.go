@@ -16,9 +16,6 @@ func NewProvider(cfg config.AIConfig) (AIProvider, error) {
 	if strings.TrimSpace(cfg.BaseURL) == "" {
 		return nil, errors.New("alamat penyedia AI belum ditentukan")
 	}
-	if strings.TrimSpace(cfg.Model) == "" {
-		return nil, errors.New("model AI belum ditentukan")
-	}
 
 	client := &http.Client{Timeout: 2 * time.Minute}
 	switch strings.ToLower(cfg.Provider) {
