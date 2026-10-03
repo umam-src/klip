@@ -32,7 +32,7 @@ Daftar kerja pengembangan. Prioritas: P0 wajib, P1 penting, P2 setelah inti stab
 - [x] Tetapkan Goal sebagai pusat arah kerja.
 - [x] Audit model lama `Sasaran` dan relasi `Pekerjaan` terhadap kontrak Goal.
 - [x] Tetapkan kontrak Goal v1: identitas, `ruang_id`, hierarki Goal, judul, deskripsi, lifecycle, dan timestamp.
-- [ ] Putuskan pemetaan istilah `Sasaran` → Goal tanpa migrasi kosmetik.
+- [x] Putuskan pemetaan istilah `Sasaran` → Goal tanpa migrasi kosmetik.
 - [ ] Tentukan aturan Goal induk/anak: `parent_goal_id` wajib berada di Ruang Kerja yang sama.
 - [ ] Tentukan aturan Goal → Pekerjaan: satu Pekerjaan memiliki satu Goal utama dan keduanya harus berada di Ruang Kerja yang sama.
 - [ ] Hubungkan Pekerjaan ke Goal secara konsisten setelah kontrak Goal v1 disepakati.
@@ -41,7 +41,7 @@ Daftar kerja pengembangan. Prioritas: P0 wajib, P1 penting, P2 setelah inti stab
 - [ ] Tetapkan lifecycle Ruang Kerja `active` dan `archived` pada storage/service.
 - [ ] Tetapkan Execution dan Result/Evidence sebagai jejak yang dapat ditelusuri kembali ke Ruang Kerja dan Goal.
 
-Catatan: audit saat ini menunjukkan `Sasaran` adalah kandidat langsung untuk representasi Goal, tetapi model lama belum memiliki `description` dan hierarki Goal. `Pekerjaan` sudah memiliki `sasaran_id` opsional dan storage sudah memeriksa kesamaan `ruang_id`. Karena itu tidak perlu membuat relasi kedua hanya untuk mengganti nama; kontrak Goal perlu dilengkapi lebih dahulu sebelum relasi lama diperketat.
+Catatan: `Sasaran` adalah representasi legacy yang paling dekat dengan Goal. `GoalFromSasaran` sekarang menjadi adapter domain eksplisit yang mempertahankan ID/Ruang, tidak mengarang description/hierarki, dan memetakan status lama secara konservatif. Persistence lama tetap dipertahankan sampai migration Goal benar-benar diperlukan.
 
 ## P0 — AI provider
 
