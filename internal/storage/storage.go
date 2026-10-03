@@ -8,7 +8,7 @@ import (
 	_ "modernc.org/sqlite"
 )
 
-const schemaVersion = 8
+const schemaVersion = 9
 
 const schema = `
 CREATE TABLE IF NOT EXISTS schema_migrations (
@@ -190,6 +190,14 @@ CREATE TABLE IF NOT EXISTS schedule_run (
 );
 CREATE INDEX IF NOT EXISTS idx_schedule_run_schedule ON schedule_run(schedule_id, started_at DESC, id DESC);
 CREATE INDEX IF NOT EXISTS idx_schedule_run_status ON schedule_run(status);
+
+CREATE TABLE IF NOT EXISTS pengaturan_ai (
+    id INTEGER PRIMARY KEY CHECK (id = 1),
+    provider TEXT NOT NULL,
+    base_url TEXT NOT NULL,
+    model TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);
 `
 
 // Open membuka database lokal dan memastikan skema minimum Klip tersedia.
