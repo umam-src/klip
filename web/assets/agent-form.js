@@ -1,8 +1,6 @@
 (() => {
   const $ = (selector) => document.querySelector(selector);
 
-  const escapeHTML = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]);
-
   async function request(path, options = {}) {
     const response = await fetch(path, { ...options, headers: { Accept: 'application/json', ...(options.headers || {}) } });
     if (!response.ok) throw new Error(`request ${response.status}`);
@@ -65,7 +63,7 @@
       fillParents(agents);
       await fillModels('');
     } catch (_) {
-      // Form tetap dapat digunakan untuk data identitas bila layanan pilihan belum tersedia.
+      // Form tetap dapat digunakan untuk data identitas bila daftar AI belum tersedia.
     }
   }
 
@@ -73,8 +71,7 @@
     const toggle = event.target.closest('[data-toggle="agent-form"]');
     if (!toggle) return;
     const form = $('#agent-form');
-    if (!form) return;
-    if (!form.hidden) return;
+    if (!form || !form.hidden) return;
     prepareForm();
   }, true);
 
@@ -103,10 +100,7 @@
       });
       formElement.reset();
       formElement.hidden = true;
-      document.querySelector('#agent-list')?.replaceChildren();
-      const refresh = document.querySelector('#refresh');
-      refresh?.click();
-      window.setTimeout(() => document.querySelector('#workspace')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 0);
+      Array.from(document.querySelectorAll('[data-space]')).find((button) => button.dataset.space === ruang.id)?.click();
     } catch (error) {
       alert(error?.message || 'Agen belum dapat disimpan.');
     } finally {
