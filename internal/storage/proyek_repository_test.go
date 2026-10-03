@@ -26,7 +26,7 @@ func TestProyekRepositoryRequiresGoal(t *testing.T) {
 		RuangID: "ruang-1",
 		GoalID:  "goal-tidak-ada",
 		Title:   "Proyek",
-		Status:  domain.StatusActive,
+		Status:  domain.StatusDraft,
 	}
 	if err := repo.CreateProyek(ctx, proyek); err == nil || !errors.Is(err, ErrInvalid) {
 		t.Fatalf("expected ErrInvalid, got %v", err)
@@ -57,7 +57,7 @@ func TestProyekRepositoryRejectsCrossWorkspaceGoal(t *testing.T) {
 		RuangID: "ruang-2",
 		GoalID:  goal.ID,
 		Title:   "Proyek",
-		Status:  domain.StatusActive,
+		Status:  domain.StatusDraft,
 	}
 	if err := repo.CreateProyek(ctx, proyek); err == nil || !errors.Is(err, ErrInvalid) {
 		t.Fatalf("expected ErrInvalid, got %v", err)
@@ -85,7 +85,7 @@ func TestProyekRepositoryKeepsWorkspaceAndGoalContext(t *testing.T) {
 		RuangID: "ruang-1",
 		GoalID:  goal.ID,
 		Title:   "Proyek",
-		Status:  domain.StatusActive,
+		Status:  domain.StatusDraft,
 	}
 	if err := repo.CreateProyek(ctx, proyek); err != nil {
 		t.Fatal(err)
