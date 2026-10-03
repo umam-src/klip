@@ -30,6 +30,7 @@ Format mengikuti Keep a Changelog dan versi mengikuti Semantic Versioning.
 - Form Tambah/Edit Agen dengan identitas, peran, deskripsi, atasan, penyedia, dan model.
 - Pilihan Agen pelaksana pada form Tugas serta tampilan assignment pada daftar dan detail Tugas.
 - Daftar Tugas terkait pada Detail Agen berdasarkan assignment lokal.
+- Kontrak domain Goal v1 dengan identitas, batas Ruang Kerja, hierarki, deskripsi, lifecycle, dan timestamp.
 
 ### Changed
 - Konfigurasi sekarang menyimpan locale secara eksplisit dan menormalkan locale yang belum didukung ke `id-ID`.
