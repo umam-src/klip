@@ -99,6 +99,8 @@ func (a *App) handleProyekChild(w http.ResponseWriter, r *http.Request) {
 		a.handleProyekTugas(w, r, proyekID)
 	case "hasil":
 		a.handleProyekHasil(w, r, proyekID)
+	case "aktivitas":
+		a.handleAktivitas(w, r, proyekID)
 	default:
 		writeError(w, http.StatusNotFound, "jalur tidak ditemukan")
 	}
