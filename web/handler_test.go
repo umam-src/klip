@@ -17,8 +17,8 @@ func TestHandlerServesLocalUI(t *testing.T) {
 	if response.Code != http.StatusOK {
 		t.Fatalf("status = %d, want %d", response.Code, http.StatusOK)
 	}
-	if response.Header().Get("Content-Type") != "text/html; charset=utf-8" {
-		t.Fatalf("content type = %q", response.Header.Get("Content-Type"))
+	if response.Result().Header.Get("Content-Type") != "text/html; charset=utf-8" {
+		t.Fatalf("content type = %q", response.Result().Header.Get("Content-Type"))
 	}
 }
 
