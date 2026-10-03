@@ -14,103 +14,80 @@
   </header>
   <main class="shell">
     <section class="hero">
-      <p class="eyebrow">Ruang kerja AI</p><h1>Kerjakan dengan lebih teratur.</h1>
-      <p class="lead">Kelola ruang, agen, sasaran, pekerjaan, dan tugas dari satu tempat.</p>
+      <p class="eyebrow">Ruang kerja AI</p>
+      <h1>Kerjakan dengan lebih teratur.</h1>
+      <p class="lead">Kelola ruang, agen, goal, proyek, dan tugas dari satu tempat.</p>
       <div class="actions"><a class="button primary" href="#ruang">Mulai bekerja</a><button class="button" type="button" id="check-service">Periksa layanan</button></div>
       <div id="service-status" class="service-panel" hidden aria-live="polite"><div class="panel"><div class="service-status"><i></i><div><strong>Memeriksa layanan...</strong><span>Tunggu sebentar.</span></div></div><button class="button small" type="button" id="close-service">Tutup</button></div></div>
     </section>
+
     <section id="ruang" class="section" aria-labelledby="ruang-title">
       <div class="section-head"><div><p class="eyebrow">Ruang</p><h2 id="ruang-title">Tempat kerja</h2></div><button class="button" type="button" id="refresh">Muat ulang</button></div>
       <div id="space-list" class="grid" aria-live="polite"></div>
     </section>
+
     <section id="workspace" class="section workspace" hidden aria-labelledby="workspace-title">
       <div class="section-head"><div><p class="eyebrow" id="workspace-label">Ruang</p><h2 id="workspace-title">Detail ruang</h2></div><button class="button" type="button" id="back-to-spaces">Semua ruang</button></div>
       <div class="columns">
-        <div class="panel"><div class="panel-head"><div><h3>Agen</h3><p>Pelaksana kerja di ruang ini.</p></div><button class="button small" type="button" data-toggle="agent-form">Tambah agen</button></div>
+        <div class="panel">
+          <div class="panel-head"><div><h3>Agen</h3><p>Pelaksana kerja di ruang ini.</p></div><button class="button small" type="button" id="toggle-agent-form">Tambah agen</button></div>
           <form id="agent-form" class="inline-form" hidden>
-            <label>Nama<input name="name" placeholder="Nama agen" required maxlength="120" autocomplete="off"></label>
-            <label>Peran<input name="role" placeholder="Contoh: Peneliti" required maxlength="120" autocomplete="off"></label>
-            <label>Deskripsi<textarea name="description" rows="3" placeholder="Apa yang dikerjakan agen?" maxlength="1000"></textarea></label>
+            <label>Nama<input name="name" required maxlength="120" autocomplete="off"></label>
+            <label>Peran<input name="role" required maxlength="120" autocomplete="off"></label>
+            <label>Deskripsi<textarea name="description" rows="3" maxlength="1000"></textarea></label>
             <label>Atasan<select name="parent_id" id="agent-parent"><option value="">Tidak ada atasan</option></select></label>
-            <label>Penyedia AI<select name="provider_id" id="agent-provider"><option value="ollama">Ollama</option><option value="openai-compatible">OpenAI-compatible</option></select></label>
-            <label>Model<select name="model_id" id="agent-model"><option value="">Pilih model</option></select></label>
+            <label>Penyedia AI<select name="provider_id"><option value="ollama">Ollama</option><option value="openai-compatible">OpenAI-compatible</option></select></label>
+            <label>Model<input name="model_id" maxlength="160" placeholder="Nama model"></label>
             <div class="form-actions"><button class="button primary small" type="submit">Simpan agen</button></div>
-          </form><div id="agent-list" class="stack"></div>
+          </form>
+          <div id="agent-list" class="stack"></div>
         </div>
-        <div class="panel"><div class="panel-head"><div><h3>Sasaran</h3><p>Hasil yang ingin dicapai dalam ruang.</p></div><button class="button small" type="button" data-toggle="goal-form">Tambah</button></div>
-          <form id="goal-form" class="inline-form" hidden><input name="title" placeholder="Judul sasaran" required maxlength="160"><button class="button primary small" type="submit">Simpan sasaran</button></form><div id="goal-list" class="stack"></div>
+
+        <div class="panel">
+          <div class="panel-head"><div><h3>Goal</h3><p>Hasil yang ingin dicapai dalam ruang.</p></div><button class="button small" type="button" id="toggle-goal-form">Tambah</button></div>
+          <form id="goal-form" class="inline-form" hidden>
+            <input name="title" placeholder="Judul goal" required maxlength="160">
+            <textarea name="description" rows="3" placeholder="Deskripsi singkat" maxlength="1000"></textarea>
+            <label>Goal induk<select name="parent_goal_id" id="goal-parent"><option value="">Tidak ada</option></select></label>
+            <div class="form-actions"><button class="button primary small" type="submit">Simpan goal</button></div>
+          </form>
+          <div id="goal-list" class="stack"></div>
         </div>
-        <div class="panel"><div class="panel-head"><div><h3>Pekerjaan</h3><p>Unit kerja utama dalam ruang.</p></div><button class="button small" type="button" data-toggle="job-form">Tambah</button></div>
-          <form id="job-form" class="inline-form" hidden><input name="title" placeholder="Judul pekerjaan" required maxlength="160"><select name="sasaran_id" aria-label="Sasaran pekerjaan"><option value="">Tanpa sasaran</option></select><button class="button primary small" type="submit">Simpan pekerjaan</button></form><div id="job-list" class="stack"></div>
+
+        <div class="panel">
+          <div class="panel-head"><div><h3>Proyek</h3><p>Unit kerja utama yang diarahkan oleh goal.</p></div><button class="button small" type="button" id="toggle-project-form">Tambah</button></div>
+          <form id="project-form" class="inline-form" hidden>
+            <input name="title" placeholder="Judul proyek" required maxlength="160">
+            <textarea name="description" rows="3" placeholder="Deskripsi singkat" maxlength="1000"></textarea>
+            <label>Goal<select name="goal_id" id="project-goal" required><option value="">Pilih goal</option></select></label>
+            <div class="form-actions"><button class="button primary small" type="submit">Simpan proyek</button></div>
+          </form>
+          <div id="project-list" class="stack"></div>
         </div>
       </div>
-      <div class="panel provider-panel"><div class="panel-head"><div><h3>Penyedia &amp; model</h3><p>Status penyedia AI yang dipakai Klip.</p></div><button class="button small" type="button" id="refresh-provider">Muat ulang</button></div><div id="provider-status" class="stack" aria-live="polite"></div><div class="inline-form"><label for="provider-model">Model untuk agen baru</label><select id="provider-model" aria-describedby="provider-model-help" disabled><option value="">Memuat model...</option></select><span id="provider-model-help" class="form-help">Pilih model dari daftar penyedia. Pilihan ini akan diisikan ke formulir agen.</span></div></div>
-      <div class="panel approval-queue"><div class="panel-head"><div><h3>Antrean persetujuan</h3><p>Tindakan yang menunggu keputusan sebelum dapat dijalankan.</p></div><button class="button small" type="button" id="refresh-approvals">Muat ulang</button></div><div id="approval-list" class="stack" aria-live="polite"></div></div>
-      <div class="panel activity-history"><div class="panel-head"><div><h3>Riwayat aktivitas</h3><p>Peristiwa terbaru dari pekerjaan di ruang ini.</p></div><button class="button small" type="button" id="refresh-activity">Muat ulang</button></div><div id="activity-list" class="stack" aria-live="polite"></div></div>
-      <div class="panel hasil-history"><div class="panel-head"><div><h3>Hasil</h3><p>Metadata hasil yang tersimpan pada pekerjaan di ruang ini.</p></div><button class="button small" type="button" id="refresh-hasil">Muat ulang</button></div><div id="hasil-list" class="stack" aria-live="polite"></div></div>
     </section>
-    <section id="settings" class="section" aria-labelledby="settings-title">
-      <details class="collapsible">
-        <summary><div class="collapsible-title"><p class="eyebrow">Pengaturan</p><h2 id="settings-title">Pengaturan</h2><p>Pilih penyedia, alamat, dan model yang digunakan.</p></div></summary>
-        <div class="collapsible-body">
-          <div class="section-head"><span></span><button class="button" type="button" id="refresh-settings">Muat ulang</button></div>
-          <div class="panel settings-editor">
-            <div class="settings-form">
-              <label>Penyedia AI<select id="settings-provider"><option value="ollama">Ollama</option><option value="openai-compatible">OpenAI-compatible</option></select></label>
-              <label>Alamat penyedia<input id="settings-base-url" type="url" placeholder="http://127.0.0.1:11434" autocomplete="url"></label>
-              <div class="form-actions"><button class="button" type="button" id="check-provider">Periksa koneksi</button><button class="button" type="button" id="load-models">Ambil daftar model</button></div>
-              <label>Model<select id="settings-model"><option value="">Periksa penyedia terlebih dahulu</option></select></label>
-              <div class="form-actions"><button class="button primary" type="button" id="save-settings">Simpan pengaturan</button></div>
-              <div id="settings-message" class="settings-message" hidden aria-live="polite"></div>
-            </div>
-          </div>
-          <div id="settings-list" class="panel" aria-live="polite"></div>
-        </div>
-      </details>
+
+    <section id="project-detail" class="section" hidden aria-labelledby="project-title">
+      <div class="section-head"><div><p class="eyebrow">Proyek</p><h2 id="project-title">Proyek</h2></div><button class="button" type="button" id="back-to-workspace">Kembali</button></div>
+      <div class="panel">
+        <div id="project-detail-card" class="detail-grid"></div>
+        <div class="panel-head"><div><h3>Tugas</h3><p>Langkah konkret untuk menyelesaikan proyek.</p></div><button class="button small" type="button" id="toggle-task-form">Tambah</button></div>
+        <form id="task-form" class="inline-form" hidden><input name="title" placeholder="Judul tugas" required maxlength="160"><select name="parent_id" id="task-parent"><option value="">Tugas induk: tidak ada</option></select><div class="form-actions"><button class="button primary small" type="submit">Simpan tugas</button></div></form>
+        <div id="task-list" class="stack"></div>
+      </div>
     </section>
-    <section id="agent-detail" class="section" hidden aria-labelledby="agent-title"><div class="section-head"><div><p class="eyebrow">Agen</p><h2 id="agent-title">Agen</h2></div><button class="button" type="button" id="back-to-workspace-from-agent">Kembali</button></div><div id="agent-detail-card" class="panel detail-grid"></div></section>
-    <section id="job-detail" class="section" hidden aria-labelledby="job-title"><div class="section-head"><div><p class="eyebrow">Pekerjaan</p><h2 id="job-title">Pekerjaan</h2></div><button class="button" type="button" id="back-to-workspace">Kembali</button></div><div class="panel"><div class="panel-head"><div><h3>Tugas</h3><p>Langkah konkret untuk menyelesaikan pekerjaan.</p></div><button class="button small" type="button" data-toggle="task-form">Tambah</button></div><form id="task-form" class="inline-form" hidden><input name="title" placeholder="Judul tugas" required maxlength="160"><label>Agen pelaksana<select name="agen_id" id="task-agent"><option value="">Tanpa agen pelaksana</option></select></label><button class="button primary small" type="submit">Simpan tugas</button></form><div id="task-list" class="stack"></div></div></section>
-    <section id="task-detail" class="section" hidden aria-labelledby="task-title"><div class="section-head"><div><p class="eyebrow">Tugas</p><h2 id="task-title">Tugas</h2></div><button class="button" type="button" id="back-to-job">Kembali ke pekerjaan</button></div><div id="task-detail-card" class="panel detail-grid"></div><div class="panel task-thread"><div class="panel-head"><div><h3>Thread</h3><p>Diskusi dan balasan untuk tugas ini.</p></div><button class="button small" type="button" id="refresh-comments">Muat ulang</button></div><form id="comment-form" class="inline-form"><div id="replying-to" class="reply-context" hidden></div><textarea name="body" rows="3" placeholder="Tulis komentar..." required maxlength="4000"></textarea><div class="form-actions"><button class="button primary small" type="submit">Kirim komentar</button><button class="button small" type="button" id="cancel-reply" hidden>Batal membalas</button></div></form><div id="comment-list" class="stack" aria-live="polite"></div></div></section>
-    <section class="section overview" aria-labelledby="overview-title">
-      <details class="collapsible">
-        <summary><div class="collapsible-title"><p class="eyebrow">Alur</p><h2 id="overview-title">Struktur Klip</h2><p>Gambaran singkat cara kerja ruang.</p></div></summary>
-        <div class="collapsible-body"><div class="flow"><article><span>01</span><h3>Agen</h3><p>Pelaksana kerja dengan penyedia dan model yang dipilih.</p></article><article><span>02</span><h3>Sasaran</h3><p>Hasil yang ingin dicapai dalam ruang kerja.</p></article><article><span>03</span><h3>Pekerjaan</h3><p>Unit kerja yang dapat dipecah menjadi beberapa tugas.</p></article></div></div>
-      </details>
+
+    <section id="task-detail" class="section" hidden aria-labelledby="task-title">
+      <div class="section-head"><div><p class="eyebrow">Tugas</p><h2 id="task-title">Tugas</h2></div><button class="button" type="button" id="back-to-project">Kembali ke proyek</button></div>
+      <div id="task-detail-card" class="panel detail-grid"></div>
+      <div class="panel task-thread">
+        <div class="panel-head"><div><h3>Komentar</h3><p>Diskusi untuk tugas ini.</p></div><button class="button small" type="button" id="refresh-comments">Muat ulang</button></div>
+        <form id="comment-form" class="inline-form"><textarea name="body" rows="3" placeholder="Tulis komentar..." required maxlength="4000"></textarea><div class="form-actions"><button class="button primary small" type="submit">Kirim komentar</button></div></form>
+        <div id="comment-list" class="stack" aria-live="polite"></div>
+      </div>
     </section>
   </main>
   <footer><span>Klip</span><span>Bahasa Indonesia</span></footer>
-  <script src="/assets/app.js" defer></script><script src="/assets/sasaran.js" defer></script><script src="/assets/aktivitas.js" defer></script><script src="/assets/provider.js" defer></script><script src="/assets/settings.js" defer></script><script src="/assets/hasil.js" defer></script><script src="/assets/agent-form.js" defer></script><script src="/assets/task-agent.js" defer></script><script src="/assets/agent-detail.js" defer></script>
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      const check = document.querySelector('#check-service');
-      const panel = document.querySelector('#service-status');
-      const close = document.querySelector('#close-service');
-      const status = panel?.querySelector('.service-status');
-      const title = status?.querySelector('strong');
-      const message = status?.querySelector('span');
-      check?.addEventListener('click', async () => {
-        panel.hidden = false;
-        status.className = 'service-status';
-        title.textContent = 'Memeriksa layanan...';
-        message.textContent = 'Tunggu sebentar.';
-        try {
-          const response = await fetch('/health', { headers: { Accept: 'application/json' } });
-          if (!response.ok) throw new Error(`status ${response.status}`);
-          status.className = 'service-status ready';
-          title.textContent = 'Layanan siap';
-          message.textContent = 'Klip dapat digunakan.';
-        } catch (_) {
-          status.className = 'service-status error';
-          title.textContent = 'Layanan belum tersedia';
-          message.textContent = 'Coba lagi setelah layanan Klip berjalan.';
-        }
-        panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-      });
-      close?.addEventListener('click', () => {
-        panel.hidden = true;
-        document.querySelector('.hero')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      });
-    });
-  </script>
+  <script src="/assets/app.js" defer></script>
 </body>
 </html>
