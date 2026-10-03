@@ -36,7 +36,7 @@ func (a *App) handleProyek(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusServiceUnavailable, "penyimpanan belum siap")
 		return
 	}
-	 ruangID := domain.ID(r.PathValue("id"))
+	ruangID := domain.ID(r.PathValue("id"))
 	if strings.TrimSpace(string(ruangID)) == "" {
 		writeError(w, http.StatusNotFound, "ruang tidak ditemukan")
 		return
