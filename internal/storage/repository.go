@@ -120,14 +120,15 @@ func (r *Repository) ListRuang(ctx context.Context) ([]domain.Ruang, error) {
 }
 
 func (r *Repository) CreateAgen(ctx context.Context, agen domain.Agen) error {
-	if err := validateIDName(agen.ID, agen.Name); err != nil {
+	if err := validateAgen(agen); err != nil {
 		return fmt.Errorf("agen: %w", err)
 	}
-	if strings.TrimSpace(string(agen.RuangID)) == "" {
-		return fmt.Errorf("agen: ruang wajib diisi: %w", ErrInvalid)
-	}
 	created, updated := timestamps(agen.CreatedAt, agen.UpdatedAt)
-	_, err := r.db.ExecContext(ctx, `INSERT INTO agen (id, ruang_id, name, description, provider_id, model_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`, agen.ID, agen.RuangID, agen.Name, agen.Description, agen.ProviderID, agen.ModelID, created, updated)
+	status := agen.Status
+	if status == "" {
+		status = domain.AgenStatusActive
+	}
+	_, err := r.db.ExecContext(ctx, `INSERT INTO agen (id, ruang_id, name, role, description, provider_id, model_id, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, agen.ID, agen.RuangID, agen.Name, agen.Role, agen.Description, agen.ProviderID, agen.ModelID, status, created, updated)
 	if err != nil {
 		return fmt.Errorf("buat agen: %w", err)
 	}
@@ -140,7 +141,7 @@ func (r *Repository) GetAgen(ctx context.Context, id domain.ID) (domain.Agen, er
 	}
 	var agen domain.Agen
 	var created, updated string
-	err := r.db.QueryRowContext(ctx, `SELECT id, ruang_id, name, description, provider_id, model_id, created_at, updated_at FROM agen WHERE id = ?`, id).Scan(&agen.ID, &agen.RuangID, &agen.Name, &agen.Description, &agen.ProviderID, &agen.ModelID, &created, &updated)
+	err := r.db.QueryRowContext(ctx, `SELECT id, ruang_id, name, role, description, provider_id, model_id, status, created_at, updated_at FROM agen WHERE id = ?`, id).Scan(&agen.ID, &agen.RuangID, &agen.Name, &agen.Role, &agen.Description, &agen.ProviderID, &agen.ModelID, &agen.Status, &created, &updated)
 	if errors.Is(err, sql.ErrNoRows) {
 		return domain.Agen{}, ErrNotFound
 	}
@@ -161,7 +162,7 @@ func (r *Repository) ListAgenByRuang(ctx context.Context, ruangID domain.ID) ([]
 	if strings.TrimSpace(string(ruangID)) == "" {
 		return nil, fmt.Errorf("agen: ruang wajib diisi: %w", ErrInvalid)
 	}
-	rows, err := r.db.QueryContext(ctx, `SELECT id, ruang_id, name, description, provider_id, model_id, created_at, updated_at FROM agen WHERE ruang_id = ? ORDER BY created_at, id`, ruangID)
+	rows, err := r.db.QueryContext(ctx, `SELECT id, ruang_id, name, role, description, provider_id, model_id, status, created_at, updated_at FROM agen WHERE ruang_id = ? ORDER BY created_at, id`, ruangID)
 	if err != nil {
 		return nil, fmt.Errorf("daftar agen: %w", err)
 	}
@@ -171,7 +172,7 @@ func (r *Repository) ListAgenByRuang(ctx context.Context, ruangID domain.ID) ([]
 	for rows.Next() {
 		var agen domain.Agen
 		var created, updated string
-		if err := rows.Scan(&agen.ID, &agen.RuangID, &agen.Name, &agen.Description, &agen.ProviderID, &agen.ModelID, &created, &updated); err != nil {
+		if err := rows.Scan(&agen.ID, &agen.RuangID, &agen.Name, &agen.Role, &agen.Description, &agen.ProviderID, &agen.ModelID, &agen.Status, &created, &updated); err != nil {
 			return nil, fmt.Errorf("baca agen: %w", err)
 		}
 		var parseErr error
@@ -467,6 +468,16 @@ func (r *Repository) ListHasilByPekerjaan(ctx context.Context, pekerjaanID domai
 		return nil, fmt.Errorf("baca daftar hasil: %w", err)
 	}
 	return result, nil
+}
+
+func validateAgen(agen domain.Agen) error {
+	if strings.TrimSpace(string(agen.ID)) == "" || strings.TrimSpace(string(agen.RuangID)) == "" || strings.TrimSpace(agen.Name) == "" || strings.TrimSpace(agen.Role) == "" {
+		return ErrInvalid
+	}
+	if agen.Status != "" && !agen.Status.IsKnown() {
+		return ErrInvalid
+	}
+	return nil
 }
 
 func validateHasil(hasil domain.Hasil) error {
