@@ -60,6 +60,35 @@ func TestOpenAICompatibleStream(t *testing.T) {
 	}
 }
 
+func TestOpenAICompatibleListModels(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			t.Fatalf("method = %s", r.Method)
+		}
+		if r.URL.Path != "/v1/models" {
+			t.Fatalf("path = %s", r.URL.Path)
+		}
+		if got := r.Header.Get("Authorization"); got != "Bearer test-key" {
+			t.Fatalf("authorization = %q", got)
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"data":[{"id":"qwen2.5-0.5b-instruct-q4_k_m"},{"id":"model-kedua"}]}`))
+	}))
+	defer server.Close()
+
+	provider := &OpenAICompatible{BaseURL: server.URL, APIKey: "test-key"}
+	models, err := provider.ListModels(context.Background())
+	if err != nil {
+		t.Fatalf("ListModels() error = %v", err)
+	}
+	if len(models) != 2 {
+		t.Fatalf("len(models) = %d, want 2", len(models))
+	}
+	if models[0].ID != "qwen2.5-0.5b-instruct-q4_k_m" || models[1].ID != "model-kedua" {
+		t.Fatalf("models = %#v", models)
+	}
+}
+
 func TestOpenAICompatibleCheck(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
