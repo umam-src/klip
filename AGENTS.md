@@ -67,3 +67,4 @@ CI harus hemat menit:
 - Migrasi skema harus idempotent: skema instalasi baru dan database lama harus dapat melewati pemeriksaan kolom/index yang sama tanpa menjalankan `ALTER TABLE` dua kali.
 - Relasi hierarki baru harus memvalidasi batas domain sebelum menulis foreign key; untuk hubungan induk-anak agen, parent harus berada di ruang yang sama dan operasi awal tidak boleh membuka jalur siklus.
 - Streaming provider harus menjadi kemampuan opsional agar provider lama tidak dipaksa mengimplementasikan API baru; parsing SSE harus dibatasi ukurannya dan tetap menghormati pembatalan context.
+- Pengaturan yang diubah dari UI harus disimpan di SQLite sebagai sumber utama; `config.json` hanya menjadi bootstrap/fallback untuk nilai yang belum tersimpan di database.
