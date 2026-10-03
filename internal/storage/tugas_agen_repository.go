@@ -40,21 +40,21 @@ func (r *Repository) AssignTugasToAgen(ctx context.Context, tugasID, agenID doma
 		return fmt.Errorf("assignment tugas: %w", ErrInvalid)
 	}
 
-	var pekerjaanRuangID, agenRuangID string
+	var tugasRuangID, agenRuangID string
 	err := r.db.QueryRowContext(ctx, `
 SELECT p.ruang_id, a.ruang_id
 FROM tugas t
-JOIN pekerjaan p ON p.id = t.pekerjaan_id
+JOIN proyek p ON p.id = t.proyek_id
 JOIN agen a ON a.id = ?
-WHERE t.id = ?`, agenID, tugasID).Scan(&pekerjaanRuangID, &agenRuangID)
+WHERE t.id = ?`, agenID, tugasID).Scan(&tugasRuangID, &agenRuangID)
 	if errors.Is(err, sql.ErrNoRows) {
 		return ErrNotFound
 	}
 	if err != nil {
 		return fmt.Errorf("cek assignment tugas: %w", err)
 	}
-	if pekerjaanRuangID != agenRuangID {
-		return fmt.Errorf("assignment tugas: agen dan pekerjaan harus berada di ruang yang sama: %w", ErrInvalid)
+	if tugasRuangID != agenRuangID {
+		return fmt.Errorf("assignment tugas: agen dan proyek harus berada di ruang yang sama: %w", ErrInvalid)
 	}
 
 	if assignedAt.IsZero() {
@@ -122,8 +122,9 @@ func (r *Repository) ListTugasByAgen(ctx context.Context, agenID domain.ID) ([]d
 		return nil, fmt.Errorf("agen: %w", ErrInvalid)
 	}
 	rows, err := r.db.QueryContext(ctx, `
-SELECT t.id, t.pekerjaan_id, t.parent_id, t.title, t.status, t.position, t.created_at, t.updated_at
+SELECT t.id, p.ruang_id, t.proyek_id, t.parent_id, t.title, t.status, t.created_at, t.updated_at
 FROM tugas t
+JOIN proyek p ON p.id = t.proyek_id
 JOIN tugas_agen ta ON ta.tugas_id = t.id
 WHERE ta.agen_id = ?
 ORDER BY t.created_at, t.id`, agenID)
@@ -137,7 +138,16 @@ ORDER BY t.created_at, t.id`, agenID)
 		var tugas domain.Tugas
 		var parentID sql.NullString
 		var created, updated string
-		if err := rows.Scan(&tugas.ID, &tugas.PekerjaanID, &parentID, &tugas.Title, &tugas.Status, &tugas.Position, &created, &updated); err != nil {
+		if err := rows.Scan(
+			&tugas.ID,
+			&tugas.RuangID,
+			&tugas.ProyekID,
+			&tugas.ParentID,
+			&tugas.Title,
+			&tugas.Status,
+			&tugas.CreatedAt,
+			&tugas.UpdatedAt,
+		); err != nil {
 			return nil, fmt.Errorf("baca tugas agen: %w", err)
 		}
 		if parentID.Valid {
