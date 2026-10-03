@@ -14,15 +14,13 @@ const defaultActivityLimit = 50
 type activityResponse struct {
 	ID        domain.ID  `json:"id"`
 	TugasID   *domain.ID `json:"tugas_id,omitempty"`
-	SesiID    *domain.ID `json:"sesi_id,omitempty"`
-	RunID     *domain.ID `json:"run_id,omitempty"`
 	AgenID    *domain.ID `json:"agen_id,omitempty"`
 	Type      string     `json:"type"`
 	Summary   string     `json:"summary,omitempty"`
 	CreatedAt time.Time  `json:"created_at"`
 }
 
-func (a *App) handleAktivitas(w http.ResponseWriter, r *http.Request, pekerjaanID domain.ID) {
+func (a *App) handleAktivitas(w http.ResponseWriter, r *http.Request, proyekID domain.ID) {
 	if r.Method != http.MethodGet {
 		writeError(w, http.StatusMethodNotAllowed, "metode tidak didukung")
 		return
@@ -34,7 +32,7 @@ func (a *App) handleAktivitas(w http.ResponseWriter, r *http.Request, pekerjaanI
 		return
 	}
 
-	events, err := a.repo.ListEventsByPekerjaan(r.Context(), pekerjaanID, limit)
+	events, err := a.repo.ListEventsByProyek(r.Context(), proyekID, limit)
 	if err != nil {
 		writeStorageError(w, err)
 		return
@@ -45,8 +43,6 @@ func (a *App) handleAktivitas(w http.ResponseWriter, r *http.Request, pekerjaanI
 		items = append(items, activityResponse{
 			ID:        event.ID,
 			TugasID:   event.TugasID,
-			SesiID:    event.SesiID,
-			RunID:     event.RunID,
 			AgenID:    event.AgenID,
 			Type:      event.Type,
 			Summary:   activitySummary(event.Type),
