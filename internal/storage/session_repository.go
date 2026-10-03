@@ -24,6 +24,22 @@ func (r *Repository) CreateSesi(ctx context.Context, sesi domain.Sesi) error {
 		sesi.Status != domain.StatusRunning {
 		return fmt.Errorf("sesi: %w", ErrInvalid)
 	}
+	var pekerjaanRuangID, agenRuangID string
+	if err := r.db.QueryRowContext(ctx, `SELECT ruang_id FROM pekerjaan WHERE id = ?`, sesi.PekerjaanID).Scan(&pekerjaanRuangID); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return fmt.Errorf("sesi: pekerjaan tidak ditemukan: %w", ErrInvalid)
+		}
+		return fmt.Errorf("cek ruang pekerjaan sesi: %w", err)
+	}
+	if err := r.db.QueryRowContext(ctx, `SELECT ruang_id FROM agen WHERE id = ?`, sesi.AgenID).Scan(&agenRuangID); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return fmt.Errorf("sesi: agen tidak ditemukan: %w", ErrInvalid)
+		}
+		return fmt.Errorf("cek ruang agen sesi: %w", err)
+	}
+	if pekerjaanRuangID != agenRuangID {
+		return fmt.Errorf("sesi: agen tidak sesuai dengan ruang pekerjaan: %w", ErrInvalid)
+	}
 	started := sesi.StartedAt
 	if started.IsZero() {
 		started = time.Now().UTC()
