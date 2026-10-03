@@ -30,6 +30,7 @@ Daftar kerja pengembangan. Prioritas: P0 wajib, P1 penting, P2 setelah inti stab
 - [x] Unit test domain.
 - [x] Tetapkan Ruang Kerja sebagai batas domain.
 - [x] Tetapkan Goal sebagai pusat arah kerja.
+- [x] Audit model lama `Sasaran` dan relasi `Pekerjaan` terhadap kontrak Goal.
 - [ ] Tetapkan kontrak Goal v1: identitas, `ruang_id`, hierarki Goal, judul, deskripsi, lifecycle, dan timestamp.
 - [ ] Putuskan pemetaan istilah `Sasaran` → Goal tanpa migrasi kosmetik.
 - [ ] Tentukan aturan Goal induk/anak: `parent_goal_id` wajib berada di Ruang Kerja yang sama.
@@ -40,7 +41,7 @@ Daftar kerja pengembangan. Prioritas: P0 wajib, P1 penting, P2 setelah inti stab
 - [ ] Tetapkan lifecycle Ruang Kerja `active` dan `archived` pada storage/service.
 - [ ] Tetapkan Execution dan Result/Evidence sebagai jejak yang dapat ditelusuri kembali ke Ruang Kerja dan Goal.
 
-Catatan: fondasi saat ini masih memakai istilah dan skema lama seperti `ruang` dan `sasaran`. Bahasa produk memakai **Ruang Kerja** dan **Goal**; perubahan istilah tidak otomatis berarti migrasi tabel. Konsep `Organisasi`, `Pengguna`, dan `Proyek` tidak menjadi syarat fondasi Klip.
+Catatan: audit saat ini menunjukkan `Sasaran` adalah kandidat langsung untuk representasi Goal, tetapi model lama belum memiliki `description` dan hierarki Goal. `Pekerjaan` sudah memiliki `sasaran_id` opsional dan storage sudah memeriksa kesamaan `ruang_id`. Karena itu tidak perlu membuat relasi kedua hanya untuk mengganti nama; kontrak Goal perlu dilengkapi lebih dahulu sebelum relasi lama diperketat.
 
 ## P0 — AI provider
 
