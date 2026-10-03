@@ -135,16 +135,16 @@ func TestSchedulerRetryAndHistory(t *testing.T) {
 func TestSchedulerPassesTaskAssignmentToExecutor(t *testing.T) {
 	tugasID := domain.ID("t1")
 	repo := &fakeRepo{schedule: domain.Schedule{
-		ID:         "s-assignment",
-		Name:       "uji assignment",
-		RuangID:    "r1",
-		ProyekID:   "p1",
-		TugasID:    &tugasID,
-		AgenID:     "a1",
-		Program:    "true",
-		Interval:   time.Hour,
-		NextRunAt:  time.Now().Add(-time.Second),
-		Status:     domain.ScheduleEnabled,
+		ID:        "s-assignment",
+		Name:      "uji assignment",
+		RuangID:   "r1",
+		ProyekID:  "p1",
+		TugasID:   &tugasID,
+		AgenID:    "a1",
+		Program:   "true",
+		Interval:  time.Hour,
+		NextRunAt: time.Now().Add(-time.Second),
+		Status:    domain.ScheduleEnabled,
 	}}
 	exec := &fakeExecutor{done: make(chan struct{})}
 	s, err := New(repo, exec, Config{PollInterval: 5 * time.Millisecond})
