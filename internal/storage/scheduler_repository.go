@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -36,6 +37,40 @@ func (r *Repository) CreateSchedule(ctx context.Context, schedule domain.Schedul
 	if schedule.RetryLimit < 0 || schedule.RetryLimit > 10 {
 		return fmt.Errorf("jadwal: retry limit: %w", ErrInvalid)
 	}
+
+	var pekerjaanRuangID, agenRuangID string
+	if err := r.db.QueryRowContext(ctx, `SELECT ruang_id FROM pekerjaan WHERE id = ?`, schedule.PekerjaanID).Scan(&pekerjaanRuangID); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return fmt.Errorf("jadwal: pekerjaan tidak ditemukan: %w", ErrInvalid)
+		}
+		return fmt.Errorf("cek ruang pekerjaan jadwal: %w", err)
+	}
+	if err := r.db.QueryRowContext(ctx, `SELECT ruang_id FROM agen WHERE id = ?`, schedule.AgenID).Scan(&agenRuangID); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return fmt.Errorf("jadwal: agen tidak ditemukan: %w", ErrInvalid)
+		}
+		return fmt.Errorf("cek ruang agen jadwal: %w", err)
+	}
+	if pekerjaanRuangID != agenRuangID {
+		return fmt.Errorf("jadwal: agen tidak sesuai dengan ruang pekerjaan: %w", ErrInvalid)
+	}
+	if schedule.TugasID != nil {
+		value := strings.TrimSpace(string(*schedule.TugasID))
+		if value == "" {
+			return fmt.Errorf("jadwal: tugas tidak valid: %w", ErrInvalid)
+		}
+		var tugasPekerjaanID string
+		if err := r.db.QueryRowContext(ctx, `SELECT pekerjaan_id FROM tugas WHERE id = ?`, value).Scan(&tugasPekerjaanID); err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				return fmt.Errorf("jadwal: tugas tidak ditemukan: %w", ErrInvalid)
+			}
+			return fmt.Errorf("cek tugas jadwal: %w", err)
+		}
+		if tugasPekerjaanID != string(schedule.PekerjaanID) {
+			return fmt.Errorf("jadwal: tugas tidak sesuai dengan pekerjaan: %w", ErrInvalid)
+		}
+	}
+
 	args, err := json.Marshal(schedule.Arguments)
 	if err != nil {
 		return fmt.Errorf("jadwal: argumen: %w", err)
