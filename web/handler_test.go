@@ -18,7 +18,7 @@ func TestHandlerServesLocalUI(t *testing.T) {
 		t.Fatalf("status = %d, want %d", response.Code, http.StatusOK)
 	}
 	if response.Header().Get("Content-Type") != "text/html; charset=utf-8" {
-		t.Fatalf("content type = %q", response.Header().Get("Content-Type"))
+		t.Fatalf("content type = %q", response.Header.Get("Content-Type"))
 	}
 }
 
@@ -56,26 +56,25 @@ func TestAssignmentUIContract(t *testing.T) {
 		`id="task-form"`,
 		`name="agen_id"`,
 		`id="task-agent"`,
-		`/assets/task-agent.js`,
 	} {
 		if !strings.Contains(page, want) {
 			t.Fatalf("index.html missing assignment UI contract %q", want)
 		}
 	}
 
-	script, err := Files.ReadFile("assets/task-agent.js")
+	app, err := Files.ReadFile("assets/app.js")
 	if err != nil {
-		t.Fatalf("read task-agent.js: %v", err)
+		t.Fatalf("read app.js: %v", err)
 	}
-	code := string(script)
+	code := string(app)
 	for _, want := range []string{
-		`/api/v1/tugas/${encodeURIComponent(tugasID)}/agen`,
+		`/api/v1/tugas/${encodeURIComponent(task.id)}/agen`,
 		`method: 'PUT'`,
-		`body: JSON.stringify({ agen_id: agentID })`,
+		`{ agen_id: data.agen_id }`,
 		`Agen pelaksana`,
 	} {
 		if !strings.Contains(code, want) {
-			t.Fatalf("task-agent.js missing assignment contract %q", want)
+			t.Fatalf("app.js missing assignment contract %q", want)
 		}
 	}
 }
