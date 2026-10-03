@@ -9,6 +9,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/umam-src/klip/internal/agent"
 	"github.com/umam-src/klip/internal/ai"
 	"github.com/umam-src/klip/internal/config"
 	"github.com/umam-src/klip/internal/domain"
@@ -30,24 +31,16 @@ func (fakeHealthProvider) Chat(_ context.Context, req ai.ChatRequest) (ai.ChatRe
 }
 func (p fakeHealthProvider) Check(context.Context) error { return p.err }
 
-type fakeModelProvider struct {
-	models []ai.Model
-	err    error
-}
-
+type fakeModelProvider struct { models []ai.Model; err error }
 func (fakeModelProvider) ID() string { return "model-test" }
-func (fakeModelProvider) Chat(_ context.Context, req ai.ChatRequest) (ai.ChatResponse, error) {
-	return ai.ChatResponse{Model: req.Model, Content: "jawaban uji"}, nil
-}
+func (fakeModelProvider) Chat(_ context.Context, req ai.ChatRequest) (ai.ChatResponse, error) { return ai.ChatResponse{Model: req.Model, Content: "jawaban uji"}, nil }
 func (p fakeModelProvider) ListModels(context.Context) ([]ai.Model, error) { return p.models, p.err }
 
 func TestHandlerHealth(t *testing.T) {
 	handler := New(config.Default(t.TempDir()), fakeProvider{}).Handler()
 	res := httptest.NewRecorder()
 	handler.ServeHTTP(res, httptest.NewRequest(http.MethodGet, "/health", nil))
-	if res.Code != http.StatusOK || res.Body.String() != "ok\n" {
-		t.Fatalf("response = %d %q", res.Code, res.Body.String())
-	}
+	if res.Code != http.StatusOK || res.Body.String() != "ok\n" { t.Fatalf("response = %d %q", res.Code, res.Body.String()) }
 }
 
 func TestHandlerProviderStatus(t *testing.T) {
@@ -56,16 +49,11 @@ func TestHandlerProviderStatus(t *testing.T) {
 	cfg.AI.Model = "model-uji"
 	res := httptest.NewRecorder()
 	New(cfg, fakeHealthProvider{}).Handler().ServeHTTP(res, httptest.NewRequest(http.MethodGet, "/api/v1/provider/status", nil))
-	if res.Code != http.StatusOK || !strings.Contains(res.Body.String(), `"reachable":true`) {
-		t.Fatalf("response = %d %s", res.Code, res.Body.String())
-	}
-
+	if res.Code != http.StatusOK || !strings.Contains(res.Body.String(), `"reachable":true`) { t.Fatalf("response = %d %s", res.Code, res.Body.String()) }
 	cfg.AI.Model = ""
 	res = httptest.NewRecorder()
 	New(cfg, fakeHealthProvider{err: errors.New("provider down")}).Handler().ServeHTTP(res, httptest.NewRequest(http.MethodGet, "/api/v1/provider/status", nil))
-	if res.Code != http.StatusServiceUnavailable || !strings.Contains(res.Body.String(), `"configured":false`) {
-		t.Fatalf("response = %d %s", res.Code, res.Body.String())
-	}
+	if res.Code != http.StatusServiceUnavailable || !strings.Contains(res.Body.String(), `"configured":false`) { t.Fatalf("response = %d %s", res.Code, res.Body.String()) }
 }
 
 func TestHandlerProviderModels(t *testing.T) {
@@ -73,9 +61,7 @@ func TestHandlerProviderModels(t *testing.T) {
 	handler := New(cfg, fakeModelProvider{models: []ai.Model{{ID: "model-satu"}, {ID: "model-dua"}}}).Handler()
 	res := httptest.NewRecorder()
 	handler.ServeHTTP(res, httptest.NewRequest(http.MethodGet, "/api/v1/provider/models", nil))
-	if res.Code != http.StatusOK || !strings.Contains(res.Body.String(), "model-satu") {
-		t.Fatalf("response = %d %s", res.Code, res.Body.String())
-	}
+	if res.Code != http.StatusOK || !strings.Contains(res.Body.String(), "model-satu") { t.Fatalf("response = %d %s", res.Code, res.Body.String()) }
 }
 
 func TestHandlerChat(t *testing.T) {
@@ -86,9 +72,7 @@ func TestHandlerChat(t *testing.T) {
 	req := httptest.NewRequest(http.MethodPost, "/api/v1/chat", strings.NewReader(`{"prompt":"Halo"}`))
 	req.Header.Set("Content-Type", "application/json")
 	handler.ServeHTTP(res, req)
-	if res.Code != http.StatusOK || !strings.Contains(res.Body.String(), `"content":"jawaban uji"`) {
-		t.Fatalf("response = %d %s", res.Code, res.Body.String())
-	}
+	if res.Code != http.StatusOK || !strings.Contains(res.Body.String(), `"content":"jawaban uji"`) { t.Fatalf("response = %d %s", res.Code, res.Body.String()) }
 }
 
 func TestAppExecutorWiring(t *testing.T) {
@@ -104,21 +88,14 @@ func TestAppExecutorWiring(t *testing.T) {
 	if err := repo.CreateGoal(ctx, domain.Goal{ID: "goal-exec", RuangID: "ruang-exec", Title: "Goal Executor", Status: domain.GoalStatusActive}); err != nil { t.Fatal(err) }
 	if err := repo.CreateProyek(ctx, domain.Proyek{ID: "proyek-exec", RuangID: "ruang-exec", GoalID: "goal-exec", Title: "Proyek Executor", Status: domain.StatusDraft}); err != nil { t.Fatal(err) }
 	if err := repo.CreateTugasNative(ctx, domain.Tugas{ID: "tugas-exec", RuangID: "ruang-exec", ProyekID: "proyek-exec", Title: "Tugas Executor", Status: domain.StatusReady}); err != nil { t.Fatal(err) }
-
 	program, args := executionTestCommand()
 	tugasID := domain.ID("tugas-exec")
-	result, err := app.executor.Execute(ctx, executionRequestForTest("proyek-exec", &tugasID, "agen-exec", program, args))
+	result, err := app.executor.Execute(ctx, agent.ExecutionRequest{ProyekID: "proyek-exec", TugasID: &tugasID, AgenID: "agen-exec", Program: program, Arguments: args})
 	if err != nil { t.Fatalf("Execute() error = %v", err) }
-	if result.Eksekusi.Status != domain.StatusCompleted || result.Eksekusi.Stdout != "klip-test\n" {
-		t.Fatalf("eksekusi = %+v", result.Eksekusi)
-	}
+	if result.Eksekusi.Status != domain.StatusCompleted || result.Eksekusi.Stdout != "klip-test\n" { t.Fatalf("eksekusi = %+v", result.Eksekusi) }
 	stored, err := repo.GetEksekusi(ctx, result.Eksekusi.ID)
 	if err != nil { t.Fatal(err) }
 	if stored.Status != domain.StatusCompleted || stored.Stdout != "klip-test\n" { t.Fatalf("stored = %+v", stored) }
-}
-
-func executionRequestForTest(proyekID domain.ID, tugasID *domain.ID, agenID domain.ID, program string, args []string) agent.ExecutionRequest {
-	return agent.ExecutionRequest{ProyekID: proyekID, TugasID: tugasID, AgenID: agenID, Program: program, Arguments: args}
 }
 
 func executionTestCommand() (string, []string) {
@@ -135,8 +112,7 @@ func TestHandlerNativeProyekFlow(t *testing.T) {
 	if err := repo.CreateRuang(ctx, domain.Ruang{ID: "ruang-http", Name: "Ruang HTTP"}); err != nil { t.Fatal(err) }
 	if err := repo.CreateGoal(ctx, domain.Goal{ID: "goal-http", RuangID: "ruang-http", Title: "Goal HTTP", Status: domain.GoalStatusActive}); err != nil { t.Fatal(err) }
 	handler := New(config.Default(t.TempDir()), fakeProvider{}, repo).Handler()
-	body := `{"id":"proyek-http","goal_id":"goal-http","title":"Proyek HTTP"}`
-	req := httptest.NewRequest(http.MethodPost, "/api/v1/ruang/ruang-http/proyek", strings.NewReader(body))
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/ruang/ruang-http/proyek", strings.NewReader(`{"id":"proyek-http","goal_id":"goal-http","title":"Proyek HTTP"}`))
 	req.Header.Set("Content-Type", "application/json")
 	res := httptest.NewRecorder()
 	handler.ServeHTTP(res, req)
