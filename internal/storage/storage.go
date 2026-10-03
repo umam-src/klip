@@ -254,10 +254,13 @@ func migrate(ctx context.Context, db *sql.DB) error {
 	if err != nil {
 		return err
 	}
-	if version > schemaVersion {
+	switch {
+	case version > schemaVersion:
 		return fmt.Errorf("versi database %d lebih baru dari aplikasi %d", version, schemaVersion)
-	}
-	if version != 0 {
+	case version == schemaVersion:
+		// Database v1 yang sudah ada tidak perlu dimigrasikan ulang, tetapi sisa tabel legacy tetap ditolak.
+		return rejectLegacySchema(ctx, db)
+	case version != 0:
 		return fmt.Errorf("versi database %d tidak didukung; gunakan database baru untuk skema v1", version)
 	}
 	if err := rejectLegacySchema(ctx, db); err != nil {

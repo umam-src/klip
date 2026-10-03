@@ -74,7 +74,7 @@ func TestOpenRejectsLegacyDatabase(t *testing.T) {
 		t.Fatalf("tutup database: %v", err)
 	}
 
-	if _, err := Open(context.Background(), path); err == nil || !strings.Contains(err.Error(), "tidak didukung") {
+	if _, err := Open(context.Background(), path); err == nil || !strings.Contains(err.Error(), "database legacy terdeteksi") {
 		t.Fatalf("Open() error = %v, want database legacy ditolak", err)
 	}
 }
