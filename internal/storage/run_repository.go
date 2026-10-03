@@ -25,6 +25,38 @@ func (r *Repository) CreateRun(ctx context.Context, run domain.Run) error {
 		run.Status != domain.StatusRunning {
 		return fmt.Errorf("run: %w", ErrInvalid)
 	}
+	var pekerjaanRuangID, agenRuangID string
+	if err := r.db.QueryRowContext(ctx, `SELECT ruang_id FROM pekerjaan WHERE id = ?`, run.PekerjaanID).Scan(&pekerjaanRuangID); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return fmt.Errorf("run: pekerjaan tidak ditemukan: %w", ErrInvalid)
+		}
+		return fmt.Errorf("cek ruang pekerjaan run: %w", err)
+	}
+	if err := r.db.QueryRowContext(ctx, `SELECT ruang_id FROM agen WHERE id = ?`, run.AgenID).Scan(&agenRuangID); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return fmt.Errorf("run: agen tidak ditemukan: %w", ErrInvalid)
+		}
+		return fmt.Errorf("cek ruang agen run: %w", err)
+	}
+	if pekerjaanRuangID != agenRuangID {
+		return fmt.Errorf("run: agen tidak sesuai dengan ruang pekerjaan: %w", ErrInvalid)
+	}
+	if run.TugasID != nil {
+		value := strings.TrimSpace(string(*run.TugasID))
+		if value == "" {
+			return fmt.Errorf("run: tugas tidak valid: %w", ErrInvalid)
+		}
+		var tugasPekerjaanID string
+		if err := r.db.QueryRowContext(ctx, `SELECT pekerjaan_id FROM tugas WHERE id = ?`, value).Scan(&tugasPekerjaanID); err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				return fmt.Errorf("run: tugas tidak ditemukan: %w", ErrInvalid)
+			}
+			return fmt.Errorf("cek tugas run: %w", err)
+		}
+		if tugasPekerjaanID != string(run.PekerjaanID) {
+			return fmt.Errorf("run: tugas tidak sesuai dengan pekerjaan: %w", ErrInvalid)
+		}
+	}
 	arguments, err := json.Marshal(run.Arguments)
 	if err != nil {
 		return fmt.Errorf("run: serialisasi argumen: %w", err)
@@ -51,7 +83,7 @@ func (r *Repository) CreateRun(ctx context.Context, run domain.Run) error {
 			exit_code, stdout, stderr, started_at, finished_at
 		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 		run.ID, run.PekerjaanID, tugasID, run.AgenID, run.Status, run.Program,
-		string(arguments), exitCode, run.Stdout, run.Stderr,
+		run.Arguments, string(arguments), exitCode, run.Stdout, run.Stderr,
 		started.UTC().Format(time.RFC3339Nano), finished,
 	)
 	if err != nil {
