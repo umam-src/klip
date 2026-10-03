@@ -7,17 +7,16 @@ type ID string
 type Status string
 
 const (
-	StatusDraft     Status = "draft"
-	StatusReady     Status = "ready"
-	StatusRunning   Status = "running"
-	StatusWaiting   Status = "waiting"
-	StatusBlocked   Status = "blocked"
+	StatusDraft Status = "draft"
+	StatusReady Status = "ready"
+	StatusRunning Status = "running"
+	StatusWaiting Status = "waiting"
+	StatusBlocked Status = "blocked"
 	StatusCompleted Status = "completed"
-	StatusFailed    Status = "failed"
+	StatusFailed Status = "failed"
 	StatusCancelled Status = "cancelled"
 )
 
-// CanTransitionTo reports whether a domain status can move to the target status.
 func (s Status) CanTransitionTo(next Status) bool {
 	if s == next { return isKnownStatus(s) }
 	switch s {
@@ -32,8 +31,7 @@ func (s Status) CanTransitionTo(next Status) bool {
 
 func isKnownStatus(status Status) bool {
 	switch status {
-	case StatusDraft, StatusReady, StatusRunning, StatusWaiting, StatusBlocked, StatusCompleted, StatusFailed, StatusCancelled:
-		return true
+	case StatusDraft, StatusReady, StatusRunning, StatusWaiting, StatusBlocked, StatusCompleted, StatusFailed, StatusCancelled: return true
 	default: return false
 	}
 }
@@ -53,7 +51,6 @@ type Agen struct {
 	ID ID `json:"id"`; RuangID ID `json:"ruang_id"`; ParentID *ID `json:"parent_id,omitempty"`; Name string `json:"name"`; Role string `json:"role"`; Description string `json:"description,omitempty"`; ProviderID string `json:"provider_id,omitempty"`; ModelID string `json:"model_id,omitempty"`; Status AgenStatus `json:"status"`; CreatedAt time.Time `json:"created_at"`; UpdatedAt time.Time `json:"updated_at"`
 }
 
-// Proyek is the native project model. It advances exactly one Goal.
 type Proyek struct {
 	ID ID `json:"id"`
 	RuangID ID `json:"ruang_id"`
