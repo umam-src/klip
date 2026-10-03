@@ -105,15 +105,20 @@
       }));
     }));
 
-    const sections = Array.from($('#agent-detail-card')?.querySelectorAll('.item') || []);
-    const section = sections.find((item) => item.querySelector('strong')?.textContent?.trim() === 'Pekerjaan');
-    if (!section) return;
-    if (!tasks.length) {
-      section.innerHTML = '<strong>Pekerjaan</strong><p>Belum ada tugas yang ditugaskan ke agen ini.</p>';
-      return;
+    for (let attempt = 0; attempt < 10; attempt += 1) {
+      const sections = Array.from($('#agent-detail-card')?.querySelectorAll('.item') || []);
+      const section = sections.find((item) => item.querySelector('strong')?.textContent?.trim() === 'Pekerjaan');
+      if (section) {
+        if (!tasks.length) {
+          section.innerHTML = '<strong>Pekerjaan</strong><p>Belum ada tugas yang ditugaskan ke agen ini.</p>';
+          return;
+        }
+        tasks.sort((a, b) => String(a.title).localeCompare(String(b.title)));
+        section.innerHTML = `<strong>Pekerjaan</strong><div class="stack">${tasks.map((task) => `<div class="item"><strong>${escapeHTML(task.title)}</strong><span>Pekerjaan · ${escapeHTML(task.pekerjaan || 'Tanpa pekerjaan')}</span><span>Status · ${escapeHTML(task.status || 'Belum diatur')}</span></div>`).join('')}</div>`;
+        return;
+      }
+      await new Promise((resolve) => setTimeout(resolve, 50));
     }
-    tasks.sort((a, b) => String(a.title).localeCompare(String(b.title)));
-    section.innerHTML = `<strong>Pekerjaan</strong><div class="stack">${tasks.map((task) => `<div class="item"><strong>${escapeHTML(task.title)}</strong><span>Pekerjaan · ${escapeHTML(task.pekerjaan || 'Tanpa pekerjaan')}</span><span>Status · ${escapeHTML(task.status || 'Belum diatur')}</span></div>`).join('')}</div>`;
   }
 
   document.addEventListener('click', (event) => {
