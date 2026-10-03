@@ -22,7 +22,11 @@ func TestTugasAgenAssignment(t *testing.T) {
 			t.Fatalf("CreateRuang() error = %v", err)
 		}
 	}
-	for _, agen := range []domain.Agen{{ID: "agen-1", RuangID: "ruang-1", Name: "Agen 1", Role: "Pelaksana"}, {ID: "agen-2", RuangID: "ruang-2", Name: "Agen 2", Role: "Pelaksana"}} {
+	for _, agen := range []domain.Agen{
+		{ID: "agen-1", RuangID: "ruang-1", Name: "Agen 1", Role: "Pelaksana"},
+		{ID: "agen-2", RuangID: "ruang-2", Name: "Agen 2", Role: "Pelaksana"},
+		{ID: "agen-3", RuangID: "ruang-1", Name: "Agen 3", Role: "Pelaksana"},
+	} {
 		if err := repo.CreateAgen(ctx, agen); err != nil {
 			t.Fatalf("CreateAgen() error = %v", err)
 		}
@@ -47,12 +51,31 @@ func TestTugasAgenAssignment(t *testing.T) {
 		t.Fatalf("assignment = %#v", assignment)
 	}
 
+	reassignedAt := assignedAt.Add(time.Minute)
+	if err := repo.AssignTugasToAgen(ctx, "tugas-1", "agen-3", reassignedAt); err != nil {
+		t.Fatalf("reassign tugas: %v", err)
+	}
+	assignment, err = repo.GetTugasAssignment(ctx, "tugas-1")
+	if err != nil {
+		t.Fatalf("get reassigned task: %v", err)
+	}
+	if assignment.AgenID != "agen-3" || !assignment.AssignedAt.Equal(reassignedAt) {
+		t.Fatalf("reassigned assignment = %#v", assignment)
+	}
+
 	tasks, err := repo.ListTugasByAgen(ctx, "agen-1")
 	if err != nil {
-		t.Fatalf("list tasks by agent: %v", err)
+		t.Fatalf("list old agent tasks: %v", err)
+	}
+	if len(tasks) != 0 {
+		t.Fatalf("old agent tasks = %#v", tasks)
+	}
+	tasks, err = repo.ListTugasByAgen(ctx, "agen-3")
+	if err != nil {
+		t.Fatalf("list new agent tasks: %v", err)
 	}
 	if len(tasks) != 1 || tasks[0].ID != "tugas-1" {
-		t.Fatalf("tasks = %#v", tasks)
+		t.Fatalf("new agent tasks = %#v", tasks)
 	}
 
 	if err := repo.AssignTugasToAgen(ctx, "tugas-1", "agen-2", assignedAt); err == nil {
