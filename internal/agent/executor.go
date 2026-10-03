@@ -115,6 +115,7 @@ func (e Executor) Execute(ctx context.Context, request ExecutionRequest) (Execut
 	if err := e.Repo.CreateEksekusi(ctx, eksekusi); err != nil {
 		return ExecutionResult{}, fmt.Errorf("executor: mulai eksekusi: %w", err)
 	}
+	e.catatPeristiwa(eksekusi, domain.EventExecutionStarted)
 
 	result, runErr := e.Runner.Run(ctx, Command{
 		Program: request.Program,
@@ -146,7 +147,32 @@ func (e Executor) Execute(ctx context.Context, request ExecutionRequest) (Execut
 	eksekusi.Stderr = result.Stderr
 	eksekusi.FinishedAt = &finished
 
+	if persistErr == nil {
+		e.catatPeristiwa(eksekusi, domain.EventTypeForStatus(status))
+	}
+
 	return ExecutionResult{Eksekusi: eksekusi}, errors.Join(runErr, persistErr)
+}
+
+// catatPeristiwa menyimpan peristiwa Eksekusi sebagai jejak aktivitas lokal.
+// Pencatatan bersifat best-effort: kegagalan menulis peristiwa tidak boleh
+// menggagalkan Eksekusi, dan isi proses (argumen, stdout, stderr) tidak dicatat.
+func (e Executor) catatPeristiwa(eksekusi domain.Eksekusi, jenis string) {
+	if jenis == "" {
+		return
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	id := eksekusi.ID
+	_ = e.Repo.AppendEvent(ctx, domain.Event{
+		RuangID:     eksekusi.RuangID,
+		ExecutionID: &id,
+		ProyekID:    eksekusi.ProyekID,
+		TugasID:     eksekusi.TugasID,
+		AgenID:      &eksekusi.AgenID,
+		Type:        jenis,
+		CreatedAt:   time.Now().UTC(),
+	})
 }
 
 func validateExecutionRequest(request ExecutionRequest) error {
