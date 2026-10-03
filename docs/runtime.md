@@ -5,40 +5,36 @@ Dokumen ini menjelaskan alur kerja eksekusi lokal Klip.
 ## Alur eksekusi
 
 ```text
-Tugas
+Proyek
   ↓
-Sesi
+Tugas (opsional)
   ↓
-Run
+Agen
+  ↓
+Eksekusi
   ↓
 status akhir
   ↓
-Event
+Peristiwa / Hasil Kerja
 ```
 
-Jika eksekusi terkait `Tugas`, Klip memastikan tugas berada di `Pekerjaan` yang sama. Saat proses dimulai, status tugas menjadi `running`. Setelah proses selesai, status tugas mengikuti hasil eksekusi.
+Jika eksekusi terkait `Tugas`, Klip memastikan tugas berada di `Proyek` dan `Ruang` yang sama serta agen yang dipakai berada di ruang yang sama. Tugas hanya dapat dijalankan ketika statusnya mengizinkan transisi ke `running`.
 
-`Run` menyimpan program, argumen, waktu, kode keluar, serta keluaran standar dan keluaran error. `Sesi` menyimpan hubungan eksekusi dengan pekerjaan dan agen.
+`Eksekusi` menyimpan program, argumen, waktu mulai dan selesai, kode keluar, serta keluaran standar dan keluaran error. Konteks eksekusi menghubungkan proses dengan proyek, tugas, dan agen.
 
-## Event runtime
+`Peristiwa` adalah riwayat append-only yang dapat menghubungkan kejadian dengan eksekusi, proyek, tugas, dan agen. `Hasil Kerja` adalah artefak yang memiliki identitas, jenis, nama, lokasi, serta hubungan opsional ke eksekusi dan tugas.
 
-Event runtime adalah riwayat append-only untuk perubahan penting selama eksekusi. Klip mencatat event berikut:
-
-- `execution.started` saat `Sesi` dan `Run` berhasil dimulai.
-- `execution.completed` saat eksekusi selesai dengan status `completed`.
-- `execution.failed` saat eksekusi berakhir dengan status `failed`.
-- `execution.cancelled` saat eksekusi dibatalkan.
-
-Event start dan event terminal ditulis dalam transaksi yang sama dengan perubahan state eksekusi. Jika transaksi gagal, perubahan state dan event ikut dibatalkan. Event disimpan lokal di SQLite dan dapat dibaca berdasarkan `Pekerjaan`.
+Keluaran proses tidak otomatis dianggap sebagai `Hasil Kerja`; artefak harus disimpan secara eksplisit agar dapat dilacak.
 
 ## Keamanan proses
 
 - Program dijalankan langsung sebagai argumen proses, bukan melalui shell.
 - Konteks dapat membatalkan proses.
-- Batas waktu dan ukuran keluaran diterapkan oleh runtime.
+- Runner menerapkan batas waktu dan ukuran keluaran.
 - Runner memberi tanda jika keluaran terpotong karena batas ukuran.
 - Jumlah proses bersamaan dibatasi oleh runner.
 - Model AI tidak disimpan di dalam binary Klip.
+- Nilai input yang mengandung karakter NUL ditolak sebelum proses dijalankan.
 
 ## Pengelolaan resource
 
@@ -71,14 +67,8 @@ Benchmark tersedia sebagai baseline lokal. Jalankan:
 go test ./... -run '^$' -bench 'BenchmarkStartupComponents|BenchmarkOpenMemory|BenchmarkOpenSQLite|BenchmarkSQLiteWriteRead' -benchmem
 ```
 
-`BenchmarkStartupComponents` mengukur inisialisasi komponen aplikasi utama menggunakan database memori. Benchmark SQLite mengukur pembukaan database memori, pembukaan dan penutupan database lokal, serta operasi tulis-baca sederhana.
-
 Benchmark digunakan untuk membandingkan perubahan runtime, bukan sebagai target angka tetap. Optimasi dilakukan setelah ada hasil pengukuran yang menunjukkan bagian yang memang perlu diperbaiki.
-
-## Hasil
-
-`Hasil` adalah artefak kerja yang memiliki identitas, jenis, nama, lokasi, dan hubungan opsional ke tugas. Keluaran proses tidak otomatis dianggap sebagai `Hasil`. Pemisahan ini menjaga riwayat proses dan artefak kerja tetap memiliki makna yang berbeda.
 
 ## Penyimpanan
 
-Data runtime disimpan di SQLite lokal. Database menggunakan WAL dan satu koneksi aktif untuk menjaga perilaku lokal tetap sederhana dan dapat diprediksi.
+Data runtime disimpan di SQLite lokal. Database menggunakan WAL dan satu koneksi aktif untuk menjaga perilaku local-first tetap sederhana dan dapat diprediksi.
