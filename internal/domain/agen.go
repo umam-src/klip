@@ -19,6 +19,12 @@ func (a Agen) Validate() error {
 	if strings.TrimSpace(a.Name) == "" {
 		return errors.Join(ErrInvalidAgen, errors.New("nama wajib diisi"))
 	}
+	if strings.TrimSpace(a.Role) == "" {
+		return errors.Join(ErrInvalidAgen, errors.New("peran wajib diisi"))
+	}
+	if a.Status != "" && !a.Status.IsKnown() {
+		return errors.Join(ErrInvalidAgen, errors.New("status agen tidak dikenal"))
+	}
 	if a.ParentID != nil && strings.TrimSpace(string(*a.ParentID)) == string(a.ID) {
 		return errors.Join(ErrInvalidAgen, errors.New("agen tidak boleh menjadi induknya sendiri"))
 	}
