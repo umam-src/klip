@@ -72,11 +72,11 @@ func TestRepositoryWorkspaceIntegrity(t *testing.T) {
 	if err := repo.CreateAgen(ctx, domain.Agen{ID: "agen-1", RuangID: "ruang-1", Name: "Agen 1"}); err != nil { t.Fatal(err) }
 	if err := repo.CreateAgen(ctx, domain.Agen{ID: "agen-2", RuangID: "ruang-2", Name: "Agen 2"}); err != nil { t.Fatal(err) }
 	if err := repo.CreateTugasNative(ctx, domain.Tugas{ID: "tugas-1", RuangID: "ruang-1", ProyekID: "proyek-1", Title: "Tugas", Status: domain.StatusReady}); err != nil { t.Fatal(err) }
-	if err := repo.CreateEksekusi(ctx, domain.Eksekusi{ID: "eksekusi-1", RuangID: "ruang-1", ProyekID: "proyek-1", TugasID: idPtr("tugas-1"), AgenID: "agen-1", Status: domain.StatusRunning, Program: "echo", StartedAt: time.Now().UTC()}); err != nil { t.Fatal(err) }
+	if err := repo.CreateEksekusi(ctx, domain.Eksekusi{ID: "eksekusi-1", RuangID: "ruang-1", ProyekID: "proyek-1", TugasID: idPtrRepo("tugas-1"), AgenID: "agen-1", Status: domain.StatusRunning, Program: "echo", StartedAt: time.Now().UTC()}); err != nil { t.Fatal(err) }
 	if err := repo.CreateEksekusi(ctx, domain.Eksekusi{ID: "eksekusi-salah", RuangID: "ruang-1", ProyekID: "proyek-1", AgenID: "agen-2", Status: domain.StatusRunning, Program: "echo", StartedAt: time.Now().UTC()}); !errors.Is(err, ErrInvalid) { t.Fatalf("cross-workspace execution error = %v", err) }
 }
 
-func idPtr(value string) *domain.ID {
+func idPtrRepo(value string) *domain.ID {
 	id := domain.ID(value)
 	return &id
 }
