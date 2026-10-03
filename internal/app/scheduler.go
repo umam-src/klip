@@ -3,12 +3,14 @@ package app
 import (
 	"crypto/rand"
 	"encoding/hex"
+	"errors"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/umam-src/klip/internal/domain"
+	"github.com/umam-src/klip/internal/storage"
 )
 
 type scheduleRequest struct {
@@ -26,6 +28,7 @@ type scheduleRequest struct {
 type scheduleResponse struct {
 	ID          domain.ID             `json:"id"`
 	Name        string                `json:"name"`
+	RuangID     domain.ID             `json:"ruang_id"`
 	ProyekID    domain.ID             `json:"proyek_id"`
 	TugasID     *domain.ID            `json:"tugas_id,omitempty"`
 	AgenID      domain.ID             `json:"agen_id"`
@@ -64,6 +67,18 @@ func (a *App) handleScheduler(w http.ResponseWriter, r *http.Request) {
 			writeError(w, http.StatusBadRequest, err.Error())
 			return
 		}
+		// Ruang Kerja jadwal selalu mengikuti Proyek, bukan input klien, agar
+		// jadwal tidak dapat menunjuk konteks lintas Ruang Kerja.
+		proyek, err := a.repo.GetProyek(r.Context(), schedule.ProyekID)
+		if err != nil {
+			if errors.Is(err, storage.ErrNotFound) {
+				writeError(w, http.StatusBadRequest, errInvalidSchedule.Error())
+				return
+			}
+			writeError(w, http.StatusInternalServerError, "gagal membaca proyek jadwal")
+			return
+		}
+		schedule.RuangID = proyek.RuangID
 		if err := a.repo.CreateSchedule(r.Context(), schedule); err != nil {
 			writeError(w, http.StatusBadRequest, "jadwal tidak valid")
 			return
@@ -150,6 +165,7 @@ func toScheduleResponse(s domain.Schedule) scheduleResponse {
 	return scheduleResponse{
 		ID:          s.ID,
 		Name:        s.Name,
+		RuangID:     s.RuangID,
 		ProyekID:    s.ProyekID,
 		TugasID:     s.TugasID,
 		AgenID:      s.AgenID,
