@@ -201,11 +201,26 @@ func (r *Repository) CreatePekerjaan(ctx context.Context, pekerjaan domain.Peker
 	if strings.TrimSpace(string(pekerjaan.RuangID)) == "" {
 		return fmt.Errorf("pekerjaan: ruang wajib diisi: %w", ErrInvalid)
 	}
-	created, updated := timestamps(pekerjaan.CreatedAt, pekerjaan.UpdatedAt)
 	var sasaranID any
 	if pekerjaan.SasaranID != nil {
-		sasaranID = string(*pekerjaan.SasaranID)
+		value := strings.TrimSpace(string(*pekerjaan.SasaranID))
+		if value == "" {
+			return fmt.Errorf("pekerjaan: sasaran tidak valid: %w", ErrInvalid)
+		}
+		var sasaranRuangID string
+		err := r.db.QueryRowContext(ctx, `SELECT ruang_id FROM sasaran WHERE id = ?`, value).Scan(&sasaranRuangID)
+		if errors.Is(err, sql.ErrNoRows) {
+			return fmt.Errorf("pekerjaan: sasaran tidak ditemukan: %w", ErrInvalid)
+		}
+		if err != nil {
+			return fmt.Errorf("cek sasaran pekerjaan: %w", err)
+		}
+		if sasaranRuangID != string(pekerjaan.RuangID) {
+			return fmt.Errorf("pekerjaan: sasaran tidak sesuai dengan ruang: %w", ErrInvalid)
+		}
+		sasaranID = value
 	}
+	created, updated := timestamps(pekerjaan.CreatedAt, pekerjaan.UpdatedAt)
 	_, err := r.db.ExecContext(ctx, `INSERT INTO pekerjaan (id, ruang_id, sasaran_id, title, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)`, pekerjaan.ID, pekerjaan.RuangID, sasaranID, pekerjaan.Title, pekerjaan.Status, created, updated)
 	if err != nil {
 		return fmt.Errorf("buat pekerjaan: %w", err)
