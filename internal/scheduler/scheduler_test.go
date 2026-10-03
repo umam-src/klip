@@ -54,9 +54,9 @@ func (r *fakeRepo) FinishScheduleRun(_ context.Context, id domain.ID, status dom
 	for i := range r.runs {
 		if r.runs[i].ID == id {
 			r.runs[i].Status = status
-			r.runs[i].Error = errText
 			runsFinished := finished
 			r.runs[i].FinishedAt = &runsFinished
+			r.runs[i].Error = errText
 		}
 	}
 	return nil
@@ -92,22 +92,19 @@ func (e *fakeExecutor) Execute(_ context.Context, request agent.ExecutionRequest
 
 func TestSchedulerRetryAndHistory(t *testing.T) {
 	repo := &fakeRepo{schedule: domain.Schedule{
-		ID:          "s1",
-		Name:        "uji",
-		PekerjaanID: "p1",
-		AgenID:      "a1",
-		Program:     "true",
-		Interval:    time.Hour,
-		NextRunAt:   time.Now().Add(-time.Second),
-		Status:      domain.ScheduleEnabled,
-		RetryLimit:  2,
+		ID:         "s1",
+		Name:       "uji",
+		RuangID:    "r1",
+		ProyekID:   "p1",
+		AgenID:     "a1",
+		Program:    "true",
+		Interval:   time.Hour,
+		NextRunAt:  time.Now().Add(-time.Second),
+		Status:     domain.ScheduleEnabled,
+		RetryLimit: 2,
 	}}
 	exec := &fakeExecutor{fail: 1, done: make(chan struct{})}
-	s, err := New(repo, exec, Config{
-		PollInterval: 5 * time.Millisecond,
-		RetryDelay:   time.Millisecond,
-		Heartbeat:    5 * time.Millisecond,
-	})
+	s, err := New(repo, exec, Config{PollInterval: 5 * time.Millisecond, RetryDelay: time.Millisecond, Heartbeat: 5 * time.Millisecond})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -117,7 +114,7 @@ func TestSchedulerRetryAndHistory(t *testing.T) {
 	select {
 	case <-exec.done:
 	case <-time.After(time.Second):
-		t.Fatal("scheduler tidak menjalankan pekerjaan")
+		t.Fatal("scheduler tidak menjalankan jadwal")
 	}
 	s.Stop()
 	repo.mu.Lock()
@@ -138,15 +135,16 @@ func TestSchedulerRetryAndHistory(t *testing.T) {
 func TestSchedulerPassesTaskAssignmentToExecutor(t *testing.T) {
 	tugasID := domain.ID("t1")
 	repo := &fakeRepo{schedule: domain.Schedule{
-		ID:          "s-assignment",
-		Name:        "uji assignment",
-		PekerjaanID: "p1",
-		TugasID:     &tugasID,
-		AgenID:      "a1",
-		Program:     "true",
-		Interval:    time.Hour,
-		NextRunAt:   time.Now().Add(-time.Second),
-		Status:      domain.ScheduleEnabled,
+		ID:         "s-assignment",
+		Name:       "uji assignment",
+		RuangID:    "r1",
+		ProyekID:   "p1",
+		TugasID:    &tugasID,
+		AgenID:     "a1",
+		Program:    "true",
+		Interval:   time.Hour,
+		NextRunAt:  time.Now().Add(-time.Second),
+		Status:     domain.ScheduleEnabled,
 	}}
 	exec := &fakeExecutor{done: make(chan struct{})}
 	s, err := New(repo, exec, Config{PollInterval: 5 * time.Millisecond})
@@ -166,8 +164,8 @@ func TestSchedulerPassesTaskAssignmentToExecutor(t *testing.T) {
 	exec.mu.Lock()
 	request := exec.request
 	exec.mu.Unlock()
-	if request.PekerjaanID != "p1" {
-		t.Fatalf("pekerjaan_id = %q, want p1", request.PekerjaanID)
+	if request.ProyekID != "p1" {
+		t.Fatalf("proyek_id = %q, want p1", request.ProyekID)
 	}
 	if request.TugasID == nil || *request.TugasID != tugasID {
 		t.Fatalf("tugas_id = %v, want %q", request.TugasID, tugasID)
