@@ -31,7 +31,7 @@ Daftar kerja pengembangan. Prioritas: P0 wajib, P1 penting, P2 setelah inti stab
 - [x] Tetapkan Ruang Kerja sebagai batas domain.
 - [x] Tetapkan Goal sebagai pusat arah kerja.
 - [x] Audit model lama `Sasaran` dan relasi `Pekerjaan` terhadap kontrak Goal.
-- [ ] Tetapkan kontrak Goal v1: identitas, `ruang_id`, hierarki Goal, judul, deskripsi, lifecycle, dan timestamp.
+- [x] Tetapkan kontrak Goal v1: identitas, `ruang_id`, hierarki Goal, judul, deskripsi, lifecycle, dan timestamp.
 - [ ] Putuskan pemetaan istilah `Sasaran` → Goal tanpa migrasi kosmetik.
 - [ ] Tentukan aturan Goal induk/anak: `parent_goal_id` wajib berada di Ruang Kerja yang sama.
 - [ ] Tentukan aturan Goal → Pekerjaan: satu Pekerjaan memiliki satu Goal utama dan keduanya harus berada di Ruang Kerja yang sama.
