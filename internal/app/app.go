@@ -93,13 +93,9 @@ type providerConfigRequest struct {
 
 func (a *App) providerForRequest(w http.ResponseWriter, r *http.Request) ai.AIProvider {
 	if r.Method == http.MethodGet {
-		if a.provider == nil {
-			writeError(w, http.StatusServiceUnavailable, "penyedia AI belum siap")
-			return nil
-		}
 		return a.provider
 	}
-	if r.Method != http.MethodPost {
+	if r.Method != http.MethodPost || r.Body == http.NoBody {
 		writeError(w, http.StatusMethodNotAllowed, "metode tidak didukung")
 		return nil
 	}
@@ -128,6 +124,9 @@ func (a *App) handleProviderStatus(w http.ResponseWriter, r *http.Request) {
 	}
 	provider := a.providerForRequest(w, r)
 	if provider == nil {
+		if r.Method == http.MethodGet {
+			writeJSON(w, http.StatusServiceUnavailable, providerStatusResponse{Provider: a.config.AI.Provider})
+		}
 		return
 	}
 	status := providerStatusResponse{Provider: provider.ID()}
@@ -161,6 +160,9 @@ func (a *App) handleProviderModels(w http.ResponseWriter, r *http.Request) {
 	}
 	provider := a.providerForRequest(w, r)
 	if provider == nil {
+		if r.Method == http.MethodGet {
+			writeError(w, http.StatusServiceUnavailable, "penyedia AI belum siap")
+		}
 		return
 	}
 	lister, ok := provider.(ai.ModelLister)
