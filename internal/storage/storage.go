@@ -137,7 +137,7 @@ CREATE INDEX IF NOT EXISTS idx_hasil_tugas ON hasil(tugas_id);
 CREATE TABLE IF NOT EXISTS peristiwa (
     id TEXT PRIMARY KEY,
     ruang_id TEXT NOT NULL REFERENCES ruang(id) ON DELETE CASCADE,
-    execution_id TEXT NOT NULL REFERENCES eksekusi(id) ON DELETE CASCADE,
+    execution_id TEXT REFERENCES eksekusi(id) ON DELETE CASCADE,
     proyek_id TEXT NOT NULL REFERENCES proyek(id) ON DELETE CASCADE,
     tugas_id TEXT REFERENCES tugas(id) ON DELETE SET NULL,
     agen_id TEXT REFERENCES agen(id) ON DELETE RESTRICT,
