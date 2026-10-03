@@ -8,7 +8,7 @@ import (
 	_ "modernc.org/sqlite"
 )
 
-const schemaVersion = 11
+const schemaVersion = 1
 
 const schema = `
 CREATE TABLE IF NOT EXISTS schema_migrations (
@@ -217,7 +217,7 @@ CREATE TABLE IF NOT EXISTS pengaturan_ai (
 );
 `
 
-// Open membuka database lokal dan memastikan skema minimum Klip tersedia.
+// Open membuka database lokal dan memastikan skema v1 Klip tersedia.
 func Open(ctx context.Context, path string) (*sql.DB, error) {
 	db, err := sql.Open("sqlite", path)
 	if err != nil {
@@ -250,19 +250,51 @@ func configure(ctx context.Context, db *sql.DB) error {
 }
 
 func migrate(ctx context.Context, db *sql.DB) error {
-	if _, err := db.ExecContext(ctx, schema); err != nil {
-		return fmt.Errorf("buat skema database: %w", err)
-	}
-	var version int
-	if err := db.QueryRowContext(ctx, `SELECT COALESCE(MAX(version), 0) FROM schema_migrations`).Scan(&version); err != nil {
-		return fmt.Errorf("baca versi skema: %w", err)
+	version, err := databaseSchemaVersion(ctx, db)
+	if err != nil {
+		return err
 	}
 	if version > schemaVersion {
 		return fmt.Errorf("versi database %d lebih baru dari aplikasi %d", version, schemaVersion)
 	}
-	if version < schemaVersion {
-		if _, err := db.ExecContext(ctx, `INSERT INTO schema_migrations (version) VALUES (?)`, schemaVersion); err != nil {
-			return fmt.Errorf("catat versi skema: %w", err)
+	if version != 0 {
+		return fmt.Errorf("versi database %d tidak didukung; gunakan database baru untuk skema v1", version)
+	}
+	if err := rejectLegacySchema(ctx, db); err != nil {
+		return err
+	}
+	if _, err := db.ExecContext(ctx, schema); err != nil {
+		return fmt.Errorf("buat skema database: %w", err)
+	}
+	if _, err := db.ExecContext(ctx, `INSERT INTO schema_migrations (version) VALUES (?)`, schemaVersion); err != nil {
+		return fmt.Errorf("catat versi skema: %w", err)
+	}
+	return nil
+}
+
+func databaseSchemaVersion(ctx context.Context, db *sql.DB) (int, error) {
+	var ada int
+	if err := db.QueryRowContext(ctx, `SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'schema_migrations'`).Scan(&ada); err != nil {
+		return 0, fmt.Errorf("cek tabel versi skema: %w", err)
+	}
+	if ada == 0 {
+		return 0, nil
+	}
+	var version int
+	if err := db.QueryRowContext(ctx, `SELECT COALESCE(MAX(version), 0) FROM schema_migrations`).Scan(&version); err != nil {
+		return 0, fmt.Errorf("baca versi skema: %w", err)
+	}
+	return version, nil
+}
+
+func rejectLegacySchema(ctx context.Context, db *sql.DB) error {
+	for _, table := range []string{"pekerjaan", "run", "sesi", "sasaran", "event", "tugas_agen"} {
+		var ada int
+		if err := db.QueryRowContext(ctx, `SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = ?`, table).Scan(&ada); err != nil {
+			return fmt.Errorf("cek tabel legacy: %w", err)
+		}
+		if ada != 0 {
+			return fmt.Errorf("database legacy terdeteksi (tabel %s); gunakan database baru untuk skema v1", table)
 		}
 	}
 	return nil
