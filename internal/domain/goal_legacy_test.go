@@ -33,10 +33,10 @@ func TestGoalFromSasaranPreservesIdentityAndWorkspace(t *testing.T) {
 
 func TestGoalFromSasaranCompleted(t *testing.T) {
 	goal := GoalFromSasaran(Sasaran{
-		ID:     "goal-1",
+		ID:      "goal-1",
 		RuangID: "ruang-1",
-		Title:  "Selesai",
-		Status: StatusCompleted,
+		Title:   "Selesai",
+		Status:  StatusCompleted,
 	})
 
 	if goal.Status != GoalStatusCompleted {
