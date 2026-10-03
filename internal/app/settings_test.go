@@ -1,24 +1,30 @@
 package app
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
-	"os"
-	"path/filepath"
 	"strings"
 	"testing"
 
 	"github.com/umam-src/klip/internal/config"
+	"github.com/umam-src/klip/internal/storage"
 )
 
 func TestHandlerSettingsUpdate(t *testing.T) {
-	dataDir := t.TempDir()
-	cfg := config.Default(dataDir)
+	db, err := storage.Open(context.Background(), ":memory:")
+	if err != nil {
+		t.Fatalf("Open() error = %v", err)
+	}
+	defer db.Close()
+
+	cfg := config.Default(t.TempDir())
 	cfg.AI.Provider = "ollama"
 	cfg.AI.BaseURL = "http://old.example"
 	cfg.AI.Model = "model-lama"
-	app := New(cfg, fakeProvider{})
+	repo := storage.NewRepository(db)
+	app := New(cfg, fakeProvider{}, repo)
 
 	body := `{"provider":"ollama","base_url":"http://127.0.0.1:11434","model":"model-baru"}`
 	req := httptest.NewRequest(http.MethodPut, "/api/v1/settings", strings.NewReader(body))
@@ -28,31 +34,34 @@ func TestHandlerSettingsUpdate(t *testing.T) {
 		t.Fatalf("status = %d, want %d; body = %s", res.Code, http.StatusOK, res.Body.String())
 	}
 
-	data, err := os.ReadFile(filepath.Join(dataDir, "config.json"))
+	settings, found, err := repo.GetAISettings(context.Background())
 	if err != nil {
-		t.Fatalf("read config: %v", err)
+		t.Fatalf("GetAISettings() error = %v", err)
 	}
-	var saved config.Config
-	if err := json.Unmarshal(data, &saved); err != nil {
-		t.Fatalf("decode config: %v", err)
+	if !found {
+		t.Fatal("saved settings not found in database")
 	}
-	if saved.AI.BaseURL != "http://127.0.0.1:11434" || saved.AI.Model != "model-baru" {
-		t.Fatalf("saved AI config = %+v", saved.AI)
+	if settings.Provider != "ollama" || settings.BaseURL != "http://127.0.0.1:11434" || settings.Model != "model-baru" {
+		t.Fatalf("saved AI settings = %+v", settings)
 	}
 
-	getReq := httptest.NewRequest(http.MethodGet, "/api/v1/settings", nil)
-	getRes := httptest.NewRecorder()
-	app.Handler().ServeHTTP(getRes, getReq)
-	if getRes.Code != http.StatusOK {
-		t.Fatalf("GET status = %d, want %d", getRes.Code, http.StatusOK)
+	var response settingsResponse
+	if err := json.NewDecoder(res.Body).Decode(&response); err != nil {
+		t.Fatalf("decode response: %v", err)
 	}
-	if got := getRes.Body.String(); !containsAll(got, "model-baru", "127.0.0.1:11434") {
-		t.Fatalf("GET body = %q", got)
+	if response.Model != "model-baru" || response.BaseURL != "http://127.0.0.1:11434" {
+		t.Fatalf("response = %+v", response)
 	}
 }
 
 func TestHandlerSettingsUpdateRejectsIncompleteRequest(t *testing.T) {
-	app := New(config.Default(t.TempDir()), fakeProvider{})
+	db, err := storage.Open(context.Background(), ":memory:")
+	if err != nil {
+		t.Fatalf("Open() error = %v", err)
+	}
+	defer db.Close()
+
+	app := New(config.Default(t.TempDir()), fakeProvider{}, storage.NewRepository(db))
 	req := httptest.NewRequest(http.MethodPut, "/api/v1/settings", strings.NewReader(`{"provider":"ollama"}`))
 	res := httptest.NewRecorder()
 	app.Handler().ServeHTTP(res, req)
@@ -62,10 +71,16 @@ func TestHandlerSettingsUpdateRejectsIncompleteRequest(t *testing.T) {
 }
 
 func TestHandlerSettingsUpdatePreservesAPIKey(t *testing.T) {
+	db, err := storage.Open(context.Background(), ":memory:")
+	if err != nil {
+		t.Fatalf("Open() error = %v", err)
+	}
+	defer db.Close()
+
 	cfg := config.Default(t.TempDir())
 	cfg.AI.Provider = "openai-compatible"
 	cfg.AI.APIKey = "secret-not-logged"
-	app := New(cfg, fakeProvider{})
+	app := New(cfg, fakeProvider{}, storage.NewRepository(db))
 
 	req := httptest.NewRequest(http.MethodPut, "/api/v1/settings", strings.NewReader(`{"provider":"openai-compatible","base_url":"http://127.0.0.1:8080","model":"model-baru"}`))
 	res := httptest.NewRecorder()
@@ -78,11 +93,12 @@ func TestHandlerSettingsUpdatePreservesAPIKey(t *testing.T) {
 	}
 }
 
-func containsAll(value string, needles ...string) bool {
-	for _, needle := range needles {
-		if !strings.Contains(value, needle) {
-			return false
-		}
+func TestHandlerSettingsUpdateRequiresDatabase(t *testing.T) {
+	app := New(config.Default(t.TempDir()), fakeProvider{})
+	req := httptest.NewRequest(http.MethodPut, "/api/v1/settings", strings.NewReader(`{"provider":"ollama","base_url":"http://127.0.0.1:11434","model":"model"}`))
+	res := httptest.NewRecorder()
+	app.Handler().ServeHTTP(res, req)
+	if res.Code != http.StatusInternalServerError {
+		t.Fatalf("status = %d, want %d", res.Code, http.StatusInternalServerError)
 	}
-	return true
 }
