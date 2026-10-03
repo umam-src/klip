@@ -4,99 +4,41 @@
   <img src="assets/klip-icon.svg" alt="Ikon Klip" width="160">
 </p>
 
-Klip adalah aplikasi ringan untuk mengatur pekerjaan berbasis AI.
+Klip adalah aplikasi ringan untuk mengatur pekerjaan yang dibantu AI.
 
-Klip dibuat dengan pendekatan **lokal terlebih dahulu**. AI yang berjalan di komputer sendiri menjadi pilihan utama. Layanan AI gratis dapat digunakan jika diperlukan, sedangkan layanan berbayar bersifat opsional.
+Klip mengutamakan **bekerja di komputer sendiri**. AI yang berjalan di komputer Anda menjadi pilihan pertama. Layanan AI gratis bisa dipakai bila perlu, dan layanan berbayar hanya pilihan tambahan.
 
-## Tujuan
+## Keunggulan
 
-- Ringan dan cepat dijalankan.
-- Dapat digunakan tanpa bergantung pada layanan cloud.
-- Data utama disimpan secara lokal.
-- Mendukung AI lokal seperti Ollama dan llama.cpp.
-- Memiliki ruang kerja, agen, sasaran, pekerjaan, tugas, sesi, dan hasil.
+- Ringan dan cepat dibuka.
+- Bisa dipakai tanpa internet dan tanpa akun layanan online.
+- Data Anda tersimpan di komputer sendiri.
+- Bisa memakai AI lokal seperti Ollama dan llama.cpp.
+- Menyediakan ruang kerja, agen, goal, pekerjaan, tugas, dan hasil kerja.
 - Mudah dipasang dan dipindahkan.
-- Bahasa Indonesia sebagai bahasa bawaan.
+- Memakai Bahasa Indonesia sejak awal.
 
-## Ukuran
+## Cara memakai
 
-Ukuran yang menjadi sasaran adalah ukuran aplikasi yang digunakan, bukan ukuran kode sumber GitHub.
+Jalankan Klip, lalu buka alamat yang tampil di peramban. Klip hanya bisa dibuka dari komputer Anda sendiri, jadi data tetap aman.
 
-- Binary: target di bawah 50 MB.
-- Docker image: target di bawah 100 MB.
-- 500 MB adalah batas keras artefak runtime.
-- Model AI tidak termasuk ke dalam binary atau Docker image Klip.
+Untuk mengaktifkan AI, pilih model di halaman pengaturan. Tanpa model, Klip tetap bisa dipakai untuk mengatur pekerjaan.
 
-Model dapat dikelola secara terpisah oleh Ollama, llama.cpp, atau layanan AI lain.
-
-## AI
-
-Klip tidak mengharuskan pengguna membeli layanan AI tertentu.
-
-Prioritas penggunaan:
-
-1. AI lokal.
-2. Layanan AI gratis.
-3. Layanan AI berbayar sebagai pilihan pengguna.
-
-Provider awal yang tersedia adalah Ollama dan endpoint yang kompatibel dengan OpenAI API.
-
-Untuk `llama.cpp`, gunakan provider `openai-compatible`. Server `llama.cpp` menyediakan API yang kompatibel dengan OpenAI, sehingga tidak memerlukan provider khusus di Klip. Nilai model yang digunakan Klip harus mengikuti ID model yang diberikan oleh server pada `/v1/models`, bukan harus sama dengan nama file model.
-
-## Menjalankan
-
-Saat dijalankan tanpa perintah, Klip langsung menjalankan server lokal dan menggunakan data lokal. Server hanya tersedia dari komputer sendiri secara default.
-
-```text
-klip
-klip serve --data-dir ./data
-klip serve --listen 127.0.0.1:8788
-klip version
-klip help
-```
-
-Jika model belum dipilih, Klip tetap dapat berjalan untuk fungsi lokal. Untuk mengaktifkan AI, isi model pada `config.json` di direktori data Klip.
-
-Contoh:
-
-```json
-{
-  "listen": "127.0.0.1:8787",
-  "ai": {
-    "provider": "ollama",
-    "base_url": "http://127.0.0.1:11434",
-    "model": "nama-model-lokal"
-  }
-}
-```
-
-Untuk server `llama.cpp` yang menggunakan API OpenAI-compatible, contohnya:
-
-```json
-{
-  "ai": {
-    "provider": "openai-compatible",
-    "base_url": "http://127.0.0.1:8080",
-    "model": "id-model-dari-v1-models"
-  }
-}
-```
-
-Endpoint percobaan AI lokal tersedia di `POST /api/v1/chat`.
+Langkah lengkap, contoh pengaturan, dan daftar perintah ada di `docs/penggunaan.md`.
 
 ## Status
 
-Klip sudah memiliki rilis awal `0.1.0` dan masih dalam tahap pengembangan. Struktur dan fungsi dapat berubah sebelum versi 1.0.
+Klip baru dirilis versi awal `0.1.0` dan masih terus dikembangkan. Tampilan dan fitur bisa berubah sebelum versi 1.0.
 
 ## Dokumentasi
 
 - `ROADMAP.md` — arah pengembangan.
 - `TODO.md` — pekerjaan yang direncanakan.
 - `CHANGELOG.md` — riwayat perubahan.
-- `CONTRIBUTING.md` — panduan kontribusi.
-- `AGENTS.md` — catatan dan aturan pengembangan.
-- `docs/` — dokumentasi teknis.
+- `CONTRIBUTING.md` — panduan berkontribusi.
+- `AGENTS.md` — aturan dan pelajaran pengembangan.
+- `docs/` — dokumentasi lengkap.
 
 ## Lisensi
 
-Klip menggunakan lisensi MIT.
+Klip memakai lisensi MIT. Hak cipta milik Kontributor Klip.

@@ -60,6 +60,8 @@ Format mengikuti Keep a Changelog dan versi mengikuti Semantic Versioning.
 - Penugasan Agen pada Tugas kini disimpan di tabel `penugasan` v1 dan tabel `tugas_agen` tidak lagi dipakai.
 - Penyimpanan hasil menolak path berawalan pemisah direktori atau nama drive di semua sistem operasi.
 - Test lama yang masih memakai Pekerjaan, Sasaran, dan Hasil dimigrasikan ke model v1; penolakan database legacy kini punya test sendiri.
+- README.md ditulis ulang tanpa istilah teknis; panduan menjalankan, konfigurasi, dan target ukuran dipindahkan ke `docs/penggunaan.md`.
+- Pemegang hak cipta pada LICENSE MIT diubah menjadi "Kontributor Klip".
 
 ### Removed
 - Belum ada.

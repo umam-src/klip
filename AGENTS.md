@@ -100,3 +100,9 @@ CI harus hemat menit:
 - Pengaturan yang diubah dari UI harus disimpan di SQLite sebagai sumber utama; `config.json` hanya menjadi bootstrap/fallback untuk nilai yang belum tersimpan di database.
 - Saat remodel bertahap, jangan meninggalkan paket yang gagal kompilasi; jalankan `go vet ./...` dan `go test ./...` sebelum commit, termasuk test yang masih memakai nama entity lama.
 - Test yang membandingkan output proses harus menormalkan CRLF agar lulus di Windows dan Linux.
+
+## Pelajaran dokumentasi
+
+- README.md ditujukan untuk pembaca awam: hindari istilah teknis (binary, endpoint, provider, JSON, dan sejenisnya). Detail teknis masuk ke `docs/`.
+- Pemegang hak cipta LICENSE adalah "Kontributor Klip"; jangan memakai nama pribadi atau nama proyek lain.
+
