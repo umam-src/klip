@@ -69,6 +69,7 @@ Format mengikuti Keep a Changelog dan versi mengikuti Semantic Versioning.
 - Pemegang hak cipta pada LICENSE MIT diubah menjadi "Kontributor Klip".
 - Dokumentasi dirapikan: batas ukuran, prinsip kompatibilitas database, lingkup jejak aktivitas (Peristiwa hanya untuk Eksekusi), dan istilah model v1 diselaraskan; CONTRIBUTING dilengkapi; indeks dokumentasi ditambahkan.
 - Istilah UI "Ruang" diselaraskan menjadi "Ruang Kerja" pada beranda, daftar, detail, dan pesan kesalahan. Nama storage dan jalur API `ruang` tidak berubah.
+- CONTRIBUTING mewajibkan test berbasis berkas (tutup lalu buka ulang) untuk perubahan database, backup, restore, atau migrasi. `docs/storage.md` dan `docs/backup.md` menjelaskan perilaku buka ulang database v1, validasi restore, dan invarian Goal, Proyek, serta Hasil Kerja.
 
 ### Removed
 - Skrip `web/assets/agent-form.js` lama yang menduplikasi form Agen dan tidak pernah dimuat UI.

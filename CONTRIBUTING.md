@@ -50,6 +50,7 @@ Sebelum membuat perubahan besar:
 Setiap perubahan juga perlu:
 
 - **Perbaikan bug disertai test regresi** yang gagal sebelum perbaikan dan lulus sesudahnya, agar kesalahan yang sama tidak terulang.
+- **Test berbasis berkas untuk perilaku penyimpanan**: bila perubahan menyentuh database, backup, restore, atau migrasi, tambahkan test yang memakai berkas di `t.TempDir()` lalu menutup dan membukanya kembali, bukan hanya `:memory:`. Database di memori tidak menangkap kegagalan saat aplikasi dimulai ulang.
 - **Catatan di `CHANGELOG.md`** pada bagian `[Unreleased]`, memakai kategori Keep a Changelog: Added, Changed, Deprecated, Removed, Fixed, atau Security.
 - **Dokumentasi yang selaras**: perbarui `TODO.md` dan berkas di `docs/` bila perilaku atau keputusan berubah.
 

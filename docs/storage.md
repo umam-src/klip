@@ -29,6 +29,8 @@ Skema memiliki versi dan tabel `schema_migrations`. Perubahan skema harus dilaku
 
 Jangan mengubah skema produksi hanya dengan mengandalkan `CREATE TABLE IF NOT EXISTS`; perubahan kolom, indeks, atau aturan data harus memiliki langkah migrasi yang eksplisit.
 
+Saat ini hanya ada satu versi skema, yaitu v1. `storage.Open` membuat skema pada database baru, menerima database v1 yang sudah ada tanpa mengubahnya, dan menolak database berversi lebih baru atau yang masih berisi tabel dari model lama (legacy).
+
 ## Integritas data
 
 Lapisan penyimpanan memvalidasi hubungan penting sebelum menulis data. Contohnya:
@@ -37,7 +39,10 @@ Lapisan penyimpanan memvalidasi hubungan penting sebelum menulis data. Contohnya
 - agen yang menjalankan Eksekusi harus berasal dari Ruang Kerja yang sama;
 - hasil yang ditautkan ke tugas harus berada pada proyek yang sama;
 - perubahan status mengikuti aturan domain;
-- konteks Eksekusi (Ruang Kerja, Proyek, Tugas, dan Agen) harus konsisten sebelum Eksekusi dibuat.
+- konteks Eksekusi (Ruang Kerja, Proyek, Tugas, dan Agen) harus konsisten sebelum Eksekusi dibuat;
+- Goal induk harus berada pada Ruang Kerja yang sama dan hierarki Goal tidak boleh membentuk siklus;
+- Proyek harus mengacu ke satu Goal dalam Ruang Kerja yang sama;
+- Hasil Kerja yang ditautkan ke Eksekusi harus berada pada Proyek dan Ruang Kerja yang sama, sehingga dapat ditelusuri sampai ke Goal.
 
 Validasi di aplikasi melengkapi foreign key SQLite; keduanya tidak saling menggantikan.
 
@@ -45,7 +50,7 @@ Validasi di aplikasi melengkapi foreign key SQLite; keduanya tidak saling mengga
 
 Gunakan API penyimpanan backup untuk membuat salinan database yang konsisten. Backup menggunakan `VACUUM INTO` sehingga database WAL dapat dipadatkan menjadi satu berkas.
 
-Restore menulis salinan ke berkas sementara, melakukan sinkronisasi, lalu mengganti tujuan dengan operasi rename. Database tujuan tidak boleh sedang dibuka ketika restore dilakukan.
+Restore menulis salinan ke berkas sementara, melakukan sinkronisasi, lalu mengganti tujuan dengan operasi rename. Database tujuan tidak boleh sedang dibuka ketika restore dilakukan. Sebelum menimpa, restore memeriksa bahwa berkas cadangan adalah database Klip v1 yang utuh, lalu membersihkan berkas `-wal` dan `-shm` milik database lama.
 
 Lihat [backup.md](backup.md) untuk prosedur dan batasannya.
 
