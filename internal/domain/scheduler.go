@@ -10,19 +10,20 @@ const (
 )
 
 type Schedule struct {
-	ID          ID
-	Name        string
-	PekerjaanID ID
-	TugasID     *ID
-	AgenID      ID
-	Program     string
-	Arguments   []string
-	Interval    time.Duration
-	NextRunAt   time.Time
-	Status      ScheduleStatus
-	RetryLimit  int
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
+	ID         ID
+	Name       string
+	RuangID    ID
+	ProyekID   ID
+	TugasID    *ID
+	AgenID     ID
+	Program    string
+	Arguments  []string
+	Interval   time.Duration
+	NextRunAt  time.Time
+	Status     ScheduleStatus
+	RetryLimit int
+	CreatedAt  time.Time
+	UpdatedAt  time.Time
 }
 
 type ScheduleRunStatus string
