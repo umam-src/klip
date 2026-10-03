@@ -82,8 +82,12 @@ func TestRepositoryNotFoundAndValidation(t *testing.T) {
 	if err := repo.CreateRuang(ctx, domain.Ruang{ID: "", Name: "tanpa id"}); !errors.Is(err, ErrInvalid) {
 		t.Fatalf("CreateRuang() error = %v, want ErrInvalid", err)
 	}
-	if err := repo.CreateAgen(ctx, domain.Agen{ID: "agen-1", RuangID: "ruang-1", Name: "tanpa peran"}); !errors.Is(err, ErrInvalid) {
-		t.Fatalf("CreateAgen() error = %v, want ErrInvalid", err)
+	if err := repo.CreateAgen(ctx, domain.Agen{ID: "agen-1", RuangID: "ruang-1", Name: "tanpa peran"}); err != nil {
+		t.Fatalf("CreateAgen() legacy role normalization error = %v", err)
+	}
+	legacy, err := repo.GetAgen(ctx, "agen-1")
+	if err != nil || legacy.Role != "Agen" || legacy.Status != domain.AgenStatusActive {
+		t.Fatalf("legacy agent = %+v, error = %v, want role Agen and active status", legacy, err)
 	}
 	if err := repo.CreateAgen(ctx, domain.Agen{ID: "agen-2", RuangID: "ruang-1", Name: "status salah", Role: "Pelaksana", Status: "unknown"}); !errors.Is(err, ErrInvalid) {
 		t.Fatalf("CreateAgen(status) error = %v, want ErrInvalid", err)
