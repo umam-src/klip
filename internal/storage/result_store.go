@@ -145,7 +145,7 @@ func (s *ResultStore) Read(relPath string) ([]byte, error) {
 
 func (s *ResultStore) resolve(relPath string) (string, error) {
 	relPath = filepath.FromSlash(strings.TrimSpace(relPath))
-	if relPath == "" || filepath.IsAbs(relPath) || relPath == "." || relPath == ".." || strings.ContainsRune(relPath, 0) {
+	if relPath == "" || filepath.IsAbs(relPath) || filepath.VolumeName(relPath) != "" || strings.HasPrefix(relPath, string(filepath.Separator)) || relPath == "." || relPath == ".." || strings.ContainsRune(relPath, 0) {
 		return "", fmt.Errorf("hasil: path tidak valid: %w", ErrInvalid)
 	}
 	clean := filepath.Clean(relPath)

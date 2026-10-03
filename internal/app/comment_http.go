@@ -13,27 +13,23 @@ type createKomentarRequest struct {
 	Body     string `json:"body"`
 }
 
-func (a *App) handleKomentar(w http.ResponseWriter, r *http.Request) {
-	if a.repo == nil {
-		writeError(w, http.StatusServiceUnavailable, "penyimpanan belum siap")
+// handleProyekKomentar menangani komentar tingkat Proyek.
+func (a *App) handleProyekKomentar(w http.ResponseWriter, r *http.Request, proyekID domain.ID) {
+	proyek, err := a.repo.GetProyek(r.Context(), proyekID)
+	if err != nil {
+		writeStorageError(w, err)
 		return
 	}
-	parts := strings.Split(strings.Trim(strings.TrimPrefix(r.URL.Path, "/api/v1/pekerjaan/"), "/"), "/")
-	if len(parts) != 2 || parts[0] == "" || parts[1] != "komentar" {
-		writeError(w, http.StatusNotFound, "jalur tidak ditemukan")
-		return
-	}
-	pekerjaanID := domain.ID(parts[0])
 	switch r.Method {
 	case http.MethodGet:
-		items, err := a.repo.ListKomentarByPekerjaan(r.Context(), pekerjaanID)
+		items, err := a.repo.ListKomentarByProyek(r.Context(), proyekID)
 		if err != nil {
 			writeStorageError(w, err)
 			return
 		}
 		writeJSON(w, http.StatusOK, items)
 	case http.MethodPost:
-		a.createKomentar(w, r, pekerjaanID, nil)
+		a.createKomentar(w, r, proyek.RuangID, proyek.ID, nil)
 	default:
 		writeError(w, http.StatusMethodNotAllowed, "metode tidak didukung")
 	}
@@ -50,7 +46,7 @@ func (a *App) handleTugasKomentar(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	tugasID := domain.ID(parts[0])
-	tugas, err := a.repo.GetTugas(r.Context(), tugasID)
+	tugas, err := a.repo.GetTugasNative(r.Context(), tugasID)
 	if err != nil {
 		writeStorageError(w, err)
 		return
@@ -64,13 +60,13 @@ func (a *App) handleTugasKomentar(w http.ResponseWriter, r *http.Request) {
 		}
 		writeJSON(w, http.StatusOK, items)
 	case http.MethodPost:
-		a.createKomentar(w, r, tugas.PekerjaanID, &tugasID)
+		a.createKomentar(w, r, tugas.RuangID, tugas.ProyekID, &tugasID)
 	default:
 		writeError(w, http.StatusMethodNotAllowed, "metode tidak didukung")
 	}
 }
 
-func (a *App) createKomentar(w http.ResponseWriter, r *http.Request, pekerjaanID domain.ID, tugasID *domain.ID) {
+func (a *App) createKomentar(w http.ResponseWriter, r *http.Request, ruangID, proyekID domain.ID, tugasID *domain.ID) {
 	var req createKomentarRequest
 	if !decodeJSON(w, r, &req) {
 		return
@@ -81,11 +77,12 @@ func (a *App) createKomentar(w http.ResponseWriter, r *http.Request, pekerjaanID
 		parentID = &id
 	}
 	komentar := domain.Komentar{
-		ID:          domain.ID(strings.TrimSpace(req.ID)),
-		PekerjaanID: pekerjaanID,
-		TugasID:     tugasID,
-		ParentID:    parentID,
-		Body:        strings.TrimSpace(req.Body),
+		ID:       domain.ID(strings.TrimSpace(req.ID)),
+		RuangID:  ruangID,
+		ProyekID: proyekID,
+		TugasID:  tugasID,
+		ParentID: parentID,
+		Body:     strings.TrimSpace(req.Body),
 	}
 	if err := a.repo.CreateKomentar(r.Context(), komentar); err != nil {
 		writeStorageError(w, err)

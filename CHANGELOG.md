@@ -56,6 +56,11 @@ Format mengikuti Keep a Changelog dan versi mengikuti Semantic Versioning.
 - Pemetaan `Sasaran` → Goal sebelumnya ditetapkan sebagai adapter sementara; karena Klip belum rilis, keputusan baru menetapkan remodel menyeluruh tanpa kewajiban kompatibilitas database legacy.
 - Model data sekarang menjadi blueprint keseluruhan sebelum migration schema, sehingga Goal, Pekerjaan, Tugas, Assignment, Agen, Execution, Event, dan Result/Evidence dapat dikunci relasinya terlebih dahulu.
 
+- Komentar kini terikat ke Ruang Kerja, Proyek, dan Tugas sesuai skema v1; komentar tingkat Proyek tersedia di `/api/v1/proyek/{id}/komentar`.
+- Penugasan Agen pada Tugas kini disimpan di tabel `penugasan` v1 dan tabel `tugas_agen` tidak lagi dipakai.
+- Penyimpanan hasil menolak path berawalan pemisah direktori atau nama drive di semua sistem operasi.
+- Test lama yang masih memakai Pekerjaan, Sasaran, dan Hasil dimigrasikan ke model v1; penolakan database legacy kini punya test sendiri.
+
 ### Removed
 - Belum ada.
 

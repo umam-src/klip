@@ -33,7 +33,13 @@ func buatKonteksPeristiwa(t *testing.T) (context.Context, *Repository) {
 func TestAppendAndListEvents(t *testing.T) {
 	ctx, repo := buatKonteksPeristiwa(t)
 	created := time.Date(2026, 10, 2, 12, 0, 0, 0, time.UTC)
-	event := domain.Event{ID: "event-1", RuangID: "ruang-1", ProyekID: "proyek-1", Type: domain.EventExecutionStarted, Message: "Eksekusi dimulai", CreatedAt: created}
+	if err := repo.CreateAgen(ctx, domain.Agen{ID: "agen-1", RuangID: "ruang-1", Name: "Agen"}); err != nil {
+		t.Fatal(err)
+	}
+	if err := repo.CreateEksekusi(ctx, domain.Eksekusi{ID: "eksekusi-1", RuangID: "ruang-1", ProyekID: "proyek-1", AgenID: "agen-1", Status: domain.StatusRunning, Program: "echo", StartedAt: created}); err != nil {
+		t.Fatal(err)
+	}
+	event := domain.Event{ID: "event-1", RuangID: "ruang-1", ExecutionID: idPtr("eksekusi-1"), ProyekID: "proyek-1", Type: domain.EventExecutionStarted, Message: "Eksekusi dimulai", CreatedAt: created}
 	if err := repo.AppendEvent(ctx, event); err != nil {
 		t.Fatal(err)
 	}
@@ -84,6 +90,9 @@ func TestAppendEventRejectsCrossWorkspaceContext(t *testing.T) {
 	if err := repo.CreateTugasNative(ctx, domain.Tugas{ID: tugas2, RuangID: "ruang-2", ProyekID: "proyek-2", Title: "Tugas 2", Status: domain.StatusReady}); err != nil {
 		t.Fatal(err)
 	}
+	if err := repo.CreateEksekusi(ctx, domain.Eksekusi{ID: "eksekusi-1", RuangID: "ruang-1", ProyekID: "proyek-1", TugasID: idPtr("tugas-1"), AgenID: "agen-1", Status: domain.StatusRunning, Program: "echo", StartedAt: time.Now().UTC()}); err != nil {
+		t.Fatal(err)
+	}
 	cases := []domain.Event{
 		{RuangID: "ruang-1", ProyekID: "proyek-1", AgenID: idPtr("agen-2"), Type: domain.EventExecutionStarted},
 		{RuangID: "ruang-1", ProyekID: "proyek-1", TugasID: idPtr("tugas-2"), Type: domain.EventExecutionStarted},
@@ -93,7 +102,7 @@ func TestAppendEventRejectsCrossWorkspaceContext(t *testing.T) {
 			t.Errorf("AppendEvent() error = %v, want ErrInvalid", err)
 		}
 	}
-	if err := repo.AppendEvent(ctx, domain.Event{RuangID: "ruang-1", ProyekID: "proyek-1", TugasID: idPtr("tugas-1"), AgenID: idPtr("agen-1"), Type: domain.EventExecutionStarted}); err != nil {
+	if err := repo.AppendEvent(ctx, domain.Event{RuangID: "ruang-1", ExecutionID: idPtr("eksekusi-1"), ProyekID: "proyek-1", TugasID: idPtr("tugas-1"), AgenID: idPtr("agen-1"), Type: domain.EventExecutionStarted}); err != nil {
 		t.Fatalf("AppendEvent() valid context error = %v", err)
 	}
 }

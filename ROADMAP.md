@@ -23,7 +23,7 @@ Klip adalah orkestrator AI yang ringan, offline-first, dan mengutamakan AI lokal
 - [x] UI dasar.
 - [x] CLI dasar.
 - [x] Konfigurasi lokal.
-- [ ] Sistem i18n dengan `id-ID` sebagai default.
+- [x] Sistem i18n dengan `id-ID` sebagai default.
 - [x] Health check dan logging sederhana.
 - [x] CI dasar dengan cache dan pemeriksaan ukuran binary.
 
@@ -36,10 +36,10 @@ Klip adalah orkestrator AI yang ringan, offline-first, dan mengutamakan AI lokal
 - [x] Tugas.
 - [x] Sesi.
 - [x] Hasil.
-- [ ] Thread/komentar tugas.
-- [ ] Persetujuan.
-- [ ] Riwayat aktivitas.
-- [ ] Repository/service layer.
+- [x] Thread/komentar tugas.
+- [x] Persetujuan.
+- [x] Riwayat aktivitas.
+- [x] Repository/service layer.
 
 ### 0.3 — Local AI
 
@@ -47,20 +47,20 @@ Klip adalah orkestrator AI yang ringan, offline-first, dan mengutamakan AI lokal
 - [x] Ollama melalui endpoint OpenAI-compatible.
 - [x] OpenAI-compatible API.
 - [ ] llama.cpp/llama-server adapter khusus.
-- [ ] Streaming respons.
+- [x] Streaming respons.
 - [x] Timeout dan pembatalan.
 - [x] Retry sederhana.
 - [x] Pemilihan model.
-- [ ] Status koneksi provider.
+- [x] Status koneksi provider.
 - [x] Konfigurasi endpoint lokal.
 
 ### 0.4 — Runtime agen
 
 - [x] Eksekusi proses lokal.
 - [ ] Tool execution.
-- [ ] Skills.
-- [ ] Heartbeat.
-- [ ] Scheduler.
+- [x] Skills.
+- [x] Heartbeat.
+- [x] Scheduler.
 - [x] Riwayat eksekusi.
 - [x] Batas waktu.
 - [x] Batas concurrency.
@@ -76,22 +76,22 @@ Klip adalah orkestrator AI yang ringan, offline-first, dan mengutamakan AI lokal
 
 ### 0.6 — UI lengkap
 
-- [ ] Dasbor.
-- [ ] Manajemen agen.
+- [x] Dasbor.
+- [x] Manajemen agen.
 - [ ] Ruang dan sasaran.
 - [ ] Daftar dan detail pekerjaan.
-- [ ] Daftar dan detail tugas.
-- [ ] Thread tugas.
-- [ ] Antrean persetujuan.
+- [x] Daftar dan detail tugas.
+- [x] Thread tugas.
+- [x] Antrean persetujuan.
 - [ ] Riwayat eksekusi.
-- [ ] Model dan provider.
-- [ ] Pengaturan.
+- [x] Model dan provider.
+- [x] Pengaturan.
 
 ### 0.7 — Keamanan dan ketahanan
 
 - [ ] Manajemen secret.
 - [ ] Permission dasar.
-- [ ] Audit log.
+- [x] Audit log.
 - [x] Validasi path artifact.
 - [x] Pembatasan proses.
 - [x] Backup.
@@ -105,8 +105,8 @@ Klip adalah orkestrator AI yang ringan, offline-first, dan mengutamakan AI lokal
 - [x] Audit dependency.
 - [x] Strip simbol debug untuk release.
 - [ ] Optimasi asset UI.
-- [ ] Uji startup time.
-- [ ] Uji memory idle.
+- [x] Uji startup time.
+- [x] Uji memory idle.
 - [x] Uji penggunaan SQLite.
 
 ### 0.9 — Kompatibilitas

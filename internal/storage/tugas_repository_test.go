@@ -17,7 +17,7 @@ func TestTugasNativeRepositoryRoundTrip(t *testing.T) {
 	proyekID := domain.ID("proyek-1")
 	tugasID := domain.ID("tugas-1")
 
-	mustExec(t, db, `INSERT INTO ruang (id, name, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?)`, ruangID, "Ruang", "active", "2026-01-01T00:00:00Z", "2026-01-01T00:00:00Z")
+	mustExec(t, db, `INSERT INTO ruang (id, name, created_at, updated_at) VALUES (?, ?, ?, ?)`, ruangID, "Ruang", "2026-01-01T00:00:00Z", "2026-01-01T00:00:00Z")
 	mustExec(t, db, `INSERT INTO goal (id, ruang_id, title, description, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)`, goalID, ruangID, "Goal", "", "active", "2026-01-01T00:00:00Z", "2026-01-01T00:00:00Z")
 	mustExec(t, db, `INSERT INTO proyek (id, ruang_id, goal_id, title, description, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`, proyekID, ruangID, goalID, "Proyek", "", "draft", "2026-01-01T00:00:00Z", "2026-01-01T00:00:00Z")
 
@@ -48,7 +48,7 @@ func TestTugasNativeRepositoryRejectsCrossProjectParent(t *testing.T) {
 	repo := NewRepository(db)
 	ctx := context.Background()
 
-	mustExec(t, db, `INSERT INTO ruang (id, name, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?)`, "ruang-1", "Ruang", "active", "2026-01-01T00:00:00Z", "2026-01-01T00:00:00Z")
+	mustExec(t, db, `INSERT INTO ruang (id, name, created_at, updated_at) VALUES (?, ?, ?, ?)`, "ruang-1", "Ruang", "2026-01-01T00:00:00Z", "2026-01-01T00:00:00Z")
 	mustExec(t, db, `INSERT INTO goal (id, ruang_id, title, description, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)`, "goal-1", "ruang-1", "Goal", "", "active", "2026-01-01T00:00:00Z", "2026-01-01T00:00:00Z")
 	mustExec(t, db, `INSERT INTO proyek (id, ruang_id, goal_id, title, description, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`, "proyek-1", "ruang-1", "goal-1", "Proyek 1", "", "draft", "2026-01-01T00:00:00Z", "2026-01-01T00:00:00Z")
 	mustExec(t, db, `INSERT INTO proyek (id, ruang_id, goal_id, title, description, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`, "proyek-2", "ruang-1", "goal-1", "Proyek 2", "", "draft", "2026-01-01T00:00:00Z", "2026-01-01T00:00:00Z")

@@ -8,9 +8,9 @@ import (
 	"github.com/umam-src/klip/internal/storage"
 )
 
-func validateHasil(hasil domain.Hasil) error {
+func validateHasil(hasil domain.HasilKerja) error {
 	if strings.TrimSpace(string(hasil.ID)) == "" ||
-		strings.TrimSpace(string(hasil.PekerjaanID)) == "" ||
+		strings.TrimSpace(string(hasil.ProyekID)) == "" ||
 		strings.TrimSpace(hasil.Kind) == "" ||
 		strings.TrimSpace(hasil.Name) == "" ||
 		strings.TrimSpace(hasil.Path) == "" {

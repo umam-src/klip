@@ -26,7 +26,7 @@ func TestHandlerAktivitasReturnsSafeNewestLimitedHistory(t *testing.T) {
 	if err := repo.CreateRuang(ctx, domain.Ruang{ID: "ruang-activity", Name: "Aktivitas"}); err != nil {
 		t.Fatalf("CreateRuang() error = %v", err)
 	}
-	if err := repo.CreateGoal(ctx, domain.Goal{ID: "goal-activity", RuangID: "ruang-activity", Title: "Goal Aktivitas"}); err != nil {
+	if err := repo.CreateGoal(ctx, domain.Goal{ID: "goal-activity", RuangID: "ruang-activity", Title: "Goal Aktivitas", Status: domain.GoalStatusActive}); err != nil {
 		t.Fatalf("CreateGoal() error = %v", err)
 	}
 	for _, proyek := range []domain.Proyek{
@@ -39,10 +39,21 @@ func TestHandlerAktivitasReturnsSafeNewestLimitedHistory(t *testing.T) {
 	}
 
 	base := time.Date(2026, 10, 2, 10, 0, 0, 0, time.UTC)
+	if err := repo.CreateAgen(ctx, domain.Agen{ID: "agen-activity", RuangID: "ruang-activity", Name: "Agen Aktivitas"}); err != nil {
+		t.Fatalf("CreateAgen() error = %v", err)
+	}
+	for _, eksekusi := range []domain.Eksekusi{
+		{ID: "eksekusi-activity", RuangID: "ruang-activity", ProyekID: "proyek-activity", AgenID: "agen-activity", Status: domain.StatusRunning, Program: "echo", StartedAt: base},
+		{ID: "eksekusi-other", RuangID: "ruang-activity", ProyekID: "proyek-other", AgenID: "agen-activity", Status: domain.StatusRunning, Program: "echo", StartedAt: base},
+	} {
+		if err := repo.CreateEksekusi(ctx, eksekusi); err != nil {
+			t.Fatalf("CreateEksekusi(%s) error = %v", eksekusi.ID, err)
+		}
+	}
 	for _, event := range []domain.Event{
-		{ID: "event-old", RuangID: "ruang-activity", ProyekID: "proyek-activity", Type: domain.EventExecutionStarted, Message: "prompt rahasia credential-token", CreatedAt: base},
-		{ID: "event-new", RuangID: "ruang-activity", ProyekID: "proyek-activity", Type: domain.EventExecutionCompleted, Message: "credential-token", CreatedAt: base.Add(time.Minute)},
-		{ID: "event-other", RuangID: "ruang-activity", ProyekID: "proyek-other", Type: domain.EventExecutionFailed, Message: "jangan tampil", CreatedAt: base.Add(2 * time.Minute)},
+		{ID: "event-old", RuangID: "ruang-activity", ExecutionID: ptrID("eksekusi-activity"), ProyekID: "proyek-activity", Type: domain.EventExecutionStarted, Message: "prompt rahasia credential-token", CreatedAt: base},
+		{ID: "event-new", RuangID: "ruang-activity", ExecutionID: ptrID("eksekusi-activity"), ProyekID: "proyek-activity", Type: domain.EventExecutionCompleted, Message: "credential-token", CreatedAt: base.Add(time.Minute)},
+		{ID: "event-other", RuangID: "ruang-activity", ExecutionID: ptrID("eksekusi-other"), ProyekID: "proyek-other", Type: domain.EventExecutionFailed, Message: "jangan tampil", CreatedAt: base.Add(2 * time.Minute)},
 	} {
 		if err := repo.AppendEvent(ctx, event); err != nil {
 			t.Fatalf("AppendEvent(%s) error = %v", event.ID, err)

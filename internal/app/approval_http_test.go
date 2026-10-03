@@ -17,13 +17,23 @@ func siapkanApproval(t *testing.T) (context.Context, *storage.Repository, http.H
 	t.Helper()
 	ctx := context.Background()
 	db, err := storage.Open(ctx, ":memory:")
-	if err != nil { t.Fatal(err) }
+	if err != nil {
+		t.Fatal(err)
+	}
 	t.Cleanup(func() { _ = db.Close() })
 	repo := storage.NewRepository(db)
-	if err := repo.CreateRuang(ctx, domain.Ruang{ID: "ruang-approval", Name: "Approval"}); err != nil { t.Fatal(err) }
-	if err := repo.CreateGoal(ctx, domain.Goal{ID: "goal-approval", RuangID: "ruang-approval", Title: "Goal", Status: domain.GoalStatusActive}); err != nil { t.Fatal(err) }
-	if err := repo.CreateProyek(ctx, domain.Proyek{ID: "proyek-approval", RuangID: "ruang-approval", GoalID: "goal-approval", Title: "Proyek", Status: domain.StatusDraft}); err != nil { t.Fatal(err) }
-	if err := repo.CreateTugasNative(ctx, domain.Tugas{ID: "tugas-approval", RuangID: "ruang-approval", ProyekID: "proyek-approval", Title: "Tugas", Status: domain.StatusReady}); err != nil { t.Fatal(err) }
+	if err := repo.CreateRuang(ctx, domain.Ruang{ID: "ruang-approval", Name: "Approval"}); err != nil {
+		t.Fatal(err)
+	}
+	if err := repo.CreateGoal(ctx, domain.Goal{ID: "goal-approval", RuangID: "ruang-approval", Title: "Goal", Status: domain.GoalStatusActive}); err != nil {
+		t.Fatal(err)
+	}
+	if err := repo.CreateProyek(ctx, domain.Proyek{ID: "proyek-approval", RuangID: "ruang-approval", GoalID: "goal-approval", Title: "Proyek", Status: domain.StatusDraft}); err != nil {
+		t.Fatal(err)
+	}
+	if err := repo.CreateTugasNative(ctx, domain.Tugas{ID: "tugas-approval", RuangID: "ruang-approval", ProyekID: "proyek-approval", Title: "Tugas", Status: domain.StatusReady}); err != nil {
+		t.Fatal(err)
+	}
 	return ctx, repo, New(config.Default(t.TempDir()), nil, repo).Handler()
 }
 
@@ -40,18 +50,32 @@ func TestApprovalLifecycle(t *testing.T) {
 		t.Fatalf("create approval: %d %s", res.Code, res.Body.String())
 	}
 	res := post("/api/v1/approval/approval-1/approve", `{}`)
-	if res.Code != http.StatusOK { t.Fatalf("approve: %d %s", res.Code, res.Body.String()) }
+	if res.Code != http.StatusOK {
+		t.Fatalf("approve: %d %s", res.Code, res.Body.String())
+	}
 	var approval domain.Approval
-	if err := json.NewDecoder(res.Body).Decode(&approval); err != nil { t.Fatal(err) }
-	if approval.Status != domain.ApprovalApproved || approval.DecidedAt == nil || approval.ProyekID != "proyek-approval" || approval.TugasID == nil { t.Fatalf("approval = %#v", approval) }
-	if err := repo.DecideApproval(ctx, "approval-1", domain.ApprovalRejected, "late"); err == nil { t.Fatal("expected second decision to fail") }
+	if err := json.NewDecoder(res.Body).Decode(&approval); err != nil {
+		t.Fatal(err)
+	}
+	if approval.Status != domain.ApprovalApproved || approval.DecidedAt == nil || approval.ProyekID != "proyek-approval" || approval.TugasID == nil {
+		t.Fatalf("approval = %#v", approval)
+	}
+	if err := repo.DecideApproval(ctx, "approval-1", domain.ApprovalRejected, "late"); err == nil {
+		t.Fatal("expected second decision to fail")
+	}
 }
 
 func TestApprovalGate(t *testing.T) {
 	ctx, repo, _ := siapkanApproval(t)
 	status, exists, err := repo.ApprovalGate(ctx, "proyek-approval", nil)
-	if err != nil || exists || status != "" { t.Fatalf("empty gate = %q %v %v", status, exists, err) }
-	if err := repo.CreateApproval(ctx, domain.Approval{ID: "approval-gate", RuangID: "ruang-approval", ProyekID: "proyek-approval", Status: domain.ApprovalPending}); err != nil { t.Fatal(err) }
+	if err != nil || exists || status != "" {
+		t.Fatalf("empty gate = %q %v %v", status, exists, err)
+	}
+	if err := repo.CreateApproval(ctx, domain.Approval{ID: "approval-gate", RuangID: "ruang-approval", ProyekID: "proyek-approval", Status: domain.ApprovalPending}); err != nil {
+		t.Fatal(err)
+	}
 	status, exists, err = repo.ApprovalGate(ctx, "proyek-approval", nil)
-	if err != nil || !exists || status != domain.ApprovalPending { t.Fatalf("pending gate = %q %v %v", status, exists, err) }
+	if err != nil || !exists || status != domain.ApprovalPending {
+		t.Fatalf("pending gate = %q %v %v", status, exists, err)
+	}
 }

@@ -2,7 +2,9 @@ package storage
 
 import (
 	"context"
+	"crypto/rand"
 	"database/sql"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"strings"
@@ -11,80 +13,80 @@ import (
 	"github.com/umam-src/klip/internal/domain"
 )
 
+// TugasAgenAssignment adalah tampilan ringkas Penugasan untuk satu Tugas.
+// AssignedAt berasal dari waktu pembuatan Penugasan.
 type TugasAgenAssignment struct {
 	TugasID    domain.ID `json:"tugas_id"`
 	AgenID     domain.ID `json:"agen_id"`
 	AssignedAt time.Time `json:"assigned_at"`
 }
 
-func (r *Repository) ensureTugasAgenTable(ctx context.Context) error {
-	_, err := r.db.ExecContext(ctx, `
-CREATE TABLE IF NOT EXISTS tugas_agen (
-    tugas_id TEXT PRIMARY KEY REFERENCES tugas(id) ON DELETE CASCADE,
-    agen_id TEXT NOT NULL REFERENCES agen(id) ON DELETE RESTRICT,
-    assigned_at TEXT NOT NULL
-);
-CREATE INDEX IF NOT EXISTS idx_tugas_agen_agen ON tugas_agen(agen_id);
-`)
-	if err != nil {
-		return fmt.Errorf("siapkan assignment tugas: %w", err)
+func newPenugasanID() domain.ID {
+	var data [16]byte
+	if _, err := rand.Read(data[:]); err != nil {
+		return domain.ID(fmt.Sprintf("penugasan-%d", time.Now().UnixNano()))
 	}
-	return nil
+	return domain.ID("penugasan-" + hex.EncodeToString(data[:]))
 }
 
+// AssignTugasToAgen menetapkan satu Agen pelaksana untuk Tugas dengan mengganti
+// Penugasan yang ada. Tugas dan Agen harus berada di Ruang Kerja yang sama.
 func (r *Repository) AssignTugasToAgen(ctx context.Context, tugasID, agenID domain.ID, assignedAt time.Time) error {
-	if err := r.ensureTugasAgenTable(ctx); err != nil {
-		return err
-	}
 	if strings.TrimSpace(string(tugasID)) == "" || strings.TrimSpace(string(agenID)) == "" {
-		return fmt.Errorf("assignment tugas: %w", ErrInvalid)
+		return fmt.Errorf("penugasan tugas: %w", ErrInvalid)
 	}
 
 	var tugasRuangID, agenRuangID string
 	err := r.db.QueryRowContext(ctx, `
-SELECT p.ruang_id, a.ruang_id
+SELECT t.ruang_id, a.ruang_id
 FROM tugas t
-JOIN proyek p ON p.id = t.proyek_id
 JOIN agen a ON a.id = ?
 WHERE t.id = ?`, agenID, tugasID).Scan(&tugasRuangID, &agenRuangID)
 	if errors.Is(err, sql.ErrNoRows) {
 		return ErrNotFound
 	}
 	if err != nil {
-		return fmt.Errorf("cek assignment tugas: %w", err)
+		return fmt.Errorf("cek penugasan tugas: %w", err)
 	}
 	if tugasRuangID != agenRuangID {
-		return fmt.Errorf("assignment tugas: agen dan proyek harus berada di ruang yang sama: %w", ErrInvalid)
+		return fmt.Errorf("penugasan tugas: agen dan tugas harus berada di ruang kerja yang sama: %w", ErrInvalid)
 	}
 
 	if assignedAt.IsZero() {
 		assignedAt = time.Now().UTC()
 	}
-	_, err = r.db.ExecContext(ctx, `
-INSERT INTO tugas_agen (tugas_id, agen_id, assigned_at) VALUES (?, ?, ?)
-ON CONFLICT(tugas_id) DO UPDATE SET agen_id = excluded.agen_id, assigned_at = excluded.assigned_at`,
-		tugasID, agenID, assignedAt.UTC().Format(time.RFC3339Nano))
+	stamp := assignedAt.UTC().Format(time.RFC3339Nano)
+
+	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
-		return fmt.Errorf("simpan assignment tugas: %w", err)
+		return fmt.Errorf("mulai penugasan tugas: %w", err)
+	}
+	defer tx.Rollback()
+	if _, err := tx.ExecContext(ctx, `DELETE FROM penugasan WHERE tugas_id = ?`, tugasID); err != nil {
+		return fmt.Errorf("ganti penugasan tugas: %w", err)
+	}
+	if _, err := tx.ExecContext(ctx, `INSERT INTO penugasan (id, tugas_id, agen_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?)`, newPenugasanID(), tugasID, agenID, stamp, stamp); err != nil {
+		return fmt.Errorf("simpan penugasan tugas: %w", err)
+	}
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("simpan penugasan tugas: %w", err)
 	}
 	return nil
 }
 
+// UnassignTugas menghapus seluruh Penugasan pada Tugas.
 func (r *Repository) UnassignTugas(ctx context.Context, tugasID domain.ID) error {
-	if err := r.ensureTugasAgenTable(ctx); err != nil {
-		return err
-	}
 	if strings.TrimSpace(string(tugasID)) == "" {
-		return fmt.Errorf("assignment tugas: %w", ErrInvalid)
+		return fmt.Errorf("penugasan tugas: %w", ErrInvalid)
 	}
-	result, err := r.db.ExecContext(ctx, `DELETE FROM tugas_agen WHERE tugas_id = ?`, tugasID)
+	result, err := r.db.ExecContext(ctx, `DELETE FROM penugasan WHERE tugas_id = ?`, tugasID)
 	if err != nil {
-		return fmt.Errorf("hapus assignment tugas: %w", err)
+		return fmt.Errorf("hapus penugasan tugas: %w", err)
 	}
 	if affected, _ := result.RowsAffected(); affected == 0 {
 		var exists bool
 		if err := r.db.QueryRowContext(ctx, `SELECT EXISTS(SELECT 1 FROM tugas WHERE id = ?)`, tugasID).Scan(&exists); err != nil {
-			return fmt.Errorf("cek tugas assignment: %w", err)
+			return fmt.Errorf("cek tugas penugasan: %w", err)
 		}
 		if !exists {
 			return ErrNotFound
@@ -93,19 +95,17 @@ func (r *Repository) UnassignTugas(ctx context.Context, tugasID domain.ID) error
 	return nil
 }
 
+// GetTugasAssignment mengembalikan Penugasan paling awal pada Tugas.
 func (r *Repository) GetTugasAssignment(ctx context.Context, tugasID domain.ID) (TugasAgenAssignment, error) {
-	if err := r.ensureTugasAgenTable(ctx); err != nil {
-		return TugasAgenAssignment{}, err
-	}
 	var assignment TugasAgenAssignment
 	var assignedAt string
-	err := r.db.QueryRowContext(ctx, `SELECT tugas_id, agen_id, assigned_at FROM tugas_agen WHERE tugas_id = ?`, tugasID).
+	err := r.db.QueryRowContext(ctx, `SELECT tugas_id, agen_id, created_at FROM penugasan WHERE tugas_id = ? ORDER BY created_at, id LIMIT 1`, tugasID).
 		Scan(&assignment.TugasID, &assignment.AgenID, &assignedAt)
 	if errors.Is(err, sql.ErrNoRows) {
 		return TugasAgenAssignment{}, ErrNotFound
 	}
 	if err != nil {
-		return TugasAgenAssignment{}, fmt.Errorf("ambil assignment tugas: %w", err)
+		return TugasAgenAssignment{}, fmt.Errorf("ambil penugasan tugas: %w", err)
 	}
 	assignment.AssignedAt, err = parseTime(assignedAt)
 	if err != nil {
@@ -114,19 +114,16 @@ func (r *Repository) GetTugasAssignment(ctx context.Context, tugasID domain.ID) 
 	return assignment, nil
 }
 
+// ListTugasByAgen mengembalikan Tugas yang ditugaskan kepada Agen.
 func (r *Repository) ListTugasByAgen(ctx context.Context, agenID domain.ID) ([]domain.Tugas, error) {
-	if err := r.ensureTugasAgenTable(ctx); err != nil {
-		return nil, err
-	}
 	if strings.TrimSpace(string(agenID)) == "" {
 		return nil, fmt.Errorf("agen: %w", ErrInvalid)
 	}
 	rows, err := r.db.QueryContext(ctx, `
-SELECT t.id, p.ruang_id, t.proyek_id, t.parent_id, t.title, t.status, t.created_at, t.updated_at
+SELECT t.id, t.ruang_id, t.proyek_id, t.parent_id, t.title, t.status, t.created_at, t.updated_at
 FROM tugas t
-JOIN proyek p ON p.id = t.proyek_id
-JOIN tugas_agen ta ON ta.tugas_id = t.id
-WHERE ta.agen_id = ?
+JOIN penugasan pn ON pn.tugas_id = t.id
+WHERE pn.agen_id = ?
 ORDER BY t.created_at, t.id`, agenID)
 	if err != nil {
 		return nil, fmt.Errorf("daftar tugas agen: %w", err)
@@ -138,16 +135,7 @@ ORDER BY t.created_at, t.id`, agenID)
 		var tugas domain.Tugas
 		var parentID sql.NullString
 		var created, updated string
-		if err := rows.Scan(
-			&tugas.ID,
-			&tugas.RuangID,
-			&tugas.ProyekID,
-			&tugas.ParentID,
-			&tugas.Title,
-			&tugas.Status,
-			&tugas.CreatedAt,
-			&tugas.UpdatedAt,
-		); err != nil {
+		if err := rows.Scan(&tugas.ID, &tugas.RuangID, &tugas.ProyekID, &parentID, &tugas.Title, &tugas.Status, &created, &updated); err != nil {
 			return nil, fmt.Errorf("baca tugas agen: %w", err)
 		}
 		if parentID.Valid {

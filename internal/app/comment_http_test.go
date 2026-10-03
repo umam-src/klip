@@ -13,7 +13,23 @@ import (
 	"github.com/umam-src/klip/internal/storage"
 )
 
-func TestKomentarPekerjaanAndTugasThread(t *testing.T) {
+func seedKomentarProyek(t *testing.T, repo *storage.Repository, ruangID domain.ID, proyekIDs ...domain.ID) {
+	t.Helper()
+	ctx := context.Background()
+	if err := repo.CreateRuang(ctx, domain.Ruang{ID: ruangID, Name: "Komentar"}); err != nil {
+		t.Fatal(err)
+	}
+	if err := repo.CreateGoal(ctx, domain.Goal{ID: "goal-komentar", RuangID: ruangID, Title: "Goal", Status: domain.GoalStatusActive}); err != nil {
+		t.Fatal(err)
+	}
+	for _, id := range proyekIDs {
+		if err := repo.CreateProyek(ctx, domain.Proyek{ID: id, RuangID: ruangID, GoalID: "goal-komentar", Title: string(id), Status: domain.StatusDraft}); err != nil {
+			t.Fatal(err)
+		}
+	}
+}
+
+func TestKomentarProyekAndTugasThread(t *testing.T) {
 	ctx := context.Background()
 	db, err := storage.Open(ctx, ":memory:")
 	if err != nil {
@@ -21,13 +37,8 @@ func TestKomentarPekerjaanAndTugasThread(t *testing.T) {
 	}
 	defer db.Close()
 	repo := storage.NewRepository(db)
-	if err := repo.CreateRuang(ctx, domain.Ruang{ID: "ruang-komentar", Name: "Komentar"}); err != nil {
-		t.Fatal(err)
-	}
-	if err := repo.CreatePekerjaan(ctx, domain.Pekerjaan{ID: "pekerjaan-komentar", RuangID: "ruang-komentar", Title: "Pekerjaan", Status: domain.StatusDraft}); err != nil {
-		t.Fatal(err)
-	}
-	if err := repo.CreateTugas(ctx, domain.Tugas{ID: "tugas-komentar", PekerjaanID: "pekerjaan-komentar", Title: "Tugas", Status: domain.StatusDraft}); err != nil {
+	seedKomentarProyek(t, repo, "ruang-komentar", "proyek-komentar")
+	if err := repo.CreateTugasNative(ctx, domain.Tugas{ID: "tugas-komentar", RuangID: "ruang-komentar", ProyekID: "proyek-komentar", Title: "Tugas", Status: domain.StatusDraft}); err != nil {
 		t.Fatal(err)
 	}
 
@@ -39,10 +50,10 @@ func TestKomentarPekerjaanAndTugasThread(t *testing.T) {
 		h.ServeHTTP(res, req)
 		return res
 	}
-	if res := post("/api/v1/pekerjaan/pekerjaan-komentar/komentar", `{"id":"comment-1","body":"konteks"}`); res.Code != http.StatusCreated {
-		t.Fatalf("create pekerjaan comment: %d %s", res.Code, res.Body.String())
+	if res := post("/api/v1/proyek/proyek-komentar/komentar", `{"id":"comment-1","body":"konteks"}`); res.Code != http.StatusCreated {
+		t.Fatalf("create proyek comment: %d %s", res.Code, res.Body.String())
 	}
-	if res := post("/api/v1/pekerjaan/pekerjaan-komentar/komentar", `{"id":"comment-2","parent_id":"comment-1","body":"balasan"}`); res.Code != http.StatusCreated {
+	if res := post("/api/v1/proyek/proyek-komentar/komentar", `{"id":"comment-2","parent_id":"comment-1","body":"balasan"}`); res.Code != http.StatusCreated {
 		t.Fatalf("create reply: %d %s", res.Code, res.Body.String())
 	}
 	if res := post("/api/v1/tugas/tugas-komentar/komentar", `{"id":"comment-3","body":"catatan tugas"}`); res.Code != http.StatusCreated {
@@ -50,16 +61,19 @@ func TestKomentarPekerjaanAndTugasThread(t *testing.T) {
 	}
 
 	res := httptest.NewRecorder()
-	h.ServeHTTP(res, httptest.NewRequest(http.MethodGet, "/api/v1/pekerjaan/pekerjaan-komentar/komentar", nil))
+	h.ServeHTTP(res, httptest.NewRequest(http.MethodGet, "/api/v1/proyek/proyek-komentar/komentar", nil))
 	if res.Code != http.StatusOK {
-		t.Fatalf("list pekerjaan comments: %d", res.Code)
+		t.Fatalf("list proyek comments: %d", res.Code)
 	}
-	var pekerjaanComments []domain.Komentar
-	if err := json.NewDecoder(res.Body).Decode(&pekerjaanComments); err != nil {
+	var proyekComments []domain.Komentar
+	if err := json.NewDecoder(res.Body).Decode(&proyekComments); err != nil {
 		t.Fatal(err)
 	}
-	if len(pekerjaanComments) != 2 || pekerjaanComments[1].ParentID == nil || *pekerjaanComments[1].ParentID != "comment-1" {
-		t.Fatalf("comments = %#v", pekerjaanComments)
+	if len(proyekComments) != 2 || proyekComments[1].ParentID == nil || *proyekComments[1].ParentID != "comment-1" {
+		t.Fatalf("comments = %#v", proyekComments)
+	}
+	if proyekComments[0].RuangID != "ruang-komentar" || proyekComments[0].ProyekID != "proyek-komentar" {
+		t.Fatalf("konteks komentar = %#v", proyekComments[0])
 	}
 
 	res = httptest.NewRecorder()
@@ -84,18 +98,11 @@ func TestKomentarRejectsCrossContextParent(t *testing.T) {
 	}
 	defer db.Close()
 	repo := storage.NewRepository(db)
-	if err := repo.CreateRuang(ctx, domain.Ruang{ID: "ruang-cross", Name: "Cross"}); err != nil {
+	seedKomentarProyek(t, repo, "ruang-cross", "p1", "p2")
+	if err := repo.CreateKomentar(ctx, domain.Komentar{ID: "parent", RuangID: "ruang-cross", ProyekID: "p1", Body: "parent"}); err != nil {
 		t.Fatal(err)
 	}
-	for _, p := range []domain.Pekerjaan{{ID: "p1", RuangID: "ruang-cross", Title: "P1"}, {ID: "p2", RuangID: "ruang-cross", Title: "P2"}} {
-		if err := repo.CreatePekerjaan(ctx, p); err != nil {
-			t.Fatal(err)
-		}
-	}
-	if err := repo.CreateKomentar(ctx, domain.Komentar{ID: "parent", PekerjaanID: "p1", Body: "parent"}); err != nil {
-		t.Fatal(err)
-	}
-	if err := repo.CreateKomentar(ctx, domain.Komentar{ID: "child", PekerjaanID: "p2", ParentID: ptrID("parent"), Body: "invalid"}); err == nil {
+	if err := repo.CreateKomentar(ctx, domain.Komentar{ID: "child", RuangID: "ruang-cross", ProyekID: "p2", ParentID: ptrID("parent"), Body: "invalid"}); err == nil {
 		t.Fatal("expected cross-context parent rejection")
 	}
 }

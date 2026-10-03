@@ -13,7 +13,7 @@ import (
 )
 
 func TestValidateHasilPathAndName(t *testing.T) {
-	valid := domain.Hasil{ID: "hasil-1", PekerjaanID: "pekerjaan-1", Kind: "file", Name: "hasil.txt", Path: "hasil/hasil.txt"}
+	valid := domain.HasilKerja{ID: "hasil-1", RuangID: "ruang-1", ProyekID: "proyek-1", Kind: "file", Name: "hasil.txt", Path: "hasil/hasil.txt"}
 	if err := validateHasil(valid); err != nil {
 		t.Fatalf("valid hasil rejected: %v", err)
 	}
@@ -34,7 +34,7 @@ func TestValidateHasilPathAndName(t *testing.T) {
 	}
 }
 
-func TestHandlerHasilRejectsCrossJobTask(t *testing.T) {
+func TestHandlerHasilRejectsCrossProyekTugas(t *testing.T) {
 	ctx := context.Background()
 	db, err := storage.Open(ctx, ":memory:")
 	if err != nil {
@@ -46,20 +46,23 @@ func TestHandlerHasilRejectsCrossJobTask(t *testing.T) {
 	if err := repo.CreateRuang(ctx, domain.Ruang{ID: "ruang-1", Name: "Ruang"}); err != nil {
 		t.Fatal(err)
 	}
-	for _, job := range []domain.Pekerjaan{
-		{ID: "pekerjaan-1", RuangID: "ruang-1", Title: "Satu", Status: domain.StatusReady},
-		{ID: "pekerjaan-2", RuangID: "ruang-1", Title: "Dua", Status: domain.StatusReady},
+	if err := repo.CreateGoal(ctx, domain.Goal{ID: "goal-1", RuangID: "ruang-1", Title: "Goal", Status: domain.GoalStatusActive}); err != nil {
+		t.Fatal(err)
+	}
+	for _, proyek := range []domain.Proyek{
+		{ID: "proyek-1", RuangID: "ruang-1", GoalID: "goal-1", Title: "Satu", Status: domain.StatusReady},
+		{ID: "proyek-2", RuangID: "ruang-1", GoalID: "goal-1", Title: "Dua", Status: domain.StatusReady},
 	} {
-		if err := repo.CreatePekerjaan(ctx, job); err != nil {
+		if err := repo.CreateProyek(ctx, proyek); err != nil {
 			t.Fatal(err)
 		}
 	}
-	if err := repo.CreateTugas(ctx, domain.Tugas{ID: "tugas-1", PekerjaanID: "pekerjaan-1", Title: "Tugas", Status: domain.StatusReady}); err != nil {
+	if err := repo.CreateTugasNative(ctx, domain.Tugas{ID: "tugas-1", RuangID: "ruang-1", ProyekID: "proyek-1", Title: "Tugas", Status: domain.StatusReady}); err != nil {
 		t.Fatal(err)
 	}
 
 	app := New(config.Default(t.TempDir()), fakeProvider{}, repo)
-	req := httptest.NewRequest(http.MethodPost, "/api/v1/pekerjaan/pekerjaan-2/hasil", strings.NewReader(`{"id":"hasil-1","tugas_id":"tugas-1","kind":"file","name":"hasil.txt","path":"hasil.txt"}`))
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/proyek/proyek-2/hasil", strings.NewReader(`{"id":"hasil-1","tugas_id":"tugas-1","kind":"file","name":"hasil.txt","path":"hasil.txt"}`))
 	res := httptest.NewRecorder()
 	app.Handler().ServeHTTP(res, req)
 	if res.Code != http.StatusBadRequest {

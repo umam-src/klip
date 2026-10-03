@@ -98,3 +98,5 @@ CI harus hemat menit:
 - Relasi hierarki baru harus memvalidasi batas domain sebelum menulis foreign key; untuk hubungan induk-anak agen, parent harus berada di ruang yang sama dan operasi awal tidak boleh membuka jalur siklus.
 - Streaming provider harus menjadi kemampuan opsional agar provider lama tidak dipaksa mengimplementasikan API baru; parsing SSE harus dibatasi ukurannya dan tetap menghormati pembatalan context.
 - Pengaturan yang diubah dari UI harus disimpan di SQLite sebagai sumber utama; `config.json` hanya menjadi bootstrap/fallback untuk nilai yang belum tersimpan di database.
+- Saat remodel bertahap, jangan meninggalkan paket yang gagal kompilasi; jalankan `go vet ./...` dan `go test ./...` sebelum commit, termasuk test yang masih memakai nama entity lama.
+- Test yang membandingkan output proses harus menormalkan CRLF agar lulus di Windows dan Linux.

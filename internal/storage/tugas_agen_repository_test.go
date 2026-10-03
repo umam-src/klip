@@ -31,11 +31,14 @@ func TestTugasAgenAssignment(t *testing.T) {
 			t.Fatalf("CreateAgen() error = %v", err)
 		}
 	}
-	if err := repo.CreatePekerjaan(ctx, domain.Pekerjaan{ID: "pekerjaan-1", RuangID: "ruang-1", Title: "Pekerjaan 1", Status: domain.StatusDraft}); err != nil {
-		t.Fatalf("CreatePekerjaan() error = %v", err)
+	if err := repo.CreateGoal(ctx, domain.Goal{ID: "goal-1", RuangID: "ruang-1", Title: "Goal 1", Status: domain.GoalStatusActive}); err != nil {
+		t.Fatalf("CreateGoal() error = %v", err)
 	}
-	if err := repo.CreateTugas(ctx, domain.Tugas{ID: "tugas-1", PekerjaanID: "pekerjaan-1", Title: "Tugas 1", Status: domain.StatusDraft}); err != nil {
-		t.Fatalf("CreateTugas() error = %v", err)
+	if err := repo.CreateProyek(ctx, domain.Proyek{ID: "proyek-1", RuangID: "ruang-1", GoalID: "goal-1", Title: "Proyek 1", Status: domain.StatusDraft}); err != nil {
+		t.Fatalf("CreateProyek() error = %v", err)
+	}
+	if err := repo.CreateTugasNative(ctx, domain.Tugas{ID: "tugas-1", RuangID: "ruang-1", ProyekID: "proyek-1", Title: "Tugas 1", Status: domain.StatusDraft}); err != nil {
+		t.Fatalf("CreateTugasNative() error = %v", err)
 	}
 
 	assignedAt := time.Date(2026, 10, 3, 0, 0, 0, 0, time.UTC)

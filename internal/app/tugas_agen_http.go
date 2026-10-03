@@ -32,7 +32,7 @@ func (a *App) handleTugasAgen(w http.ResponseWriter, r *http.Request) {
 	}
 
 	tugasID := domain.ID(parts[0])
-	if _, err := a.repo.GetTugas(r.Context(), tugasID); err != nil {
+	if _, err := a.repo.GetTugasNative(r.Context(), tugasID); err != nil {
 		writeStorageError(w, err)
 		return
 	}

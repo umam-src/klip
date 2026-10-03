@@ -10,39 +10,44 @@ import (
 	"github.com/umam-src/klip/internal/domain"
 )
 
+const komentarColumns = `id, ruang_id, proyek_id, tugas_id, parent_id, body, created_at, updated_at`
+
 func (r *Repository) CreateKomentar(ctx context.Context, komentar domain.Komentar) error {
 	if strings.TrimSpace(string(komentar.ID)) == "" || strings.TrimSpace(komentar.Body) == "" {
 		return fmt.Errorf("komentar: id dan isi wajib diisi: %w", ErrInvalid)
 	}
-	if strings.TrimSpace(string(komentar.PekerjaanID)) == "" {
-		return fmt.Errorf("komentar: pekerjaan wajib diisi: %w", ErrInvalid)
+	if strings.TrimSpace(string(komentar.ProyekID)) == "" {
+		return fmt.Errorf("komentar: proyek wajib diisi: %w", ErrInvalid)
 	}
-	var exists int
-	if err := r.db.QueryRowContext(ctx, `SELECT 1 FROM pekerjaan WHERE id = ?`, komentar.PekerjaanID).Scan(&exists); errors.Is(err, sql.ErrNoRows) {
+	var proyekRuangID string
+	if err := r.db.QueryRowContext(ctx, `SELECT ruang_id FROM proyek WHERE id = ?`, komentar.ProyekID).Scan(&proyekRuangID); errors.Is(err, sql.ErrNoRows) {
 		return ErrNotFound
 	} else if err != nil {
-		return fmt.Errorf("cek pekerjaan komentar: %w", err)
+		return fmt.Errorf("cek proyek komentar: %w", err)
+	}
+	if proyekRuangID != string(komentar.RuangID) {
+		return fmt.Errorf("komentar: ruang kerja tidak sesuai dengan proyek: %w", ErrInvalid)
 	}
 	if komentar.TugasID != nil {
-		var tugasPekerjaanID string
-		if err := r.db.QueryRowContext(ctx, `SELECT pekerjaan_id FROM tugas WHERE id = ?`, *komentar.TugasID).Scan(&tugasPekerjaanID); errors.Is(err, sql.ErrNoRows) {
+		var tugasProyekID string
+		if err := r.db.QueryRowContext(ctx, `SELECT proyek_id FROM tugas WHERE id = ?`, *komentar.TugasID).Scan(&tugasProyekID); errors.Is(err, sql.ErrNoRows) {
 			return ErrNotFound
 		} else if err != nil {
 			return fmt.Errorf("cek tugas komentar: %w", err)
 		}
-		if tugasPekerjaanID != string(komentar.PekerjaanID) {
-			return fmt.Errorf("komentar: tugas tidak sesuai dengan pekerjaan: %w", ErrInvalid)
+		if tugasProyekID != string(komentar.ProyekID) {
+			return fmt.Errorf("komentar: tugas tidak sesuai dengan proyek: %w", ErrInvalid)
 		}
 	}
 	if komentar.ParentID != nil {
-		var parentPekerjaanID string
+		var parentProyekID string
 		var parentTugasID sql.NullString
-		if err := r.db.QueryRowContext(ctx, `SELECT pekerjaan_id, tugas_id FROM komentar WHERE id = ?`, *komentar.ParentID).Scan(&parentPekerjaanID, &parentTugasID); errors.Is(err, sql.ErrNoRows) {
+		if err := r.db.QueryRowContext(ctx, `SELECT proyek_id, tugas_id FROM komentar WHERE id = ?`, *komentar.ParentID).Scan(&parentProyekID, &parentTugasID); errors.Is(err, sql.ErrNoRows) {
 			return fmt.Errorf("komentar: induk tidak ditemukan: %w", ErrInvalid)
 		} else if err != nil {
 			return fmt.Errorf("cek induk komentar: %w", err)
 		}
-		if parentPekerjaanID != string(komentar.PekerjaanID) || !sameOptionalKomentarID(parentTugasID, komentar.TugasID) {
+		if parentProyekID != string(komentar.ProyekID) || !sameOptionalKomentarID(parentTugasID, komentar.TugasID) {
 			return fmt.Errorf("komentar: induk tidak sesuai konteks: %w", ErrInvalid)
 		}
 	}
@@ -54,7 +59,7 @@ func (r *Repository) CreateKomentar(ctx context.Context, komentar domain.Komenta
 	if komentar.ParentID != nil {
 		parentID = string(*komentar.ParentID)
 	}
-	_, err := r.db.ExecContext(ctx, `INSERT INTO komentar (id, pekerjaan_id, tugas_id, parent_id, body, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)`, komentar.ID, komentar.PekerjaanID, tugasID, parentID, strings.TrimSpace(komentar.Body), created, updated)
+	_, err := r.db.ExecContext(ctx, `INSERT INTO komentar (`+komentarColumns+`) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`, komentar.ID, komentar.RuangID, komentar.ProyekID, tugasID, parentID, strings.TrimSpace(komentar.Body), created, updated)
 	if err != nil {
 		return fmt.Errorf("buat komentar: %w", err)
 	}
@@ -68,7 +73,7 @@ func (r *Repository) GetKomentar(ctx context.Context, id domain.ID) (domain.Kome
 	var k domain.Komentar
 	var tugasID, parentID sql.NullString
 	var created, updated string
-	err := r.db.QueryRowContext(ctx, `SELECT id, pekerjaan_id, tugas_id, parent_id, body, created_at, updated_at FROM komentar WHERE id = ?`, id).Scan(&k.ID, &k.PekerjaanID, &tugasID, &parentID, &k.Body, &created, &updated)
+	err := r.db.QueryRowContext(ctx, `SELECT `+komentarColumns+` FROM komentar WHERE id = ?`, id).Scan(&k.ID, &k.RuangID, &k.ProyekID, &tugasID, &parentID, &k.Body, &created, &updated)
 	if errors.Is(err, sql.ErrNoRows) {
 		return domain.Komentar{}, ErrNotFound
 	}
@@ -93,11 +98,13 @@ func (r *Repository) GetKomentar(ctx context.Context, id domain.ID) (domain.Kome
 	return k, nil
 }
 
-func (r *Repository) ListKomentarByPekerjaan(ctx context.Context, pekerjaanID domain.ID) ([]domain.Komentar, error) {
-	if strings.TrimSpace(string(pekerjaanID)) == "" {
-		return nil, fmt.Errorf("komentar: pekerjaan wajib diisi: %w", ErrInvalid)
+// ListKomentarByProyek mengembalikan komentar tingkat Proyek, yaitu komentar
+// yang tidak terikat pada Tugas tertentu.
+func (r *Repository) ListKomentarByProyek(ctx context.Context, proyekID domain.ID) ([]domain.Komentar, error) {
+	if strings.TrimSpace(string(proyekID)) == "" {
+		return nil, fmt.Errorf("komentar: proyek wajib diisi: %w", ErrInvalid)
 	}
-	rows, err := r.db.QueryContext(ctx, `SELECT id, pekerjaan_id, tugas_id, parent_id, body, created_at, updated_at FROM komentar WHERE pekerjaan_id = ? AND tugas_id IS NULL ORDER BY created_at, id`, pekerjaanID)
+	rows, err := r.db.QueryContext(ctx, `SELECT `+komentarColumns+` FROM komentar WHERE proyek_id = ? AND tugas_id IS NULL ORDER BY created_at, id`, proyekID)
 	if err != nil {
 		return nil, fmt.Errorf("daftar komentar: %w", err)
 	}
@@ -109,7 +116,7 @@ func (r *Repository) ListKomentarByTugas(ctx context.Context, tugasID domain.ID)
 	if strings.TrimSpace(string(tugasID)) == "" {
 		return nil, fmt.Errorf("komentar: tugas wajib diisi: %w", ErrInvalid)
 	}
-	rows, err := r.db.QueryContext(ctx, `SELECT id, pekerjaan_id, tugas_id, parent_id, body, created_at, updated_at FROM komentar WHERE tugas_id = ? ORDER BY created_at, id`, tugasID)
+	rows, err := r.db.QueryContext(ctx, `SELECT `+komentarColumns+` FROM komentar WHERE tugas_id = ? ORDER BY created_at, id`, tugasID)
 	if err != nil {
 		return nil, fmt.Errorf("daftar komentar tugas: %w", err)
 	}
@@ -123,7 +130,7 @@ func scanKomentarRows(rows *sql.Rows) ([]domain.Komentar, error) {
 		var k domain.Komentar
 		var tugasID, parentID sql.NullString
 		var created, updated string
-		if err := rows.Scan(&k.ID, &k.PekerjaanID, &tugasID, &parentID, &k.Body, &created, &updated); err != nil {
+		if err := rows.Scan(&k.ID, &k.RuangID, &k.ProyekID, &tugasID, &parentID, &k.Body, &created, &updated); err != nil {
 			return nil, fmt.Errorf("baca komentar: %w", err)
 		}
 		if tugasID.Valid {
