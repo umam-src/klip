@@ -57,6 +57,20 @@ Goal
 
 Atribut seperti `priority`, `progress`, `target`, dan `deadline` belum menjadi alasan untuk memperbesar model sebelum kebutuhan operasionalnya jelas.
 
+### Hasil audit implementasi lama
+
+Audit kode saat ini menunjukkan bahwa `Sasaran` adalah kandidat langsung untuk menjadi representasi Goal, tetapi belum memenuhi seluruh kontrak Goal v1.
+
+- Model `domain.Sasaran` saat ini memiliki `id`, `ruang_id`, `title`, `status`, `created_at`, dan `updated_at`.
+- Model `Sasaran` saat ini belum memiliki `description` dan `parent_goal_id`, sehingga hierarki Goal belum tersedia pada model lama.
+- Storage `sasaran` sudah dibatasi oleh `ruang_id` dan menyediakan pembuatan serta daftar Sasaran per Ruang Kerja.
+- API lama masih menggunakan istilah `/sasaran` dan menerima `title` serta `status`.
+- `Pekerjaan` saat ini sudah memiliki `sasaran_id` opsional. Saat dibuat, storage memeriksa bahwa Sasaran ada dan berada pada Ruang Kerja yang sama.
+- Karena relasi tersebut sudah ada, fondasi Goal tidak perlu membuat relasi kedua hanya untuk mengganti nama. Relasi `sasaran_id` dapat menjadi jembatan kompatibilitas sampai kontrak Goal v1 benar-benar diterapkan.
+- `Pekerjaan` belum menjadikan relasi Sasaran sebagai kewajiban mutlak; ini perlu diputuskan bersama lifecycle data lama sebelum kolom atau validasi diperketat.
+
+Kesimpulan audit: **Sasaran dan Goal sangat mungkin merupakan entitas yang sama secara semantik, sedangkan perbedaan utama saat ini adalah kontrak model dan bahasa produk.** Karena itu langkah berikutnya adalah melengkapi kontrak Goal secara bertahap, bukan membuat tabel Goal baru.
+
 ## Hierarki Goal
 
 Goal dapat memiliki Goal turunan melalui `parent_goal_id`.
@@ -181,8 +195,9 @@ Goal yang sudah memiliki riwayat tidak sebaiknya dihapus secara destruktif hanya
 
 Dokumen ini sengaja belum mengunci beberapa keputusan implementasi:
 
-- apakah tabel/model lama `sasaran` langsung diperlakukan sebagai Goal;
-- apakah `Pekerjaan` saat ini sudah memiliki relasi Sasaran yang cukup untuk dipetakan menjadi `goal_id`;
+- kapan `Sasaran` mulai diekspos sebagai Goal pada API dan UI;
+- bagaimana menambah `description` dan hierarki Goal tanpa merusak data lama;
+- kapan relasi Sasaran/Goal pada Pekerjaan harus menjadi wajib;
 - bagaimana progress Goal dihitung dari Execution dan Result / Evidence;
 - kapan `priority`, `target`, dan `deadline` benar-benar diperlukan;
 - apakah kebutuhan many-to-many Goal ↔ Pekerjaan akan muncul.
