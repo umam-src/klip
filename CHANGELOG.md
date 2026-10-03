@@ -31,7 +31,7 @@ Format mengikuti Keep a Changelog dan versi mengikuti Semantic Versioning.
 - Pilihan Agen pelaksana pada form Tugas serta tampilan assignment pada daftar dan detail Tugas.
 - Daftar Tugas terkait pada Detail Agen berdasarkan assignment lokal.
 - Kontrak domain Goal v1 dengan identitas, batas Ruang Kerja, hierarki, deskripsi, lifecycle, dan timestamp.
-- Adapter domain untuk memetakan representasi legacy `Sasaran` ke kontrak Goal tanpa membuat tabel baru.
+- Rancangan model data v1 yang mencakup entity inti, relasi, invariant Ruang Kerja, Execution, Event, dan Result/Evidence sebelum remodel database.
 
 ### Changed
 - Konfigurasi sekarang menyimpan locale secara eksplisit dan menormalkan locale yang belum didukung ke `id-ID`.
@@ -52,9 +52,9 @@ Format mengikuti Keep a Changelog dan versi mengikuti Semantic Versioning.
 - CI membatalkan run lama pada ref yang sama saat commit baru masuk dan menggunakan permission workflow minimum untuk mengurangi pemborosan runner tanpa melemahkan pemeriksaan utama.
 - UI Agen menggunakan bahasa pengguna yang lebih ringkas dan tidak menampilkan URL provider atau credential pada daftar Agen.
 - Domain kini menetapkan **Ruang Kerja** sebagai batas lingkungan kerja dan **Goal** sebagai pusat arah kerja.
-- Dokumentasi domain memisahkan peran Goal, Pekerjaan, Tugas, Agen, Runtime, Execution, dan Result/Evidence tanpa memaksa migrasi tabel hanya karena perubahan istilah pengguna.
-- TODO domain menambahkan pekerjaan pematangan isolasi Ruang Kerja, hubungan Pekerjaan ke Goal, dan penelusuran Execution serta Result/Evidence.
-- Pemetaan `Sasaran` → Goal ditetapkan sebagai adapter kompatibilitas; ID dan `ruang_id` dipertahankan, sedangkan field Goal yang belum tersedia tidak diisi secara semu.
+- Dokumentasi domain memisahkan peran Goal, Pekerjaan, Tugas, Agen, Runtime, Execution, dan Result/Evidence tanpa menambah entity hanya untuk mengantisipasi fitur.
+- Pemetaan `Sasaran` → Goal sebelumnya ditetapkan sebagai adapter sementara; karena Klip belum rilis, keputusan baru menetapkan remodel menyeluruh tanpa kewajiban kompatibilitas database legacy.
+- Model data sekarang menjadi blueprint keseluruhan sebelum migration schema, sehingga Goal, Pekerjaan, Tugas, Assignment, Agen, Execution, Event, dan Result/Evidence dapat dikunci relasinya terlebih dahulu.
 
 ### Removed
 - Belum ada.
