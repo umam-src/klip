@@ -41,6 +41,8 @@ Prioritas penggunaan:
 
 Provider awal yang tersedia adalah Ollama dan endpoint yang kompatibel dengan OpenAI API.
 
+Untuk `llama.cpp`, gunakan provider `openai-compatible`. Server `llama.cpp` menyediakan API yang kompatibel dengan OpenAI, sehingga tidak memerlukan provider khusus di Klip. Nilai model yang digunakan Klip harus mengikuti ID model yang diberikan oleh server pada `/v1/models`, bukan harus sama dengan nama file model.
+
 ## Menjalankan
 
 Saat dijalankan tanpa perintah, Klip langsung menjalankan server lokal dan menggunakan data lokal. Server hanya tersedia dari komputer sendiri secara default.
@@ -64,6 +66,18 @@ Contoh:
     "provider": "ollama",
     "base_url": "http://127.0.0.1:11434",
     "model": "nama-model-lokal"
+  }
+}
+```
+
+Untuk server `llama.cpp` yang menggunakan API OpenAI-compatible, contohnya:
+
+```json
+{
+  "ai": {
+    "provider": "openai-compatible",
+    "base_url": "http://127.0.0.1:8080",
+    "model": "id-model-dari-v1-models"
   }
 }
 ```
