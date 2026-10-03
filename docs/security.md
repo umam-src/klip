@@ -33,15 +33,11 @@ Klip saat ini tidak menggunakan cookie sesi atau autentikasi browser untuk API l
 
 Jika autentikasi berbasis cookie atau mode bind non-localhost ditambahkan, CSRF harus ditinjau kembali sebelum mode tersebut diaktifkan.
 
-## Audit aksi penting
+## Jejak aktivitas
 
-Aksi penting yang mengubah alur kerja dicatat sebagai event lokal tanpa memasukkan alasan, prompt, isi proses, atau data rahasia ke event audit. Saat ini cakupannya meliputi:
+Klip mencatat Peristiwa lokal saat Eksekusi mulai, selesai, gagal, atau dibatalkan. Pencatatan bersifat best-effort: kegagalan menulis Peristiwa tidak menggagalkan Eksekusi. Argumen, keluaran proses, prompt, dan data rahasia tidak ikut dicatat.
 
-- pembuatan approval proyek atau tugas;
-- keputusan approval (setujui atau tolak);
-- pembuatan jadwal.
-
-Event runtime tetap mencatat mulai, selesai, gagal, dan pembatalan eksekusi. Kegagalan menulis event audit tidak membatalkan aksi utama yang sudah berhasil, sehingga audit bersifat best-effort pada mode lokal.
+Persetujuan dan pembuatan Jadwal belum dicatat sebagai Peristiwa karena keduanya bukan pelaksanaan Eksekusi. Audit untuk aksi tersebut belum tersedia dan perlu dirancang tersendiri; lihat `TODO.md`.
 
 ## Data lokal
 

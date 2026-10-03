@@ -43,21 +43,11 @@ Keluaran proses tidak otomatis dianggap sebagai `Hasil Kerja`; artefak harus dis
 - Respons HTTP dari provider AI selalu ditutup setelah selesai dibaca.
 - Runner memakai `context.Context` untuk menghentikan proses dan semaphore untuk membatasi proses aktif.
 - Transaksi penyimpanan memakai rollback saat terjadi kegagalan sebelum commit.
-- Benchmark memory idle belum dianggap selesai karena belum ada pengukuran RSS/heap jangka panjang yang representatif.
+- Pengukuran heap memori idle dijelaskan di [size-budget.md](size-budget.md).
 
 ## CLI
 
-Perintah utama Klip tetap sederhana dan tidak membutuhkan dependency tambahan:
-
-```text
-klip
-klip serve --data-dir ./data
-klip serve --listen 127.0.0.1:8788
-klip version
-klip help
-```
-
-Tanpa perintah, Klip menjalankan server seperti perilaku sebelumnya. Opsi `--data-dir` dan `--listen` hanya mengubah nilai untuk proses tersebut dan tidak menulis ulang `config.json`.
+Perintah dan opsi Klip dijelaskan di [penggunaan.md](penggunaan.md).
 
 ## Pengukuran performa
 

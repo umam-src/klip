@@ -36,7 +36,7 @@ Klip baru dirilis versi awal `0.1.0` dan masih terus dikembangkan. Tampilan dan 
 - `TODO.md` — pekerjaan yang direncanakan.
 - `CHANGELOG.md` — riwayat perubahan.
 - `CONTRIBUTING.md` — panduan berkontribusi.
-- `docs/` — dokumentasi lengkap.
+- `docs/README.md` — daftar dokumentasi lengkap.
 
 ## Lisensi
 

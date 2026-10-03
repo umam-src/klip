@@ -14,7 +14,9 @@ Jadwal menyimpan:
 
 Rentang interval yang diterima API adalah 1 detik sampai 7 hari.
 
-## Antrean dan duplicate run
+Setiap jadwal berada dalam satu Ruang Kerja yang diambil dari Proyeknya, bukan dari input klien. Jadwal dengan agen atau tugas dari Ruang Kerja lain ditolak.
+
+## Antrean dan pencegahan eksekusi ganda
 
 Scheduler memeriksa jadwal yang sudah jatuh tempo secara berkala. Jadwal yang sedang diproses ditandai aktif di memori sehingga satu proses Klip tidak memasukkan jadwal yang sama ke antrean lebih dari sekali.
 

@@ -4,7 +4,7 @@ Rilis Klip mengikuti Semantic Versioning.
 
 ## Sebelum rilis
 
-1. Pastikan perubahan utama tercatat di `CHANGELOG.md`.
+1. Pastikan perubahan utama tercatat di `CHANGELOG.md`, lalu pindahkan dari `[Unreleased]` ke bagian versi baru berikut tanggalnya (`## [X.Y.Z] - TAHUN-BULAN-TANGGAL`).
 2. Jalankan test lokal.
 3. Periksa ukuran binary hasil build.
 4. Pastikan tidak ada secret, credential, database lokal, atau data pengguna yang ikut masuk ke repository.
@@ -30,9 +30,13 @@ Target ukuran runtime:
 
 Batas keras release untuk binary adalah 100 MiB.
 
-## Tag
+## Tag dan workflow
 
-Release build hanya dijalankan untuk tag release. Pull request dan push biasa cukup menjalankan pemeriksaan yang diperlukan untuk menjaga waktu CI tetap hemat.
+- `CI` berjalan otomatis pada pull request dan push ke `main`, kecuali perubahan yang hanya menyentuh dokumen. Isinya pemeriksaan format, `go vet`, dan test.
+- `Build` hanya berjalan manual untuk mencoba build binary Linux, Windows, dan macOS beserta pemeriksaan ukurannya.
+- `Release` berjalan saat tag `v*` didorong: memeriksa kode, membangun binary tiga platform, lalu membuat GitHub Release.
+
+Versi dan catatan rilis dibaca dari bagian versi pertama di `CHANGELOG.md`, jadi tag `vX.Y.Z` harus sesuai dengan bagian `[X.Y.Z]` di sana dan menunjuk commit yang dirilis.
 
 ## Setelah rilis
 

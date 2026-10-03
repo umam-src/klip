@@ -1,5 +1,7 @@
 # Model Inti: Goal sebagai Pusat Klip
 
+> **Arsip.** Dokumen ini ditulis sebelum remodel model data v1 dan tidak lagi menjadi rujukan. Istilah lama dipetakan ke istilah yang berlaku: `Sasaran` menjadi Goal, `Pekerjaan` menjadi Proyek, `Run`/`Execution` menjadi Eksekusi, `Assignment`/`tugas_agen` menjadi Penugasan (`penugasan`), dan `Result/Evidence` menjadi Hasil Kerja. Field `progress` pada Goal tidak disimpan sebagai angka pada schema inti v1. Rujukan yang berlaku: [DOMAIN.md](../DOMAIN.md) dan [data-model.md](../data-model.md).
+
 Status: **Tahap 7 selesai; desain berikutnya berpusat pada Goal sebelum Runtime AI diperluas.**
 
 ## Prinsip utama

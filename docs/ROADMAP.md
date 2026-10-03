@@ -2,11 +2,11 @@
 
 Klip adalah orkestrator AI yang ringan, offline-first, dan mengutamakan AI lokal atau layanan AI gratis.
 
-## Sasaran utama
+## Tujuan utama
 
-- Binary runtime utama ditargetkan di bawah 50 MB.
-- Docker image minimal ditargetkan di bawah 100 MB.
-- Batas keras artefak runtime: 500 MB.
+- Binary runtime utama ditargetkan di bawah 50 MiB.
+- Docker image minimal ditargetkan di bawah 100 MiB.
+- Batas keras artefak runtime: 100 MiB.
 - Model AI tidak dibundel ke binary atau image Klip.
 - Bahasa antarmuka default: Bahasa Indonesia.
 - AI lokal menjadi pilihan utama; layanan gratis menjadi pilihan berikutnya.
@@ -79,7 +79,7 @@ Klip adalah orkestrator AI yang ringan, offline-first, dan mengutamakan AI lokal
 - [x] Dasbor.
 - [x] Manajemen agen.
 - [ ] Ruang Kerja dan Goal.
-- [ ] Daftar dan detail Proyek.
+- [x] Daftar dan detail Proyek.
 - [x] Daftar dan detail tugas.
 - [x] Thread tugas.
 - [x] Antrean persetujuan.
@@ -91,7 +91,8 @@ Klip adalah orkestrator AI yang ringan, offline-first, dan mengutamakan AI lokal
 
 - [ ] Manajemen secret.
 - [ ] Permission dasar.
-- [x] Audit log.
+- [x] Jejak Peristiwa Eksekusi.
+- [ ] Audit aksi penting di luar Eksekusi (persetujuan dan jadwal).
 - [x] Validasi path artifact.
 - [x] Pembatasan proses.
 - [x] Backup.

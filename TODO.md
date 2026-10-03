@@ -44,7 +44,7 @@ Daftar kerja pengembangan. Prioritas: P0 wajib, P1 penting, P2 setelah inti stab
 - [ ] Pastikan Goal parent/child satu Ruang Kerja dan tidak membentuk cycle.
 - [ ] Pastikan setiap Proyek mengacu ke satu Goal utama dan satu Ruang Kerja.
 - [ ] Pastikan seluruh relasi domain mempertahankan batas `ruang_id`.
-- [ ] Pastikan Execution dan Result/Evidence dapat ditelusuri ke Ruang Kerja dan konteks Goal.
+- [ ] Pastikan Eksekusi dan Hasil Kerja dapat ditelusuri ke Ruang Kerja dan konteks Goal.
 - [ ] Reset/migrate database development setelah schema v1 siap.
 - [ ] Jalankan regression test dan CI penuh setelah remodel.
 
@@ -67,18 +67,18 @@ Catatan: `Sasaran` tidak lagi dipertahankan sebagai compatibility layer permanen
 
 ## P0 — Runtime agen
 
-- [x] Model run.
+- [x] Model Eksekusi.
 - [x] Jalankan proses lokal melalui argv, bukan shell interpolation.
 - [x] Capture stdout/stderr.
 - [x] Timeout proses.
 - [x] Cancellation.
 - [x] Concurrency limit.
-- [x] Run history.
+- [x] Riwayat Eksekusi.
 - [x] Event runtime.
 - [x] Error classification.
 - [ ] Bawa konteks Goal ke Runtime tanpa menjadikan Runtime pemilik Goal.
 - [x] Hubungkan Eksekusi dengan konteks Ruang Kerja, Proyek, Tugas, dan Agen.
-- [ ] Gunakan Result/Evidence sebagai input pembaruan progress Goal.
+- [ ] Gunakan Hasil Kerja sebagai input pembaruan progress Goal.
 
 ## P1 — UI
 
@@ -88,6 +88,7 @@ Catatan: `Sasaran` tidak lagi dipertahankan sebagai compatibility layer permanen
 - [x] Daftar ruang dasar.
 - [x] Daftar agen.
 - [x] Detail agen.
+- [ ] Tampilkan daftar Tugas agen pada Detail Agen.
 - [x] Struktur ruang.
 - [x] Daftar goal.
 - [x] Daftar proyek.
@@ -110,14 +111,14 @@ Catatan: `Sasaran` tidak lagi dipertahankan sebagai compatibility layer permanen
 - [x] Validasi nama dan path hasil.
 - [x] Metadata hasil.
 - [x] Download/view hasil melalui UI.
-- [ ] Kaitkan hasil kerja dengan Execution dan konteks Goal.
+- [ ] Kaitkan Hasil Kerja dengan Eksekusi dan konteks Goal.
 
 ## P1 — Scheduler
 
 - [x] Jadwal lokal.
 - [x] Heartbeat agen.
 - [x] Job queue sederhana.
-- [x] Pencegahan duplicate run.
+- [x] Pencegahan eksekusi ganda.
 - [x] Retry policy.
 - [x] Riwayat scheduler.
 - [x] Pastikan scheduler tidak membuat eksekusi lintas Ruang Kerja.
@@ -131,7 +132,7 @@ Catatan: `Sasaran` tidak lagi dipertahankan sebagai compatibility layer permanen
 - [x] Default bind hanya ke localhost.
 - [x] Validasi dasar input HTTP.
 - [x] Tinjau kebutuhan CSRF untuk mode UI saat ini; belum diperlukan karena API tidak memakai cookie sesi dan bind bawaan hanya localhost.
-- [x] Audit aksi penting: approval dibuat/diputuskan dan jadwal dibuat dicatat sebagai event lokal.
+- [ ] Audit aksi penting di luar Eksekusi (persetujuan dibuat/diputuskan dan jadwal dibuat); Peristiwa saat ini hanya mencatat Eksekusi.
 - [x] Dokumentasikan batas keamanan local-first.
 - [ ] Jadikan Ruang Kerja sebagai unit backup/export yang eksplisit bila export/import diperluas.
 - [ ] Sesuaikan backup/restore dengan schema v1 setelah remodel.
@@ -150,6 +151,8 @@ Catatan: `Sasaran` tidak lagi dipertahankan sebagai compatibility layer permanen
 - [x] Benchmark memory idle.
 - [x] Benchmark SQLite.
 - [x] Benchmark concurrent runs.
+
+Catatan: belum ada Dockerfile. Butir ukuran Docker image di P0 Fondasi dan P2 Optimasi baru dapat dikerjakan setelah Dockerfile tersedia.
 
 ## P2 — CI/CD hemat menit
 
@@ -185,3 +188,9 @@ Catatan: `Sasaran` tidak lagi dipertahankan sebagai compatibility layer permanen
 - [x] docs/storage.md.
 - [x] docs/backup.md.
 - [x] docs/size-budget.md.
+- [x] docs/ROADMAP.md.
+- [x] docs/penggunaan.md.
+- [x] docs/scheduler.md.
+- [x] docs/release.md.
+- [x] docs/PLUGINS.md (rencana, belum diimplementasikan).
+- [x] docs/README.md (indeks dokumentasi).

@@ -23,22 +23,20 @@ Format mengikuti Keep a Changelog dan versi mengikuti Semantic Versioning.
 - Jadwal lokal berbasis interval, antrean pekerjaan, pencegahan eksekusi ganda, retry terbatas, heartbeat, dan riwayat scheduler.
 - API lokal untuk membuat, melihat, dan membaca riwayat jadwal.
 - Cadangan berkas hasil lokal dalam arsip `.tar.gz` tanpa mengikuti tautan simbolik.
-- Audit event lokal untuk pembuatan dan keputusan approval serta pembuatan jadwal.
 - Benchmark heap memori idle aplikasi untuk mendeteksi regresi penggunaan memori.
 - Penyimpanan pengaturan provider AI, alamat provider, dan model di SQLite.
 - Daftar Agen dalam Ruang kerja yang menampilkan nama, peran, deskripsi singkat, status, dan hierarki.
 - Detail Agen yang menampilkan ringkasan, AI yang digunakan, struktur agen, serta keadaan pekerjaan dan aktivitas yang tersedia.
 - Form Tambah/Edit Agen dengan identitas, peran, deskripsi, atasan, penyedia, dan model.
 - Pilihan Agen pelaksana pada form Tugas serta tampilan assignment pada daftar dan detail Tugas.
-- Daftar Tugas terkait pada Detail Agen berdasarkan assignment lokal.
 - Kontrak domain Goal v1 dengan identitas, batas Ruang Kerja, hierarki, deskripsi, lifecycle, dan timestamp.
-- Rancangan model data v1 yang mencakup entity inti, relasi, invariant Ruang Kerja, Execution, Event, dan Result/Evidence sebelum remodel database.
+- Rancangan model data v1 yang mencakup entity inti, relasi, invariant Ruang Kerja, Eksekusi, Peristiwa, dan Hasil Kerja sebelum remodel database.
 - `.gitignore` agar data lokal, konfigurasi pribadi, rahasia, database, dan hasil build tidak ikut masuk repository.
 
 ### Changed
 - Detail Agen, Status AI, dan Pengaturan kini dimuat di UI. Detail Agen memakai ID ruang aktif, bukan judul halaman, sehingga aman untuk ruang bernama sama.
 - Konfigurasi sekarang menyimpan locale secara eksplisit dan menormalkan locale yang belum didukung ke `id-ID`.
-- State `Run`, `Sesi`, dan `Tugas` beserta event runtime diperbarui secara atomik saat memulai dan menyelesaikan eksekusi.
+- Eksekusi dan Peristiwa runtime mengikuti model v1 (`Eksekusi` menggantikan `Run` dan `Sesi`). Peristiwa dicatat terpisah secara best-effort dan tidak menggagalkan Eksekusi.
 - Validasi nama skill digunakan bersama oleh parser skill dan penyimpanan relasi agen.
 - Skema SQLite dinaikkan ke versi 8 untuk menyimpan hubungan induk-anak agen secara lokal.
 - Skema SQLite dinaikkan ke versi 9 untuk menyimpan pengaturan AI yang dipilih pengguna.
@@ -55,10 +53,9 @@ Format mengikuti Keep a Changelog dan versi mengikuti Semantic Versioning.
 - CI membatalkan run lama pada ref yang sama saat commit baru masuk dan menggunakan permission workflow minimum untuk mengurangi pemborosan runner tanpa melemahkan pemeriksaan utama.
 - UI Agen menggunakan bahasa pengguna yang lebih ringkas dan tidak menampilkan URL provider atau credential pada daftar Agen.
 - Domain kini menetapkan **Ruang Kerja** sebagai batas lingkungan kerja dan **Goal** sebagai pusat arah kerja.
-- Dokumentasi domain memisahkan peran Goal, Pekerjaan, Tugas, Agen, Runtime, Execution, dan Result/Evidence tanpa menambah entity hanya untuk mengantisipasi fitur.
+- Dokumentasi domain memisahkan peran Goal, Proyek, Tugas, Agen, Runtime, Eksekusi, dan Hasil Kerja tanpa menambah entity hanya untuk mengantisipasi fitur.
 - Pemetaan `Sasaran` → Goal sebelumnya ditetapkan sebagai adapter sementara; karena Klip belum rilis, keputusan baru menetapkan remodel menyeluruh tanpa kewajiban kompatibilitas database legacy.
-- Model data sekarang menjadi blueprint keseluruhan sebelum migration schema, sehingga Goal, Pekerjaan, Tugas, Assignment, Agen, Execution, Event, dan Result/Evidence dapat dikunci relasinya terlebih dahulu.
-
+- Model data sekarang menjadi blueprint keseluruhan sebelum migration schema, sehingga Goal, Proyek, Tugas, Penugasan, Agen, Eksekusi, Peristiwa, dan Hasil Kerja dapat dikunci relasinya terlebih dahulu.
 - Komentar kini terikat ke Ruang Kerja, Proyek, dan Tugas sesuai skema v1; komentar tingkat Proyek tersedia di `/api/v1/proyek/{id}/komentar`.
 - Penugasan Agen pada Tugas kini disimpan di tabel `penugasan` v1 dan tabel `tugas_agen` tidak lagi dipakai.
 - Penyimpanan hasil menolak path berawalan pemisah direktori atau nama drive di semua sistem operasi.
@@ -69,6 +66,7 @@ Format mengikuti Keep a Changelog dan versi mengikuti Semantic Versioning.
 - `ROADMAP.md` dipindahkan ke `docs/ROADMAP.md`.
 - README.md ditulis ulang tanpa istilah teknis; panduan menjalankan, konfigurasi, dan target ukuran dipindahkan ke `docs/penggunaan.md`.
 - Pemegang hak cipta pada LICENSE MIT diubah menjadi "Kontributor Klip".
+- Dokumentasi dirapikan: batas ukuran, prinsip kompatibilitas database, lingkup jejak aktivitas (Peristiwa hanya untuk Eksekusi), dan istilah model v1 diselaraskan; CONTRIBUTING dilengkapi; indeks dokumentasi ditambahkan.
 
 ### Removed
 - Skrip `web/assets/agent-form.js` lama yang menduplikasi form Agen dan tidak pernah dimuat UI.
@@ -109,3 +107,6 @@ Format mengikuti Keep a Changelog dan versi mengikuti Semantic Versioning.
 - Konfigurasi runtime menggunakan `config.json` agar tetap memakai pustaka standar Go.
 - Runtime eksekusi menolak input proses yang mengandung NUL dan direktori kerja relatif.
 - API JSON menolak `Content-Type` non-JSON ketika header tersebut diberikan.
+
+[Unreleased]: https://github.com/umam-src/klip/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/umam-src/klip/releases/tag/v0.1.0

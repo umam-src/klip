@@ -33,19 +33,19 @@ Ukuran sumber kode GitHub bukan metrik ukuran produk.
 ## Struktur kode
 
 ```text
-cmd/klip/             # pintu masuk program
-internal/app/          # perakitan aplikasi, HTTP API, dan lifecycle
-internal/config/       # konfigurasi lokal
-internal/domain/       # entity dan aturan domain v1
-internal/storage/      # SQLite, skema, dan repository
-internal/ai/           # kontrak AI dan provider
-internal/agent/        # runner proses dan executor Eksekusi
-internal/scheduler/    # jadwal lokal
-internal/skill/        # skill lokal
-internal/i18n/         # bahasa antarmuka
-web/                   # UI statis yang dibundel ke binary
+cmd/klip/            # pintu masuk program
+internal/app/        # perakitan aplikasi, HTTP API, dan lifecycle
+internal/config/     # konfigurasi lokal
+internal/domain/     # entity dan aturan domain v1
+internal/storage/    # SQLite, skema, dan repository
+internal/ai/         # kontrak AI dan provider
+internal/agent/      # runner proses dan executor Eksekusi
+internal/scheduler/  # jadwal lokal
+internal/skill/      # skill lokal
+internal/i18n/       # bahasa antarmuka
+web/                 # UI statis yang dibundel ke binary
 
-docs/                  # keputusan dan detail teknis
+docs/                # keputusan dan detail teknis
 ```
 
 ## Lapisan AI
@@ -95,7 +95,7 @@ Koneksi internet hanya diperlukan jika pengguna memilih provider yang membutuhka
 
 ## UI
 
-UI v0.1 memakai HTML yang disajikan dari program dan JavaScript seminimal mungkin. Aset penting dibundel secara lokal. CDN bukan ketergantungan runtime.
+UI memakai HTML yang disajikan dari program dan JavaScript seminimal mungkin. Aset penting dibundel secara lokal. CDN bukan ketergantungan runtime.
 
 ## Penyimpanan
 
@@ -103,9 +103,11 @@ SQLite menjadi penyimpanan default. Data aplikasi berada di direktori pengguna. 
 
 Model AI tetap berada di luar paket Klip.
 
-## API lokal awal
+## API lokal
 
-Klip menyediakan `POST /api/v1/chat` untuk percobaan AI lokal. Endpoint menerima prompt teks dan mengirimkannya ke provider yang dikonfigurasi. Endpoint hanya diikat ke alamat lokal secara default.
+API berada di bawah `/api/v1/` dan hanya diikat ke alamat lokal secara bawaan. Kelompok utamanya: ruang (beserta agen), goal, proyek, tugas (komentar, penugasan, persetujuan), jadwal, hasil kerja, pengaturan, status dan model penyedia AI, serta percakapan AI (`POST /api/v1/chat`). Pemeriksaan kesehatan ada di `/health`.
+
+Tidak ada endpoint untuk menjalankan program. Alasannya dijelaskan di [security.md](security.md).
 
 ## Aturan ketergantungan
 

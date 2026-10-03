@@ -8,6 +8,8 @@ Aturan lokal yang tidak membutuhkan database:
 - Ruang wajib.
 - Nama wajib.
 - Agen tidak boleh menjadi induknya sendiri.
+- Peran wajib diisi.
+- Status, bila diisi, harus berupa nilai yang dikenal domain.
 
 Aturan lintas data tetap berada di storage/API:
 
@@ -15,5 +17,3 @@ Aturan lintas data tetap berada di storage/API:
 - Atasan harus ada.
 - Atasan harus berada pada Ruang yang sama.
 - Siklus hierarki harus ditolak.
-
-Peran dan status tampilan Agen belum menjadi bagian kontrak domain final; keduanya akan ditetapkan setelah audit storage dan UX berikutnya.

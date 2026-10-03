@@ -11,7 +11,7 @@ Dokumen ini menjaga agar Klip mengambil **kebutuhan produk**, bukan menyalin imp
 | Langkah | Tugas | Fokus pada tindakan konkret |
 | Urutan kerja | Alur | Model sederhana dan dapat diperluas |
 | Eksekusi | Eksekusi | Tidak disamakan dengan Proyek atau Tugas |
-| Keluaran | Hasil Kerja | Objek kelas satu
+| Keluaran | Hasil Kerja | Objek kelas satu |
 | Kemampuan | Skill / Alat | Dipasang sesuai kebutuhan agen |
 | Pengaman | Persetujuan | Hanya digunakan pada titik yang memang membutuhkan manusia |
 | AI | Penyedia + Model | Provider-agnostic, lokal lebih dulu |

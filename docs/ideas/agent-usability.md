@@ -1,5 +1,7 @@
 # Rancangan: Usability Agen
 
+> **Arsip.** Ditulis sebelum remodel model data v1. Istilah lama dipetakan ke istilah yang berlaku: `Sasaran` menjadi Goal dan `Pekerjaan` menjadi Proyek. Rujukan yang berlaku: [DOMAIN.md](../DOMAIN.md) dan [data-model.md](../data-model.md).
+
 > **Status: Rancangan — belum disetujui.**
 >
 > Dokumen ini menyimpan arah desain pengalaman pengguna untuk Agen agar keputusan yang sedang dipikirkan tidak hilang dari percakapan. Dokumen ini belum menjadi spesifikasi implementasi, keputusan arsitektur, atau pekerjaan roadmap.

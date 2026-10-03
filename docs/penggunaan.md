@@ -6,9 +6,9 @@ Panduan teknis untuk menjalankan dan mengonfigurasi Klip. Ringkasan untuk penggu
 
 Ukuran yang diperhatikan adalah ukuran artefak runtime, bukan ukuran source code atau clone repository.
 
-- Binary release: target di bawah 50 MB.
-- Docker image release: target di bawah 100 MB.
-- Batas keras artefak runtime: 500 MB.
+- Binary release: target di bawah 50 MiB.
+- Docker image release: target di bawah 100 MiB.
+- Batas keras artefak runtime: 100 MiB.
 - Model AI tidak dibundel ke binary atau Docker image Klip.
 
 Model dikelola terpisah oleh Ollama, llama.cpp, atau layanan AI lain. Detail anggaran ukuran ada di `size-budget.md`.
@@ -34,6 +34,8 @@ klip serve --listen 127.0.0.1:8788
 klip version
 klip help
 ```
+
+Opsi `--data-dir` dan `--listen` hanya berlaku untuk proses tersebut dan tidak menulis ulang `config.json`.
 
 Jika model belum dipilih, Klip tetap berjalan untuk fungsi lokal. Untuk mengaktifkan AI, isi model pada `config.json` di direktori data, atau ubah dari halaman pengaturan (disimpan di SQLite dan menjadi sumber utama).
 

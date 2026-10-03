@@ -11,13 +11,13 @@ Urutan informasi:
 1. **Ringkasan** — nama, peran, status, dan deskripsi.
 2. **AI yang digunakan** — penyedia dan model yang terhubung pada Agen.
 3. **Struktur agen** — atasan dan identitas Agen.
-4. **Pekerjaan** — sementara menampilkan keadaan belum ada pekerjaan yang terhubung langsung.
+4. **Tugas** — sementara menyatakan bahwa daftar tugas Agen belum ditampilkan.
 5. **Aktivitas** — sementara menampilkan keadaan belum ada aktivitas Agen yang ditampilkan.
 6. **Pengaturan** — belum editable; pengaturan Agen akan datang setelah alur edit matang.
 
 ## Batas tahap ini
 
-- Tidak menambahkan relasi Pekerjaan → Agen yang belum tersedia di domain.
+- Tidak menambahkan relasi Tugas → Agen yang belum tersedia di domain.
 - Tidak membuat data Aktivitas Agen buatan hanya agar tampilan terlihat penuh.
 - Tidak menampilkan kredensial atau token.
 - Tidak memasukkan banyak penyedia/Akun AI sebagai bagian dari tahap ini.

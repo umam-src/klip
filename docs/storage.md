@@ -51,7 +51,7 @@ Lihat [backup.md](backup.md) untuk prosedur dan batasannya.
 
 ## Prinsip perubahan
 
-1. Utamakan kompatibilitas database lama.
+1. Setelah rilis stabil (1.0), utamakan kompatibilitas database lama. Selama beta, skema boleh berubah tanpa kompatibilitas ke database lama; database berskema legacy ditolak.
 2. Gunakan transaksi untuk perubahan yang harus atomik.
 3. Jangan menyimpan secret di database tanpa kebutuhan yang jelas.
 4. Jangan menambah ORM hanya untuk mengurangi beberapa query SQL sederhana.

@@ -400,6 +400,8 @@ Tidak menjadi schema inti v1:
 
 ## Urutan implementasi
 
+Status pengerjaan setiap langkah dicatat di isu #28 dan `TODO.md`.
+
 1. Audit seluruh entity, tabel, kolom, service, API, UI, scheduler, runtime, dan test.
 2. Remodel schema SQLite menjadi schema native v1.
 3. Remodel domain dan repository.
