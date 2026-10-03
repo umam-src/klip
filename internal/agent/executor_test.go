@@ -92,11 +92,11 @@ func TestExecutorRejectsRelativeWorkingDirectoryBeforeStart(t *testing.T) {
 
 	program, args := testCommand("relative-dir")
 	_, err := (Executor{Repo: repo}).Execute(ctx, ExecutionRequest{
-		ProyekID: "proyek-1",
-		AgenID:   "agen-1",
-		Program:  program,
+		ProyekID:  "proyek-1",
+		AgenID:    "agen-1",
+		Program:   program,
 		Arguments: args,
-		Dir:      filepath.Join("workspace", "task"),
+		Dir:       filepath.Join("workspace", "task"),
 	})
 	if !errors.Is(err, storage.ErrInvalid) {
 		t.Fatalf("Execute() error = %v, want storage.ErrInvalid", err)
