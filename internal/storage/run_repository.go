@@ -83,7 +83,7 @@ func (r *Repository) CreateRun(ctx context.Context, run domain.Run) error {
 			exit_code, stdout, stderr, started_at, finished_at
 		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 		run.ID, run.PekerjaanID, tugasID, run.AgenID, run.Status, run.Program,
-		run.Arguments, string(arguments), exitCode, run.Stdout, run.Stderr,
+		string(arguments), exitCode, run.Stdout, run.Stderr,
 		started.UTC().Format(time.RFC3339Nano), finished,
 	)
 	if err != nil {
