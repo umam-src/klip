@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/umam-src/klip/internal/domain"
 	"github.com/umam-src/klip/internal/storage"
@@ -50,7 +51,7 @@ func (a *App) handleTugasAgen(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusOK, tugasAgenResponse{
 			TugasID:    assignment.TugasID,
 			AgenID:     assignment.AgenID,
-			AssignedAt: assignment.AssignedAt.UTC().Format("2006-01-02T15:04:05.999999999Z"),
+			AssignedAt: assignment.AssignedAt.UTC().Format(time.RFC3339Nano),
 		})
 	case http.MethodPut:
 		var req assignTugasAgenRequest
@@ -63,7 +64,7 @@ func (a *App) handleTugasAgen(w http.ResponseWriter, r *http.Request) {
 			writeError(w, http.StatusBadRequest, "agen_id wajib diisi")
 			return
 		}
-		if err := a.repo.AssignTugasToAgen(r.Context(), tugasID, agentID, timeNowUTC()); err != nil {
+		if err := a.repo.AssignTugasToAgen(r.Context(), tugasID, agentID, time.Now().UTC()); err != nil {
 			writeStorageError(w, err)
 			return
 		}
@@ -75,7 +76,7 @@ func (a *App) handleTugasAgen(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusOK, tugasAgenResponse{
 			TugasID:    assignment.TugasID,
 			AgenID:     assignment.AgenID,
-			AssignedAt: assignment.AssignedAt.UTC().Format("2006-01-02T15:04:05.999999999Z"),
+			AssignedAt: assignment.AssignedAt.UTC().Format(time.RFC3339Nano),
 		})
 	case http.MethodDelete:
 		if err := a.repo.UnassignTugas(r.Context(), tugasID); err != nil {
@@ -86,8 +87,4 @@ func (a *App) handleTugasAgen(w http.ResponseWriter, r *http.Request) {
 	default:
 		writeError(w, http.StatusMethodNotAllowed, "metode tidak didukung")
 	}
-}
-
-func timeNowUTC() time.Time {
-	return time.Now().UTC()
 }
