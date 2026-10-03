@@ -28,6 +28,8 @@ Format mengikuti Keep a Changelog dan versi mengikuti Semantic Versioning.
 - Daftar Agen dalam Ruang kerja yang menampilkan nama, peran, deskripsi singkat, status, dan hierarki.
 - Detail Agen yang menampilkan ringkasan, AI yang digunakan, struktur agen, serta keadaan pekerjaan dan aktivitas yang tersedia.
 - Form Tambah/Edit Agen dengan identitas, peran, deskripsi, atasan, penyedia, dan model.
+- Pilihan Agen pelaksana pada form Tugas serta tampilan assignment pada daftar dan detail Tugas.
+- Daftar Tugas terkait pada Detail Agen berdasarkan assignment lokal.
 
 ### Changed
 - Konfigurasi sekarang menyimpan locale secara eksplisit dan menormalkan locale yang belum didukung ke `id-ID`.
