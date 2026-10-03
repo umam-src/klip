@@ -1,6 +1,6 @@
 # Progres Assignment Agen ke Tugas
 
-Status: **UI assignment selesai — verifikasi end-to-end masih tersisa.**
+Status: **Runtime terintegrasi — kontrak UI assignment teruji otomatis; verifikasi browser penuh masih tersisa.**
 
 ## Tahap 7 — Hubungkan Agen dengan pekerjaan
 
@@ -36,8 +36,16 @@ Assignment menggunakan relasi `tugas_agen` yang dipisahkan dari identitas Agen d
 - Daftar Tugas menampilkan pelaksana setelah assignment tersedia.
 - Detail Tugas menampilkan Agen pelaksana.
 - Detail Agen menampilkan Tugas yang ditugaskan kepadanya.
+- Kontrak UI assignment diuji dari aset web yang di-embed agar endpoint dan elemen utama tidak terlepas saat refactor.
+
+### Runtime
+
+- `Executor.Execute` memeriksa assignment `Tugas → Agen` ketika `TugasID` diberikan.
+- Jika tugas sudah memiliki assignment, Agen yang menjalankan harus sama dengan pelaksana yang tersimpan.
+- Jika Agen tidak cocok, eksekusi dihentikan sebelum run dibuat.
+- Assignment yang belum ada tetap kompatibel dengan eksekusi eksplisit lama.
+- Test runtime mencakup assignment yang cocok dan tidak cocok.
 
 ### Belum selesai
 
-- Integrasi assignment dengan runtime.
-- Verifikasi UI end-to-end di browser.
+- Verifikasi UI end-to-end nyata di browser.
