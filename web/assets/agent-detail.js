@@ -24,8 +24,8 @@
 
   async function loadAgent(agenID) {
     const spaces = await request('/api/v1/ruang');
-    const workspaceName = $('#workspace-title')?.textContent?.trim();
-    const ruang = spaces.find((space) => space.name === workspaceName);
+    const ruangID = $('#workspace')?.dataset.ruangId;
+    const ruang = spaces.find((space) => space.id === ruangID);
     if (!ruang) throw new Error('ruang tidak ditemukan');
     const agents = await request(`/api/v1/ruang/${encodeURIComponent(ruang.id)}/agen`);
     const agent = agents.find((item) => item.id === agenID);
@@ -90,14 +90,14 @@
         <section class="item"><strong>Ringkasan</strong><p>${escapeHTML(description)}</p></section>
         <section class="item"><strong>AI yang digunakan</strong><dl>${detail('Penyedia', agent.provider_id)}${detail('Model', agent.model_id)}</dl></section>
         <section class="item"><strong>Struktur agen</strong><dl>${detail('Atasan', parent?.name || agent.parent_id)}${detail('ID', agent.id)}</dl></section>
-        <section class="item"><strong>Pekerjaan</strong><p>Belum ada pekerjaan yang terhubung langsung ke agen.</p></section>
+        <section class="item"><strong>Tugas</strong><p>Daftar tugas agen belum ditampilkan di sini.</p></section>
         <section class="item"><strong>Aktivitas</strong><p>Belum ada aktivitas agen yang ditampilkan.</p></section>
         <section class="item"><strong>Pengaturan</strong><p>Gunakan Edit untuk mengubah identitas, hubungan kerja, dan AI Agen.</p></section>
       </div>`;
 
     $('#workspace').hidden = true;
     $('#agent-detail').hidden = false;
-    $('#job-detail').hidden = true;
+    $('#project-detail').hidden = true;
     $('#task-detail').hidden = true;
     $('#agent-detail').scrollIntoView({ behavior: 'smooth', block: 'start' });
 
@@ -144,6 +144,13 @@
       // Halaman utama tetap dapat digunakan jika detail gagal dimuat.
     }
   }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    $('#back-from-agent')?.addEventListener('click', () => {
+      $('#agent-detail').hidden = true;
+      $('#workspace').hidden = false;
+    });
+  });
 
   document.addEventListener('click', (event) => {
     const button = event.target.closest('[data-agent]');

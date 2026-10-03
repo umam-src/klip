@@ -11,7 +11,11 @@
       headers: { Accept: 'application/json', 'Content-Type': 'application/json', ...(options.headers || {}) }
     });
     const data = await response.json().catch(() => ({}));
-    if (!response.ok) throw new Error(data.error || `request ${response.status}`);
+    if (!response.ok) {
+      const error = new Error(data.error || `Permintaan gagal (${response.status}).`);
+      error.data = data;
+      throw error;
+    }
     return data;
   }
 
@@ -34,7 +38,12 @@
       const model = $('#settings-model');
       if (provider) provider.value = settings.provider || 'ollama';
       if (baseURL) baseURL.value = settings.base_url || '';
-      if (model) model.value = settings.model || '';
+      if (model && settings.model) {
+        if (!Array.from(model.options).some((option) => option.value === settings.model)) {
+          model.insertAdjacentHTML('beforeend', `<option value="${escapeHTML(settings.model)}">${escapeHTML(settings.model)}</option>`);
+        }
+        model.value = settings.model;
+      }
       target.innerHTML = `<dl class="settings-grid"><div><dt>Bahasa</dt><dd>${escapeHTML(settings.locale)}</dd></div><div><dt>Penyedia AI</dt><dd>${escapeHTML(settings.provider)}</dd></div><div><dt>Model</dt><dd>${escapeHTML(settings.model || 'Belum diatur')}</dd></div></dl>`;
       setMessage('');
     } catch (_) {
@@ -59,7 +68,8 @@
       if (!status.reachable) throw new Error('Penyedia belum dapat dihubungi.');
       setMessage('Koneksi berhasil.', 'ready');
     } catch (error) {
-      setMessage(error.message || 'Koneksi belum tersedia.', 'error');
+      const belumTerhubung = error.data && error.data.reachable === false;
+      setMessage(belumTerhubung ? 'Penyedia belum dapat dihubungi.' : (error.message || 'Koneksi belum tersedia.'), 'error');
     }
   }
 

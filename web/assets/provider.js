@@ -11,11 +11,11 @@
       if (!response.ok && response.status !== 503) throw new Error(`request ${response.status}`);
       const reachable = status.reachable ? 'Terhubung' : 'Belum terhubung';
       const configured = status.configured ? 'Sudah diatur' : 'Belum diatur';
-      target.innerHTML = `<div class="provider-status-grid">
+      target.innerHTML = `<dl>
         <div><dt>Penyedia</dt><dd>${escapeHTML(status.provider || 'Belum diatur')}</dd></div>
         <div><dt>Konfigurasi model</dt><dd>${configured}</dd></div>
         <div><dt>Koneksi</dt><dd>${reachable}</dd></div>
-      </div>`;
+      </dl>`;
     } catch (_) {
       target.innerHTML = '<div class="empty"><strong>Status penyedia belum dapat dimuat.</strong></div>';
     }
