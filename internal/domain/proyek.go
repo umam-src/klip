@@ -13,12 +13,3 @@ type Proyek struct {
 	CreatedAt   time.Time `json:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at"`
 }
-
-// Penugasan connects a task to an agent. A task may have multiple assignments.
-type Penugasan struct {
-	ID        ID        `json:"id"`
-	TugasID   ID        `json:"tugas_id"`
-	AgenID    ID        `json:"agen_id"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
-}
