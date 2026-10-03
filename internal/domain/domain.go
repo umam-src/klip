@@ -7,13 +7,13 @@ type ID string
 type Status string
 
 const (
-	StatusDraft Status = "draft"
-	StatusReady Status = "ready"
-	StatusRunning Status = "running"
-	StatusWaiting Status = "waiting"
-	StatusBlocked Status = "blocked"
+	StatusDraft     Status = "draft"
+	StatusReady     Status = "ready"
+	StatusRunning   Status = "running"
+	StatusWaiting   Status = "waiting"
+	StatusBlocked   Status = "blocked"
 	StatusCompleted Status = "completed"
-	StatusFailed Status = "failed"
+	StatusFailed    Status = "failed"
 	StatusCancelled Status = "cancelled"
 )
 
@@ -49,7 +49,7 @@ func isKnownStatus(status Status) bool {
 type AgenStatus string
 
 const (
-	AgenStatusActive AgenStatus = "active"
+	AgenStatusActive   AgenStatus = "active"
 	AgenStatusInactive AgenStatus = "inactive"
 )
 
@@ -65,17 +65,17 @@ type Ruang struct {
 }
 
 type Agen struct {
-	ID         ID         `json:"id"`
-	RuangID    ID         `json:"ruang_id"`
-	ParentID   *ID        `json:"parent_id,omitempty"`
-	Name       string     `json:"name"`
-	Role       string     `json:"role"`
-	Description string    `json:"description,omitempty"`
-	ProviderID string     `json:"provider_id,omitempty"`
-	ModelID    string     `json:"model_id,omitempty"`
-	Status     AgenStatus `json:"status"`
-	CreatedAt  time.Time  `json:"created_at"`
-	UpdatedAt  time.Time  `json:"updated_at"`
+	ID          ID         `json:"id"`
+	RuangID     ID         `json:"ruang_id"`
+	ParentID    *ID        `json:"parent_id,omitempty"`
+	Name        string     `json:"name"`
+	Role        string     `json:"role"`
+	Description string     `json:"description,omitempty"`
+	ProviderID  string     `json:"provider_id,omitempty"`
+	ModelID     string     `json:"model_id,omitempty"`
+	Status      AgenStatus `json:"status"`
+	CreatedAt   time.Time  `json:"created_at"`
+	UpdatedAt   time.Time  `json:"updated_at"`
 }
 
 type Proyek struct {
@@ -98,14 +98,14 @@ type Penugasan struct {
 }
 
 type Tugas struct {
-	ID          ID        `json:"id"`
-	RuangID     ID        `json:"ruang_id"`
-	ProyekID    ID        `json:"proyek_id"`
-	ParentID    *ID       `json:"parent_id,omitempty"`
-	Title       string    `json:"title"`
-	Status      Status    `json:"status"`
-	CreatedAt   time.Time `json:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at"`
+	ID        ID        `json:"id"`
+	RuangID   ID        `json:"ruang_id"`
+	ProyekID  ID        `json:"proyek_id"`
+	ParentID  *ID       `json:"parent_id,omitempty"`
+	Title     string    `json:"title"`
+	Status    Status    `json:"status"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
 type Eksekusi struct {
