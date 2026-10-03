@@ -26,14 +26,17 @@ jobs:
             goos: linux
             goarch: amd64
             suffix: ''
+            verify: true
           - os: windows-latest
             goos: windows
             goarch: amd64
             suffix: '.exe'
+            verify: false
           - os: macos-latest
             goos: darwin
             goarch: arm64
             suffix: ''
+            verify: false
     runs-on: ${{ matrix.os }}
     timeout-minutes: 10
     steps:
@@ -49,6 +52,7 @@ jobs:
           cache: true
 
       - name: Verify source
+        if: matrix.verify
         shell: bash
         run: |
           set -euo pipefail
