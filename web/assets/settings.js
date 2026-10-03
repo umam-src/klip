@@ -10,13 +10,9 @@
       if (!response.ok) throw new Error(`request ${response.status}`);
       const settings = await response.json();
       const rows = [
-        ['Data lokal', settings.data_dir],
-        ['Alamat layanan', settings.listen],
         ['Bahasa', settings.locale],
         ['Penyedia AI', settings.provider],
-        ['Alamat penyedia', settings.base_url],
-        ['Model', settings.model || 'Belum diatur'],
-        ['Kunci API', settings.api_key_set ? 'Sudah diatur' : 'Tidak diatur']
+        ['Model', settings.model || 'Belum diatur']
       ];
       target.innerHTML = `<dl class="settings-grid">${rows.map(([label, value]) => `<div><dt>${escapeHTML(label)}</dt><dd>${escapeHTML(value)}</dd></div>`).join('')}</dl>`;
     } catch (_) {
