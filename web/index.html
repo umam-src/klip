@@ -43,8 +43,21 @@
     </section>
     <section id="settings" class="section" aria-labelledby="settings-title">
       <details class="collapsible">
-        <summary><div class="collapsible-title"><p class="eyebrow">Pengaturan</p><h2 id="settings-title">Pengaturan</h2><p>Pilihan yang sedang digunakan.</p></div></summary>
-        <div class="collapsible-body"><div class="section-head"><span></span><button class="button" type="button" id="refresh-settings">Muat ulang</button></div><div id="settings-list" class="panel" aria-live="polite"></div></div>
+        <summary><div class="collapsible-title"><p class="eyebrow">Pengaturan</p><h2 id="settings-title">Pengaturan</h2><p>Pilih penyedia, alamat, dan model yang digunakan.</p></div></summary>
+        <div class="collapsible-body">
+          <div class="section-head"><span></span><button class="button" type="button" id="refresh-settings">Muat ulang</button></div>
+          <div class="panel settings-editor">
+            <div class="settings-form">
+              <label>Penyedia AI<select id="settings-provider"><option value="ollama">Ollama</option><option value="openai-compatible">OpenAI-compatible</option></select></label>
+              <label>Alamat penyedia<input id="settings-base-url" type="url" placeholder="http://127.0.0.1:11434" autocomplete="url"></label>
+              <div class="form-actions"><button class="button" type="button" id="check-provider">Periksa koneksi</button><button class="button" type="button" id="load-models">Ambil daftar model</button></div>
+              <label>Model<select id="settings-model"><option value="">Periksa penyedia terlebih dahulu</option></select></label>
+              <div class="form-actions"><button class="button primary" type="button" id="save-settings">Simpan pengaturan</button></div>
+              <div id="settings-message" class="settings-message" hidden aria-live="polite"></div>
+            </div>
+          </div>
+          <div id="settings-list" class="panel" aria-live="polite"></div>
+        </div>
       </details>
     </section>
     <section id="agent-detail" class="section" hidden aria-labelledby="agent-title"><div class="section-head"><div><p class="eyebrow">Agen</p><h2 id="agent-title">Agen</h2></div><button class="button" type="button" id="back-to-workspace-from-agent">Kembali</button></div><div id="agent-detail-card" class="panel detail-grid"></div></section>
@@ -75,10 +88,9 @@
         try {
           const response = await fetch('/health', { headers: { Accept: 'application/json' } });
           if (!response.ok) throw new Error(`status ${response.status}`);
-          const data = await response.json().catch(() => ({}));
           status.className = 'service-status ready';
           title.textContent = 'Layanan siap';
-          message.textContent = data.status ? `Status: ${data.status}` : 'Klip dapat digunakan.';
+          message.textContent = 'Klip dapat digunakan.';
         } catch (_) {
           status.className = 'service-status error';
           title.textContent = 'Layanan belum tersedia';
