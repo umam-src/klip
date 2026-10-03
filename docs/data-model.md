@@ -1,62 +1,97 @@
 # Model Data Klip
 
-Model data Klip dibuat kecil agar alur kerja lokal mudah dipahami dan disimpan. Model ini membedakan arah kerja, pekerjaan, tindakan, pelaksana, dan pelaksanaan.
+Dokumen ini menjadi rancangan data keseluruhan sebelum remodel database. Klip masih dalam tahap beta dan belum memiliki database pengguna yang harus dipertahankan kompatibilitasnya. Karena itu model domain baru boleh menjadi sumber kebenaran dan schema lama tidak perlu dipertahankan hanya demi kompatibilitas.
 
-## Hubungan utama
+## Prinsip
+
+- Goal adalah pusat arah kerja.
+- Ruang Kerja adalah batas isolasi data.
+- Agen adalah pelaksana, bukan pemilik Goal.
+- Runtime dan Execution adalah mekanisme pelaksanaan, bukan pusat domain.
+- Result / Evidence adalah keluaran dan bukti yang dapat ditelusuri.
+- Schema dibuat setelah hubungan dan invariant domain dikunci.
+- Jangan membuat entity hanya untuk mengantisipasi fitur.
+- Database beta boleh tidak kompatibel dengan schema sebelumnya.
+- Remodel dilakukan sekali secara menyeluruh agar tidak membangun lapisan legacy yang akan dibawa sampai rilis.
+
+## Peta domain v1
 
 ```text
 Ruang Kerja
- ├── Goal
- │    └── Goal turunan
- │         └── Pekerjaan
- │              └── Tugas
- │                   └── Assignment → Agen
- │                                      └── Runtime → Execution
- │                                                       └── Result / Evidence
- │
- ├── Agen
- │    └── Agen induk/anak
- │
- └── Alur / Jadwal / Aktivitas / Persetujuan
+│
+├── Goal
+│   ├── Goal turunan
+│   └── Pekerjaan
+│       └── Tugas
+│           └── Assignment → Agen
+│                               └── Runtime
+│                                   └── Execution
+│                                       ├── Event
+│                                       └── Result / Evidence
+│
+├── Agen
+│   └── Agen induk/anak
+│
+├── Alur
+├── Jadwal
+├── Persetujuan
+└── Aktivitas / Peristiwa
 ```
 
-Hubungan di atas adalah model konseptual. Nama tabel dan kolom aktual dapat tetap menggunakan istilah lama sampai migrasi benar-benar diperlukan.
+Peta ini adalah rancangan hubungan. Tidak semua kotak harus menjadi tabel pada migration pertama. Entity pendukung hanya dibuat ketika sudah memiliki kebutuhan operasional yang jelas.
 
-## Entitas inti
+## Entity inti
 
-- **Ruang Kerja** — batas kerja yang independen; penyimpanan tetap dapat menggunakan `ruang` dan `ruang_id`.
-- **Goal** — hasil atau arah yang ingin dicapai dalam Ruang Kerja. Implementasi lama dapat menggunakan istilah **Sasaran** sampai pemetaan domain disepakati.
-- **Pekerjaan** — bagian kerja yang dilakukan untuk membantu mencapai satu Goal utama.
-- **Tugas** — langkah konkret dalam Pekerjaan; dapat memiliki tugas induk.
-- **Agen** — pelaksana kerja berbasis AI yang menerima tanggung jawab melalui assignment.
-- **Runtime** — mekanisme pelaksanaan bagi Agen; bukan pemilik Goal.
-- **Execution** — kejadian pelaksanaan yang menyimpan jejak proses.
-- **Result / Evidence** — keluaran atau bukti yang dapat ditelusuri ke pelaksanaan dan konteks Goal.
+| Entity | Tujuan | Kepemilikan utama | Lifecycle awal |
+|---|---|---|---|
+| Ruang Kerja | Batas lingkungan kerja | mandiri | `active`, `archived` |
+| Goal | Menentukan hasil/arah yang ingin dicapai | Ruang Kerja | `active`, `completed`, `archived` |
+| Pekerjaan | Bagian kerja untuk membantu Goal | Ruang Kerja + Goal | mengikuti lifecycle kerja yang sudah ada |
+| Tugas | Langkah konkret dalam Pekerjaan | Pekerjaan | mengikuti lifecycle tugas |
+| Agen | Pelaksana kerja | Ruang Kerja | mengikuti lifecycle agen |
+| Assignment | Menentukan Agen yang menjalankan Tugas | Tugas + Agen | aktif/nonaktif sesuai kebutuhan |
+| Execution | Satu kejadian pelaksanaan | Pekerjaan + Agen | riwayat, tidak diedit menjadi objek baru |
+| Event | Jejak kejadian pelaksanaan | Execution/konteks kerja | append-only secara konseptual |
+| Result / Evidence | Keluaran atau bukti kerja | Execution/konteks kerja | tersimpan dan dapat ditelusuri |
 
-Entitas pendukung seperti Sesi, Run, Alur, Jadwal, Aktivitas, dan Persetujuan tetap memiliki fungsi masing-masing dan tidak menggantikan Goal, Pekerjaan, atau Tugas.
+## Entity pendukung
 
-## Goal dan Sasaran
+Entity berikut sudah ada atau diperlukan oleh fitur yang berjalan, tetapi bukan pusat model:
 
-Untuk bahasa produk, **Goal** adalah istilah yang dipakai sebagai pusat arah kerja. **Sasaran** adalah representasi lama yang tetap dipertahankan pada storage/API selama migrasi bertahap berlangsung.
+- **Sesi** — konteks percakapan/proses tertentu.
+- **Alur** — urutan atau aturan yang menghubungkan pekerjaan/tugas.
+- **Jadwal** — aturan waktu untuk menjalankan pekerjaan atau alur.
+- **Persetujuan** — titik pengaman yang membutuhkan keputusan manusia.
+- **Aktivitas / Peristiwa** — catatan perubahan dan kejadian yang dapat ditampilkan kepada pengguna.
+- **Skill** — kemampuan/instruksi lokal yang dapat digunakan Agen.
+- **Alat** — kemampuan yang dapat dipanggil Agen.
+- **Penyedia AI** dan **Model AI** — konfigurasi kemampuan AI jika memang diperlukan sebagai entity persistence.
 
-Keputusan pemetaan adalah:
+Entity seperti organisasi, perusahaan, tim, pengguna wajib, billing, marketplace, knowledge base, atau percakapan global tidak masuk schema inti v1 tanpa kebutuhan produk yang nyata.
 
-- `Sasaran.id` menjadi identitas Goal yang sama.
-- `Sasaran.ruang_id` tetap menjadi batas Ruang Kerja Goal.
-- `Sasaran.title` dipetakan ke `Goal.title`.
-- `Sasaran.created_at` dan `Sasaran.updated_at` dipertahankan.
-- `Sasaran` tidak mengarang `description` atau `parent_goal_id` karena data tersebut memang belum tersedia pada model lama.
-- Status lama dipetakan satu arah untuk kompatibilitas: `completed` → `GoalStatusCompleted`; status lama lainnya → `GoalStatusActive`. Status `failed` dan `cancelled` tidak dianggap sebagai Goal selesai.
-- Adapter domain `GoalFromSasaran` menjadi batas eksplisit pemetaan tersebut.
-- Tidak ada tabel `goal` baru hanya untuk mengganti nama. Migrasi persistence ditunda sampai kontrak storage Goal benar-benar membutuhkan field yang belum tersedia.
+## Schema konseptual v1
 
-Kontrak Goal v1:
+### Ruang Kerja
 
 ```text
-Goal
+ruang
+├── id
+├── nama
+├── deskripsi
+├── status
+├── created_at
+└── updated_at
+```
+
+`status` hanya `active` atau `archived` pada fondasi.
+
+### Goal
+
+```text
+goal
 ├── id
 ├── ruang_id
-├── parent_goal_id (opsional)
+├── parent_goal_id (nullable)
 ├── title
 ├── description
 ├── status
@@ -64,160 +99,285 @@ Goal
 └── updated_at
 ```
 
-Atribut seperti `priority`, `progress`, `target`, dan `deadline` belum menjadi alasan untuk memperbesar model sebelum kebutuhan operasionalnya jelas.
+`parent_goal_id` adalah self-reference ke `goal.id`.
 
-### Hasil audit implementasi lama
+Aturan:
 
-Audit kode menunjukkan bahwa `Sasaran` adalah representasi lama yang paling dekat dengan Goal.
+1. Goal harus memiliki Ruang Kerja.
+2. Parent boleh kosong untuk Goal root.
+3. Jika parent ada, parent harus ada.
+4. Parent dan child harus memiliki `ruang_id` yang sama.
+5. Goal tidak boleh menjadi parent dirinya sendiri.
+6. Tidak boleh ada cycle pada hierarki.
+7. Goal tidak berpindah Ruang Kerja melalui operasi biasa.
+8. Lifecycle Goal menggunakan `active`, `completed`, dan `archived`.
 
-- Model `domain.Sasaran` saat ini memiliki `id`, `ruang_id`, `title`, `status`, `created_at`, dan `updated_at`.
-- Model `Sasaran` belum memiliki `description` dan `parent_goal_id`, sehingga hierarki Goal belum tersedia pada model lama.
-- Storage `sasaran` sudah dibatasi oleh `ruang_id` dan menyediakan pembuatan serta daftar Sasaran per Ruang Kerja.
-- API lama masih menggunakan istilah `/sasaran` dan menerima `title` serta `status`.
-- `Pekerjaan` saat ini sudah memiliki `sasaran_id` opsional. Saat dibuat, storage memeriksa bahwa Sasaran ada dan berada pada Ruang Kerja yang sama.
-- Relasi `sasaran_id` menjadi jembatan kompatibilitas; tidak dibuat `goal_id` kedua sebelum migration persistence diperlukan.
-
-Kesimpulan: **Sasaran dan Goal diperlakukan sebagai entitas yang sama secara semantik, dengan `Sasaran` sebagai representasi legacy sementara.** Perubahan bahasa produk tidak memicu migrasi kosmetik.
-
-## Hierarki Goal
-
-Goal dapat memiliki Goal turunan melalui `parent_goal_id`.
+### Pekerjaan
 
 ```text
-Goal utama
-├── Goal A
-├── Goal B
-└── Goal C
-```
-
-Aturan wajib:
-
-- Goal induk dan Goal turunan harus berada pada `ruang_id` yang sama.
-- Goal tidak berpindah Ruang Kerja melalui operasi biasa.
-- Goal root memiliki `parent_goal_id` kosong.
-- Referensi ke Goal induk yang tidak ada harus ditolak.
-- Siklus hierarki Goal tidak boleh dibuat.
-
-## Goal dan Pekerjaan
-
-Goal menjawab:
-
-> **Apa yang ingin dicapai?**
-
-Pekerjaan menjawab:
-
-> **Bagian pekerjaan apa yang dilakukan untuk membantu mencapainya?**
-
-Karena itu hubungan awal yang disiapkan adalah:
-
-```text
-Goal 1 ────────< Pekerjaan
+pekerjaan
+├── id
+├── ruang_id
+├── goal_id
+├── title
+├── description
+├── status
+├── created_at
+└── updated_at
 ```
 
 Satu Pekerjaan memiliki satu Goal utama. Satu Goal dapat memiliki banyak Pekerjaan.
 
-Untuk tahap fondasi, jangan membuat hubungan many-to-many tanpa kebutuhan nyata. Jika satu pekerjaan ternyata mendukung beberapa Goal, kasus tersebut perlu dibuktikan melalui kebutuhan produk sebelum model relasi diperluas.
+Aturan:
 
-Aturan wajib:
+1. `goal_id` harus menunjuk Goal yang ada.
+2. `pekerjaan.ruang_id == goal.ruang_id`.
+3. Pekerjaan tidak boleh menunjuk Goal dari Ruang Kerja lain.
+4. Many-to-many Goal ↔ Pekerjaan tidak dibuat pada v1.
 
-- `Pekerjaan.goal_id` harus menunjuk Goal yang ada jika hubungan Goal diwajibkan pada tahap implementasi.
-- Goal dan Pekerjaan harus berada pada Ruang Kerja yang sama.
-- Pekerjaan tidak boleh memakai Goal dari Ruang Kerja lain.
-- Agen tidak menjadi pemilik Goal.
-- Runtime tidak menjadi pemilik Goal.
-
-## Pekerjaan dan Tugas
-
-Pekerjaan adalah unit kerja yang dapat dikelola. Tugas adalah langkah konkret di dalamnya.
+### Tugas
 
 ```text
-Goal
-  ↓
-Pekerjaan
-  ├── Tugas A
-  ├── Tugas B
-  └── Tugas C
+tugas
+├── id
+├── ruang_id
+├── pekerjaan_id
+├── parent_tugas_id (nullable)
+├── title
+├── description
+├── status
+├── created_at
+└── updated_at
 ```
 
-Satu Pekerjaan dapat memiliki banyak Tugas. Tugas tetap berada pada Pekerjaan yang sama dan tidak boleh melampaui batas Ruang Kerja.
+Jika field aktual yang sudah berjalan memiliki bentuk berbeda, remodel mengikuti kontrak domain yang sudah terbukti dan hanya menambah field yang dibutuhkan invariant.
 
-## Agen dan pelaksanaan
+Aturan:
 
-Agen menjalankan pekerjaan atau Tugas melalui assignment. Assignment menjawab siapa yang menjalankan, bukan apa tujuan kerja tersebut.
+- Tugas harus berada pada Pekerjaan yang sama.
+- Parent Tugas, jika ada, harus berada pada Pekerjaan dan Ruang Kerja yang sama.
+- Hierarki Tugas tidak boleh membentuk cycle.
+
+### Agen
 
 ```text
-Goal
-  ↓
-Pekerjaan
-  ↓
-Tugas
-  ↓
-Assignment
-  ↓
-Agen
-  ↓
-Runtime
-  ↓
-Execution
-  ↓
-Result / Evidence
+agen
+├── id
+├── ruang_id
+├── nama
+├── peran
+├── deskripsi
+├── atasan_id (nullable)
+├── status
+├── created_at
+└── updated_at
 ```
 
-Dengan bentuk ini, Goal tetap independen dari model AI, provider, runtime, dan kredensial.
+Aturan:
 
-## Progress
+- Agen harus berada pada satu Ruang Kerja.
+- `atasan_id`, jika ada, harus menunjuk Agen pada Ruang Kerja yang sama.
+- Hierarki Agen tidak boleh membentuk cycle.
+- Agen tidak memiliki `goal_id`.
 
-Progress adalah keadaan kemajuan Goal. Pada tahap matang, progress sebaiknya dapat dijelaskan oleh pekerjaan, status tugas, dan Result / Evidence yang tersedia.
+### Assignment
 
-Jangan menjadikan angka progress sebagai satu-satunya sumber kebenaran. Jika progress disimpan, sumber perubahan dan alasan perubahannya harus dapat ditelusuri.
+Assignment memisahkan **siapa yang menjalankan** dari **apa yang ingin dicapai**.
 
-## Aturan batas Ruang Kerja
+```text
+assignment
+├── id
+├── tugas_id
+├── agen_id
+├── created_at
+└── updated_at
+```
 
-Semua hubungan lintas entitas harus mempertahankan batas `ruang_id`.
+Relasi efektif:
 
-Minimal:
+```text
+Goal → Pekerjaan → Tugas → Assignment → Agen
+```
 
-1. Goal ↔ Goal induk: Ruang Kerja sama.
-2. Goal ↔ Pekerjaan: Ruang Kerja sama.
-3. Pekerjaan ↔ Tugas: Ruang Kerja sama.
-4. Tugas ↔ Agen: Ruang Kerja sama.
-5. Agen ↔ Agen induk: Ruang Kerja sama.
-6. Execution ↔ konteks kerja: Ruang Kerja dapat ditelusuri.
-7. Result / Evidence ↔ sumber pelaksanaan: konteks Ruang Kerja dapat ditelusuri.
+Assignment tidak menjadi kepemilikan Goal.
 
-Pemeriksaan ini harus berada pada service/storage yang menjadi batas mutasi data, bukan hanya pada UI.
+### Execution
+
+Execution menyimpan satu kejadian pelaksanaan yang dapat ditelusuri.
+
+```text
+execution
+├── id
+├── ruang_id
+├── pekerjaan_id
+├── tugas_id (nullable)
+├── agen_id
+├── status
+├── started_at
+├── finished_at (nullable)
+└── metadata aman yang memang diperlukan
+```
+
+Aturan minimum:
+
+- Pekerjaan harus berada pada Ruang Kerja yang sama.
+- Tugas, jika ada, harus berasal dari Pekerjaan tersebut.
+- Agen harus berada pada Ruang Kerja yang sama.
+- Execution tidak menyimpan credential atau secret.
+- Execution adalah riwayat, bukan pemilik Goal.
+
+Nama persistence `run` boleh diubah menjadi `execution` bila remodel dilakukan sekaligus. Tidak perlu mempertahankan dua konsep untuk makna yang sama.
+
+### Event
+
+```text
+peristiwa
+├── id
+├── ruang_id
+├── execution_id
+├── pekerjaan_id
+├── tugas_id (nullable)
+├── agen_id
+├── jenis
+├── data aman
+└── created_at
+```
+
+Event harus dapat ditelusuri ke Execution dan konteks Ruang Kerja. Data rahasia tidak boleh masuk event.
+
+### Result / Evidence
+
+```text
+hasil
+├── id
+├── ruang_id
+├── execution_id (nullable jika hasil berasal dari konteks lain yang sah)
+├── pekerjaan_id
+├── tugas_id (nullable)
+├── kind
+├── name
+├── path / reference
+└── created_at
+```
+
+Result harus memiliki jalur penelusuran ke konteks kerja. Path harus tetap dibatasi oleh root penyimpanan lokal yang ditentukan aplikasi.
+
+## Relasi wajib
+
+```text
+Ruang Kerja 1 ────< Goal
+Goal         1 ────< Goal
+Goal         1 ────< Pekerjaan
+Pekerjaan    1 ────< Tugas
+Tugas        1 ────< Assignment >──── 1 Agen
+Agen         1 ────< Agen
+Pekerjaan    1 ────< Execution
+Tugas        0..1 ─── Execution
+Agen         1 ────< Execution
+Execution   1 ────< Event
+Execution   0..1 ───< Result / Evidence
+```
+
+Semua hubungan yang melibatkan entity ber-`ruang_id` harus mempertahankan Ruang Kerja yang sama.
+
+## Invariant lintas domain
+
+1. Tidak ada foreign key domain yang boleh melewati Ruang Kerja.
+2. Goal parent/child selalu satu Ruang Kerja.
+3. Goal → Pekerjaan selalu satu Ruang Kerja.
+4. Pekerjaan → Tugas selalu satu Ruang Kerja.
+5. Tugas → Agen melalui Assignment selalu satu Ruang Kerja.
+6. Agen parent/child selalu satu Ruang Kerja.
+7. Execution dapat ditelusuri ke Ruang Kerja, Pekerjaan, dan Agen.
+8. Event dapat ditelusuri ke Execution.
+9. Result/Evidence dapat ditelusuri ke Execution atau konteks kerja yang sah.
+10. Ruang Kerja archived tidak menerima pekerjaan baru tanpa reaktivasi.
+
+Invariant harus ditegakkan di database bila memungkinkan dan tetap divalidasi pada service/storage. UI hanya membantu pengguna dan bukan batas keamanan domain.
+
+## Goal sebagai pusat model
+
+Goal menjawab:
+
+> Apa yang ingin dicapai?
+
+Pekerjaan menjawab:
+
+> Bagian pekerjaan apa yang dilakukan untuk membantu mencapainya?
+
+Tugas menjawab:
+
+> Langkah konkret apa yang perlu dilakukan?
+
+Assignment menjawab:
+
+> Agen mana yang menjalankannya?
+
+Execution menjawab:
+
+> Apa yang benar-benar dijalankan?
+
+Result / Evidence menjawab:
+
+> Apa yang dihasilkan atau dapat dibuktikan?
+
+Dengan pembagian ini, Goal tidak bergantung pada provider AI, model, runtime, atau bentuk eksekusi tertentu.
+
+## Progress Goal
+
+Progress belum menjadi sumber kebenaran mandiri pada schema v1. Bila kelak disimpan, perubahan harus dapat dijelaskan oleh Pekerjaan, Tugas, Execution, dan Result/Evidence.
+
+Jangan menambahkan `progress`, `target`, `priority`, atau `deadline` ke schema inti hanya untuk melengkapi tampilan Goal sebelum kebutuhan operasionalnya jelas.
 
 ## Status dan lifecycle
 
-Status Goal awal sebaiknya kecil:
+Status Goal tetap kecil:
 
 - `active`
 - `completed`
 - `archived`
 
-Status seperti `blocked`, `paused`, atau `waiting` lebih cocok diekspresikan pada Pekerjaan/Tugas atau melalui aktivitas yang menjelaskan kondisi kerja.
+Status seperti `blocked`, `waiting`, dan `paused` lebih cocok pada Pekerjaan/Tugas atau aktivitas pelaksanaan.
 
-Goal yang sudah memiliki riwayat tidak sebaiknya dihapus secara destruktif hanya untuk menghilangkan tampilan. Pengarsipan menjaga riwayat tetap dapat ditelusuri.
+Pengarsipan lebih diutamakan daripada hard-delete untuk entity yang sudah memiliki riwayat.
 
-## Keputusan yang belum dikunci
+## Keputusan remodel
 
-Dokumen ini sengaja belum mengunci beberapa keputusan implementasi:
+### `Sasaran` dihapus sebagai entity domain
 
-- bagaimana menambah `description` dan hierarki Goal pada persistence tanpa merusak data lama;
-- kapan relasi Sasaran/Goal pada Pekerjaan harus menjadi wajib;
-- bagaimana progress Goal dihitung dari Execution dan Result / Evidence;
-- kapan `priority`, `target`, dan `deadline` benar-benar diperlukan;
-- apakah kebutuhan many-to-many Goal ↔ Pekerjaan akan muncul.
+`Sasaran` adalah nama lama untuk konsep yang sekarang disebut Goal. Karena Klip belum rilis, tidak ada alasan mempertahankan adapter `GoalFromSasaran` sebagai lapisan permanen.
 
-Keputusan tersebut harus didasarkan pada model yang sudah ada dan kebutuhan nyata, bukan menambah struktur untuk mengantisipasi fitur.
+Remodel v1 akan:
 
-## Prinsip implementasi
+- mengganti `Sasaran` menjadi `Goal`;
+- mengganti `sasaran_id` menjadi `goal_id`;
+- menambahkan `parent_goal_id`;
+- menyediakan `description`;
+- menggunakan lifecycle Goal khusus;
+- menghapus adapter `GoalFromSasaran` setelah persistence baru aktif;
+- menghapus schema legacy `sasaran` daripada mempertahankannya sebagai compatibility layer.
 
-1. Matangkan semantik Goal sebelum migrasi schema.
-2. Pertahankan kompatibilitas dengan model `Sasaran` selama migrasi bertahap.
-3. Gunakan `GoalFromSasaran` sebagai batas mapping, bukan duplikasi relasi.
-4. Jangan membuat relasi yang tidak dibutuhkan.
-5. Setiap relasi baru harus memiliki pemeriksaan `ruang_id`.
-6. Tambahkan regression test untuk setiap invariant baru.
-7. Runtime hanya menerima konteks Goal; Runtime tidak memiliki Goal.
-8. Result / Evidence menjadi dasar yang dapat ditelusuri untuk progress, bukan sumber arah kerja.
+### Database tidak harus kompatibel
+
+Database beta boleh di-reset atau dimigrasikan dengan cara yang tidak mempertahankan bentuk lama. Prioritasnya adalah schema yang benar dan sederhana sebelum rilis, bukan kompatibilitas semu dengan database pengembangan lama.
+
+Namun reset database tidak boleh menjadi alasan untuk menghapus regression test. Invariant domain tetap harus dibuktikan oleh test.
+
+## Tahapan implementasi setelah blueprint
+
+1. Audit seluruh entity dan kolom yang masih memakai istilah legacy.
+2. Finalisasi kontrak domain berdasarkan dokumen ini.
+3. Remodel schema SQLite sekali jalan.
+4. Remodel repository/storage.
+5. Perbarui service dan API.
+6. Perbarui UI dan bahasa produk.
+7. Hapus `Sasaran` dan adapter legacy.
+8. Perbarui test dan fixture.
+9. Jalankan seluruh CI dan perbaiki regresi.
+10. Setelah schema v1 stabil, lanjutkan penguatan Runtime AI.
+
+## Batas v1
+
+Schema v1 tidak mencakup organisasi, tim, billing, marketplace, knowledge base, multi-provider orchestration kompleks, atau entity lain yang belum memiliki kebutuhan produk nyata.
+
+Tujuan remodel adalah membuat **satu model data yang konsisten**, bukan membuat schema terbesar yang mungkin.
