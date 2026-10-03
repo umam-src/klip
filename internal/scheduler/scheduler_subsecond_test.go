@@ -5,7 +5,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/umam-src/klip/internal/agent"
 	"github.com/umam-src/klip/internal/domain"
 )
 
@@ -48,6 +47,4 @@ func TestSchedulerSubsecondIntervalAdvancesNextRun(t *testing.T) {
 	if next != start.Add(2500*time.Millisecond) {
 		t.Fatalf("next_run_at = %s, want %s", next, start.Add(2500*time.Millisecond))
 	}
-
-	var _ agent.Executor = exec
 }
