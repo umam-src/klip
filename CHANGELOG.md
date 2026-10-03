@@ -31,6 +31,7 @@ Format mengikuti Keep a Changelog dan versi mengikuti Semantic Versioning.
 - Pilihan Agen pelaksana pada form Tugas serta tampilan assignment pada daftar dan detail Tugas.
 - Daftar Tugas terkait pada Detail Agen berdasarkan assignment lokal.
 - Kontrak domain Goal v1 dengan identitas, batas Ruang Kerja, hierarki, deskripsi, lifecycle, dan timestamp.
+- Adapter domain untuk memetakan representasi legacy `Sasaran` ke kontrak Goal tanpa membuat tabel baru.
 
 ### Changed
 - Konfigurasi sekarang menyimpan locale secara eksplisit dan menormalkan locale yang belum didukung ke `id-ID`.
@@ -53,6 +54,7 @@ Format mengikuti Keep a Changelog dan versi mengikuti Semantic Versioning.
 - Domain kini menetapkan **Ruang Kerja** sebagai batas lingkungan kerja dan **Goal** sebagai pusat arah kerja.
 - Dokumentasi domain memisahkan peran Goal, Pekerjaan, Tugas, Agen, Runtime, Execution, dan Result/Evidence tanpa memaksa migrasi tabel hanya karena perubahan istilah pengguna.
 - TODO domain menambahkan pekerjaan pematangan isolasi Ruang Kerja, hubungan Pekerjaan ke Goal, dan penelusuran Execution serta Result/Evidence.
+- Pemetaan `Sasaran` → Goal ditetapkan sebagai adapter kompatibilitas; ID dan `ruang_id` dipertahankan, sedangkan field Goal yang belum tersedia tidak diisi secara semu.
 
 ### Removed
 - Belum ada.
