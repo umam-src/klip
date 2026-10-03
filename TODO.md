@@ -30,7 +30,11 @@ Daftar kerja pengembangan. Prioritas: P0 wajib, P1 penting, P2 setelah inti stab
 - [x] Unit test domain.
 - [x] Tetapkan Ruang Kerja sebagai batas domain.
 - [x] Tetapkan Goal sebagai pusat arah kerja.
-- [ ] Hubungkan Pekerjaan ke Goal secara konsisten.
+- [ ] Tetapkan kontrak Goal v1: identitas, `ruang_id`, hierarki Goal, judul, deskripsi, lifecycle, dan timestamp.
+- [ ] Putuskan pemetaan istilah `Sasaran` → Goal tanpa migrasi kosmetik.
+- [ ] Tentukan aturan Goal induk/anak: `parent_goal_id` wajib berada di Ruang Kerja yang sama.
+- [ ] Tentukan aturan Goal → Pekerjaan: satu Pekerjaan memiliki satu Goal utama dan keduanya harus berada di Ruang Kerja yang sama.
+- [ ] Hubungkan Pekerjaan ke Goal secara konsisten setelah kontrak Goal v1 disepakati.
 - [ ] Pastikan Goal turunan tidak dapat menyeberangi Ruang Kerja.
 - [ ] Audit seluruh relasi domain untuk memastikan batas `ruang_id` tidak dapat dilewati.
 - [ ] Tetapkan lifecycle Ruang Kerja `active` dan `archived` pada storage/service.
