@@ -2,6 +2,7 @@ package storage
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"testing"
 	"time"
@@ -75,8 +76,25 @@ func validSchedule(id, pekerjaanID string, tugasID *domain.ID, agenID string) do
 	}
 }
 
-func seedScheduleBoundaryFixtures(t *testing.T, db interface {
-	ExecContext(context.Context, string, ...any) (interface{ LastInsertId() (int64, error); RowsAffected() (int64, error) }, error)
-}) {
+func seedScheduleBoundaryFixtures(t *testing.T, db *sql.DB) {
 	t.Helper()
+	now := time.Now().UTC().Format(time.RFC3339Nano)
+	statements := []struct {
+		query string
+		args  []any
+	}{
+		{`INSERT INTO ruang (id, name, created_at, updated_at) VALUES (?, ?, ?, ?)`, []any{"ruang-1", "Ruang 1", now, now}},
+		{`INSERT INTO ruang (id, name, created_at, updated_at) VALUES (?, ?, ?, ?)`, []any{"ruang-2", "Ruang 2", now, now}},
+		{`INSERT INTO agen (id, ruang_id, name, created_at, updated_at) VALUES (?, ?, ?, ?, ?)`, []any{"agen-1", "ruang-1", "Agen 1", now, now}},
+		{`INSERT INTO agen (id, ruang_id, name, created_at, updated_at) VALUES (?, ?, ?, ?, ?)`, []any{"agen-2", "ruang-2", "Agen 2", now, now}},
+		{`INSERT INTO pekerjaan (id, ruang_id, title, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)`, []any{"pekerjaan-1", "ruang-1", "Pekerjaan 1", "open", now, now}},
+		{`INSERT INTO pekerjaan (id, ruang_id, title, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)`, []any{"pekerjaan-2", "ruang-1", "Pekerjaan 2", "open", now, now}},
+		{`INSERT INTO tugas (id, pekerjaan_id, title, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)`, []any{"tugas-1", "pekerjaan-1", "Tugas 1", "pending", now, now}},
+		{`INSERT INTO tugas (id, pekerjaan_id, title, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)`, []any{"tugas-2", "pekerjaan-2", "Tugas 2", "pending", now, now}},
+	}
+	for _, statement := range statements {
+		if _, err := db.Exec(statement.query, statement.args...); err != nil {
+			t.Fatalf("seed fixture: %v", err)
+		}
+	}
 }
