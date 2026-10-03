@@ -203,7 +203,3 @@ func TestAppendEventRejectsCrossWorkspaceContext(t *testing.T) {
 		t.Fatalf("AppendEvent() valid context error = %v", err)
 	}
 }
-
-func idPtr(value domain.ID) *domain.ID {
-	return &value
-}
