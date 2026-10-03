@@ -66,11 +66,39 @@ Contoh:
 ```text
 Agen: Peneliti Produk
 Peran: Peneliti
-AI: llama.cpp rumah
-Model: qwen2.5-0.5b-instruct-q4_k_m
+Akun AI: Claude Peneliti
+Model: claude-sonnet-...
 ```
 
 Pengguna seharusnya dapat memahami fungsi Agen tanpa harus mengetahui detail model terlebih dahulu.
+
+### Agen menggunakan Akun AI, bukan menyimpan token sendiri
+
+Kredensial AI sebaiknya berada pada **Akun/Connection AI** yang dikelola di Pengaturan. Agen hanya memilih akun yang akan digunakannya.
+
+Satu Akun AI dapat digunakan oleh beberapa Agen:
+
+```text
+Akun Claude Tim
+└── credential
+    ├── Peneliti Produk
+    ├── Reviewer
+    └── Penulis
+```
+
+Beberapa Akun AI juga dapat berasal dari Penyedia yang sama:
+
+```text
+Anthropic
+├── Claude Tim
+│   ├── Peneliti Produk
+│   └── Reviewer
+│
+└── Claude Pribadi
+    └── Pengembang
+```
+
+Dengan pola ini, token/API key tidak perlu dimasukkan berulang kali pada setiap Agen. Pemisahan akun dapat digunakan bila kebutuhan akses, kuota, billing, atau identitas memang berbeda.
 
 ### Agen memiliki peran yang jelas
 
@@ -80,7 +108,7 @@ Nama dan peran harus menjawab:
 - Agen ini mengerjakan apa?
 - Agen ini bekerja di bawah siapa?
 
-Jangan menjadikan nama model sebagai nama utama Agen.
+Jangan menjadikan nama model atau nama credential sebagai nama utama Agen.
 
 ### Hubungan agen tetap sederhana
 
@@ -113,7 +141,7 @@ Pengembang
   Mengerjakan perubahan teknis
 ```
 
-Informasi teknis seperti URL penyedia atau nama model tidak perlu menjadi informasi utama pada daftar.
+Informasi teknis seperti URL penyedia, credential, atau nama model tidak perlu menjadi informasi utama pada daftar.
 
 ### Detail Agen
 
@@ -123,8 +151,8 @@ Peneliti
 Mencari dan merangkum informasi.
 
 AI
-llama.cpp rumah
-qwen2.5-0.5b-instruct-q4_k_m
+Claude Peneliti
+claude-sonnet-...
 
 Melapor kepada
 Pemimpin
@@ -146,19 +174,21 @@ Versi awal sebaiknya hanya meminta informasi yang benar-benar diperlukan:
 Nama              [ Peneliti Produk ]
 Peran             [ Peneliti ]
 Deskripsi         [ Mencari dan merangkum informasi. ]
-Penyedia AI       [ llama.cpp rumah v ]
-Model             [ qwen2.5-0.5b-instruct-q4_k_m v ]
+Akun AI           [ Claude Peneliti v ]
+Model             [ claude-sonnet-... v ]
 Atasan            [ Pemimpin v ]
 
                          [ Batal ] [ Simpan agen ]
 ```
+
+Jika akun belum tersedia, pengguna membuatnya terlebih dahulu dari Pengaturan. Form Agen tidak meminta token/API key secara langsung.
 
 ### Urutan pengisian
 
 1. Nama.
 2. Peran.
 3. Deskripsi.
-4. Penyedia AI.
+4. Akun AI.
 5. Model.
 6. Atasan.
 
@@ -167,6 +197,7 @@ Urutan tersebut mengikuti cara pengguna memahami Agen: identitas → fungsi → 
 ### Hal yang tidak perlu ditampilkan di form awal
 
 - URL endpoint mentah jika sudah tersedia melalui Pengaturan.
+- Token/API key atau credential.
 - Parameter teknis model yang tidak diperlukan untuk memilih model.
 - Detail penyimpanan.
 - Pengaturan internal eksekusi.
@@ -174,18 +205,20 @@ Urutan tersebut mengikuti cara pengguna memahami Agen: identitas → fungsi → 
 
 ## Pemilihan AI
 
-Agen memilih **Penyedia** dan **Model** sebagai pasangan penggunaan AI.
+Agen memilih **Akun AI** dan **Model** sebagai pasangan penggunaan AI.
 
 ```text
-Penyedia AI  [ llama.cpp rumah ]
-Model        [ qwen2.5-0.5b-instruct-q4_k_m ]
+Akun AI  [ Claude Peneliti ]
+Model    [ claude-sonnet-... ]
 ```
+
+Akun tersebut mengarah ke Penyedia AI dan menyimpan konfigurasi aksesnya. Beberapa Agen dapat memilih Akun yang sama.
 
 Model yang ditampilkan sebaiknya berasal dari daftar model yang tersedia pada penyedia bila discovery didukung. Nama atau alias buatan Klip tidak diperlukan hanya untuk membuat model terlihat lebih ramah.
 
-Detail konfigurasi penyedia tetap berada di Pengaturan. Agen hanya perlu memilih koneksi yang tersedia.
+Detail konfigurasi Penyedia dan Akun tetap berada di Pengaturan. Agen hanya perlu memilih Akun yang tersedia.
 
-Rancangan beberapa konfigurasi penyedia AI disimpan terpisah dalam `docs/ideas/ai-multi-provider.md` dan belum disetujui.
+Rancangan beberapa Penyedia dan Akun AI disimpan terpisah dalam `docs/ideas/ai-multi-provider.md` dan belum disetujui.
 
 ## Status Agen
 
@@ -222,9 +255,11 @@ Skenario sederhana:
 ```text
 Buat Ruang kerja
       ↓
+Siapkan Akun AI
+      ↓
 Buat Agen
       ↓
-Pilih Penyedia AI + Model
+Pilih Akun AI + Model
       ↓
 Buat Sasaran
       ↓
@@ -264,9 +299,9 @@ Tujuannya adalah memastikan alur **Agen → Pekerjaan → Tugas → Hasil** tera
 - Apakah Agen pertama dibuat saat Ruang pertama dibuat atau melalui langkah terpisah.
 - Apakah setiap Ruang wajib memiliki satu Agen pemimpin.
 - Apakah Agen boleh tidak memiliki atasan.
-- Apakah Penyedia dan Model ditampilkan di daftar Agen atau hanya di detail.
+- Apakah Akun AI dan Model ditampilkan di daftar Agen atau hanya di detail.
 - Bagaimana menampilkan Agen yang modelnya sudah tidak tersedia.
-- Apakah Agen dapat diganti Penyedia atau Model setelah memiliki pekerjaan aktif.
+- Apakah Agen dapat diganti Akun atau Model setelah memiliki pekerjaan aktif.
 - Bagaimana pengguna menghentikan Agen yang sedang bekerja.
 - Status Agen mana yang benar-benar dibutuhkan oleh alur kerja awal.
 - Kapan Sasaran perlu diperkenalkan dibanding langsung membuat Pekerjaan.
@@ -277,7 +312,9 @@ Implementasi baru dipertimbangkan setelah rancangan ini disetujui dan minimal me
 
 - Pengguna dapat mengenali fungsi Agen tanpa membaca dokumentasi teknis.
 - Membuat Agen tidak membutuhkan konfigurasi yang tidak relevan.
-- Pemilihan Penyedia dan Model jelas tetapi tidak mendominasi identitas Agen.
+- Pemilihan Akun AI dan Model jelas tetapi tidak mendominasi identitas Agen.
+- Token/API key tidak perlu dimasukkan berulang kali untuk setiap Agen.
+- Satu Akun AI dapat digunakan oleh beberapa Agen.
 - Hubungan Agen induk dan anak mudah dipahami.
 - Pekerjaan dan Tugas tetap terpisah secara konseptual.
 - Aktivitas dan Hasil memiliki fungsi yang berbeda.
