@@ -61,7 +61,7 @@ func (a *App) Handler() http.Handler {
 	mux.HandleFunc("/api/v1/scheduler", a.handleScheduler)
 	mux.HandleFunc("/api/v1/scheduler/", a.handleSchedulerChild)
 	mux.HandleFunc("/api/v1/ruang", a.handleRuang)
-	mux.HandleFunc("/api/v1/ruang/{id}/sasaran", a.handleSasaran)
+	mux.HandleFunc("/api/v1/ruang/{id}/goal", a.handleGoal)
 	mux.HandleFunc("/api/v1/ruang/{id}/proyek", a.handleProyek)
 	mux.HandleFunc("/api/v1/ruang/", a.handleRuangChild)
 	mux.HandleFunc("/api/v1/tugas/{id}/agen", a.handleTugasAgen)
@@ -69,6 +69,7 @@ func (a *App) Handler() http.Handler {
 	mux.HandleFunc("/api/v1/tugas/{id}/approval", a.handleTugasApproval)
 	mux.HandleFunc("/api/v1/tugas/", a.handleTugasKomentar)
 	mux.HandleFunc("/api/v1/proyek/", a.handleProyekChild)
+	mux.HandleFunc("/api/v1/goal/", a.handleGoalDetail)
 	mux.HandleFunc("/api/v1/approval/{id}/{action}", a.handleApprovalDecision)
 	mux.HandleFunc("/api/v1/hasil/{id}/file", a.handleHasilFile)
 	return mux
