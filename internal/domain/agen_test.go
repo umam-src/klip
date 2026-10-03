@@ -14,11 +14,11 @@ func TestAgenValidate(t *testing.T) {
 		{
 			name: "valid",
 			agent: Agen{
-				ID:     "agen-1",
+				ID:      "agen-1",
 				RuangID: "ruang-1",
-				Name:   "Peneliti",
-				Role:   "Peneliti produk",
-				Status: AgenStatusActive,
+				Name:    "Peneliti",
+				Role:    "Peneliti produk",
+				Status:  AgenStatusActive,
 			},
 		},
 		{
@@ -64,11 +64,11 @@ func TestAgenValidate(t *testing.T) {
 		{
 			name: "inactive is valid",
 			agent: Agen{
-				ID:       "agen-1",
-				RuangID:  "ruang-1",
-				Name:     "Peneliti",
-				Role:     "Peneliti produk",
-				Status:   AgenStatusInactive,
+				ID:      "agen-1",
+				RuangID: "ruang-1",
+				Name:    "Peneliti",
+				Role:    "Peneliti produk",
+				Status:  AgenStatusInactive,
 			},
 		},
 	}
