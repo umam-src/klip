@@ -86,18 +86,56 @@ type providerStatusResponse struct {
 	Reachable  bool   `json:"reachable"`
 }
 
+type providerConfigRequest struct {
+	Provider string `json:"provider"`
+	BaseURL  string `json:"base_url"`
+}
+
+func (a *App) providerForRequest(w http.ResponseWriter, r *http.Request) ai.AIProvider {
+	if r.Method == http.MethodGet {
+		if a.provider == nil {
+			writeError(w, http.StatusServiceUnavailable, "penyedia AI belum siap")
+			return nil
+		}
+		return a.provider
+	}
+	if r.Method != http.MethodPost {
+		writeError(w, http.StatusMethodNotAllowed, "metode tidak didukung")
+		return nil
+	}
+	var req providerConfigRequest
+	if !decodeJSON(w, r, &req) {
+		return nil
+	}
+	req.Provider = strings.TrimSpace(req.Provider)
+	req.BaseURL = strings.TrimSpace(req.BaseURL)
+	if req.Provider == "" || req.BaseURL == "" {
+		writeError(w, http.StatusBadRequest, "penyedia dan alamat wajib diisi")
+		return nil
+	}
+	provider, err := ai.NewProvider(config.AIConfig{Provider: req.Provider, BaseURL: req.BaseURL})
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "konfigurasi penyedia AI tidak valid")
+		return nil
+	}
+	return provider
+}
+
 func (a *App) handleProviderStatus(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
+	if r.Method != http.MethodGet && r.Method != http.MethodPost {
 		writeError(w, http.StatusMethodNotAllowed, "metode tidak didukung")
 		return
 	}
-	status := providerStatusResponse{Provider: a.config.AI.Provider}
-	if a.provider == nil {
-		writeJSON(w, http.StatusServiceUnavailable, status)
+	provider := a.providerForRequest(w, r)
+	if provider == nil {
 		return
 	}
-	status.Configured = strings.TrimSpace(a.config.AI.Model) != ""
-	checker, ok := a.provider.(ai.HealthChecker)
+	status := providerStatusResponse{Provider: provider.ID()}
+	if r.Method == http.MethodGet {
+		status.Provider = a.config.AI.Provider
+		status.Configured = strings.TrimSpace(a.config.AI.Model) != ""
+	}
+	checker, ok := provider.(ai.HealthChecker)
 	if !ok {
 		writeJSON(w, http.StatusOK, status)
 		return
@@ -117,15 +155,15 @@ type providerModelsResponse struct {
 }
 
 func (a *App) handleProviderModels(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
+	if r.Method != http.MethodGet && r.Method != http.MethodPost {
 		writeError(w, http.StatusMethodNotAllowed, "metode tidak didukung")
 		return
 	}
-	if a.provider == nil {
-		writeError(w, http.StatusServiceUnavailable, "penyedia AI belum siap")
+	provider := a.providerForRequest(w, r)
+	if provider == nil {
 		return
 	}
-	lister, ok := a.provider.(ai.ModelLister)
+	lister, ok := provider.(ai.ModelLister)
 	if !ok {
 		writeError(w, http.StatusNotImplemented, "penyedia AI tidak mendukung daftar model")
 		return
