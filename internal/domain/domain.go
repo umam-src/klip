@@ -50,6 +50,22 @@ func isKnownStatus(status Status) bool {
 	}
 }
 
+type AgenStatus string
+
+const (
+	AgenStatusActive   AgenStatus = "active"
+	AgenStatusInactive AgenStatus = "inactive"
+)
+
+func (s AgenStatus) IsKnown() bool {
+	switch s {
+	case AgenStatusActive, AgenStatusInactive:
+		return true
+	default:
+		return false
+	}
+}
+
 type Ruang struct {
 	ID        ID        `json:"id"`
 	Name      string    `json:"name"`
@@ -58,15 +74,17 @@ type Ruang struct {
 }
 
 type Agen struct {
-	ID          ID        `json:"id"`
-	RuangID     ID        `json:"ruang_id"`
-	ParentID    *ID       `json:"parent_id,omitempty"`
-	Name        string    `json:"name"`
-	Description string    `json:"description,omitempty"`
-	ProviderID  string    `json:"provider_id,omitempty"`
-	ModelID     string    `json:"model_id,omitempty"`
-	CreatedAt   time.Time `json:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at"`
+	ID          ID         `json:"id"`
+	RuangID     ID         `json:"ruang_id"`
+	ParentID    *ID        `json:"parent_id,omitempty"`
+	Name        string     `json:"name"`
+	Role        string     `json:"role"`
+	Description string     `json:"description,omitempty"`
+	ProviderID  string     `json:"provider_id,omitempty"`
+	ModelID     string     `json:"model_id,omitempty"`
+	Status      AgenStatus `json:"status"`
+	CreatedAt   time.Time  `json:"created_at"`
+	UpdatedAt   time.Time  `json:"updated_at"`
 }
 
 type Sasaran struct {
