@@ -68,6 +68,7 @@ Format mengikuti Keep a Changelog dan versi mengikuti Semantic Versioning.
 - README.md ditulis ulang tanpa istilah teknis; panduan menjalankan, konfigurasi, dan target ukuran dipindahkan ke `docs/penggunaan.md`.
 - Pemegang hak cipta pada LICENSE MIT diubah menjadi "Kontributor Klip".
 - Dokumentasi dirapikan: batas ukuran, prinsip kompatibilitas database, lingkup jejak aktivitas (Peristiwa hanya untuk Eksekusi), dan istilah model v1 diselaraskan; CONTRIBUTING dilengkapi; indeks dokumentasi ditambahkan.
+- Istilah UI "Ruang" diselaraskan menjadi "Ruang Kerja" pada beranda, daftar, detail, dan pesan kesalahan. Nama storage dan jalur API `ruang` tidak berubah.
 
 ### Removed
 - Skrip `web/assets/agent-form.js` lama yang menduplikasi form Agen dan tidak pernah dimuat UI.

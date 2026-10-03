@@ -39,7 +39,7 @@ Daftar kerja pengembangan. Prioritas: P0 wajib, P1 penting, P2 setelah inti stab
 - [x] Remodel schema SQLite secara menyeluruh.
 - [x] Remodel repository/storage mengikuti schema v1.
 - [x] Remodel service dan API mengikuti Goal-centered model.
-- [ ] Remodel UI dan bahasa produk agar konsisten dengan Goal.
+- [x] Remodel UI dan bahasa produk agar konsisten dengan Goal.
 - [x] Hapus entity `Sasaran`, `sasaran_id`, dan adapter `GoalFromSasaran` setelah persistence baru aktif.
 - [x] Pastikan Goal parent/child satu Ruang Kerja dan tidak membentuk cycle.
 - [x] Pastikan setiap Proyek mengacu ke satu Goal utama dan satu Ruang Kerja.
@@ -99,7 +99,7 @@ Catatan: `Sasaran` tidak lagi dipertahankan sebagai compatibility layer permanen
 - [x] Riwayat aktivitas.
 - [x] Halaman provider/model (status AI dan pilihan model).
 - [x] Halaman pengaturan.
-- [ ] Selaraskan bahasa UI `Ruang` menjadi `Ruang Kerja` tanpa mengubah nama storage `ruang`.
+- [x] Selaraskan bahasa UI `Ruang` menjadi `Ruang Kerja` tanpa mengubah nama storage `ruang`.
 - [x] Istilah `Sasaran` tidak lagi dipakai di UI; UI memakai Goal.
 
 ## P1 — Skills dan hasil

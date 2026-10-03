@@ -4,8 +4,8 @@ Antarmuka web Klip sengaja dibuat kecil: HTML, CSS, dan JavaScript biasa tanpa C
 
 ## Isi
 
-- `index.html` — halaman tunggal untuk ruang, agen, goal, proyek, tugas, komentar, dan pengaturan AI.
-- `assets/app.js` — daftar dan form ruang, agen, goal, proyek, tugas, serta komentar.
+- `index.html` — halaman tunggal untuk Ruang Kerja, agen, goal, proyek, tugas, komentar, dan pengaturan AI.
+- `assets/app.js` — daftar dan form Ruang Kerja, agen, goal, proyek, tugas, serta komentar.
 - `assets/agent-detail.js` — detail Agen.
 - `assets/provider.js` dan `assets/settings.js` — status dan pilihan AI.
 - `assets/app.css` — gaya tampilan.
