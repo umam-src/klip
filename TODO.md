@@ -43,10 +43,10 @@ Daftar kerja pengembangan. Prioritas: P0 wajib, P1 penting, P2 setelah inti stab
 - [x] Hapus entity `Sasaran`, `sasaran_id`, dan adapter `GoalFromSasaran` setelah persistence baru aktif.
 - [x] Pastikan Goal parent/child satu Ruang Kerja dan tidak membentuk cycle.
 - [x] Pastikan setiap Proyek mengacu ke satu Goal utama dan satu Ruang Kerja.
-- [ ] Pastikan seluruh relasi domain mempertahankan batas `ruang_id`.
+- [x] Pastikan seluruh relasi domain mempertahankan batas `ruang_id`.
 - [x] Pastikan Eksekusi dan Hasil Kerja dapat ditelusuri ke Ruang Kerja dan konteks Goal.
 - [ ] Reset/migrate database development setelah schema v1 siap.
-- [ ] Jalankan regression test dan CI penuh setelah remodel.
+- [x] Jalankan regression test dan CI penuh setelah remodel.
 
 Catatan: `Sasaran` tidak lagi dipertahankan sebagai compatibility layer permanen. Karena Klip belum rilis, schema lama boleh tidak kompatibel. Prioritasnya adalah satu model data yang konsisten sebelum rilis.
 
