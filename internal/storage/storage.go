@@ -8,7 +8,7 @@ import (
 	_ "modernc.org/sqlite"
 )
 
-const schemaVersion = 9
+const schemaVersion = 10
 
 const schema = `
 CREATE TABLE IF NOT EXISTS schema_migrations (
@@ -28,9 +28,11 @@ CREATE TABLE IF NOT EXISTS agen (
     ruang_id TEXT NOT NULL REFERENCES ruang(id) ON DELETE CASCADE,
     parent_id TEXT REFERENCES agen(id) ON DELETE SET NULL,
     name TEXT NOT NULL,
+    role TEXT NOT NULL DEFAULT 'Agen',
     description TEXT NOT NULL DEFAULT '',
     provider_id TEXT NOT NULL DEFAULT '',
     model_id TEXT NOT NULL DEFAULT '',
+    status TEXT NOT NULL DEFAULT 'active',
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL
 );
@@ -256,6 +258,9 @@ func migrate(ctx context.Context, db *sql.DB) error {
 	if err := ensureAgenParentColumn(ctx, tx); err != nil {
 		return err
 	}
+	if err := ensureAgenRoleStatusColumns(ctx, tx); err != nil {
+		return err
+	}
 	if version < schemaVersion {
 		if _, err := tx.ExecContext(ctx, "INSERT INTO schema_migrations(version) VALUES (?)", schemaVersion); err != nil {
 			return fmt.Errorf("catat migrasi: %w", err)
@@ -298,6 +303,51 @@ func ensureAgenParentColumn(ctx context.Context, tx *sql.Tx) error {
 	}
 	if _, err := tx.ExecContext(ctx, "CREATE INDEX IF NOT EXISTS idx_agen_parent ON agen(parent_id)"); err != nil {
 		return fmt.Errorf("indeks hierarki agen: %w", err)
+	}
+	return nil
+}
+
+func ensureAgenRoleStatusColumns(ctx context.Context, tx *sql.Tx) error {
+	rows, err := tx.QueryContext(ctx, "PRAGMA table_info(agen)")
+	if err != nil {
+		return fmt.Errorf("baca kolom agen: %w", err)
+	}
+	defer rows.Close()
+
+	foundRole, foundStatus := false, false
+	for rows.Next() {
+		var cid int
+		var name, columnType string
+		var notNull, primaryKey int
+		var defaultValue sql.NullString
+		if err := rows.Scan(&cid, &name, &columnType, &notNull, &defaultValue, &primaryKey); err != nil {
+			return fmt.Errorf("baca metadata agen: %w", err)
+		}
+		switch name {
+		case "role":
+			foundRole = true
+		case "status":
+			foundStatus = true
+		}
+	}
+	if err := rows.Err(); err != nil {
+		return fmt.Errorf("baca metadata agen: %w", err)
+	}
+	if !foundRole {
+		if _, err := tx.ExecContext(ctx, "ALTER TABLE agen ADD COLUMN role TEXT NOT NULL DEFAULT 'Agen'"); err != nil {
+			return fmt.Errorf("migrasi peran agen: %w", err)
+		}
+	}
+	if !foundStatus {
+		if _, err := tx.ExecContext(ctx, "ALTER TABLE agen ADD COLUMN status TEXT NOT NULL DEFAULT 'active'"); err != nil {
+			return fmt.Errorf("migrasi status agen: %w", err)
+		}
+	}
+	if _, err := tx.ExecContext(ctx, "UPDATE agen SET role = 'Agen' WHERE trim(role) = ''"); err != nil {
+		return fmt.Errorf("normalisasi peran agen: %w", err)
+	}
+	if _, err := tx.ExecContext(ctx, "UPDATE agen SET status = 'active' WHERE trim(status) = ''"); err != nil {
+		return fmt.Errorf("normalisasi status agen: %w", err)
 	}
 	return nil
 }
