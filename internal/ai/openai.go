@@ -43,6 +43,10 @@ type chatStreamResponse struct {
 	} `json:"choices"`
 }
 
+type modelListResponse struct {
+	Data []Model `json:"data"`
+}
+
 func (p *OpenAICompatible) ID() string { return "openai-compatible" }
 
 func (p *OpenAICompatible) Check(ctx context.Context) error {
@@ -70,6 +74,42 @@ func (p *OpenAICompatible) Check(ctx context.Context) error {
 		return providerHTTPError{status: resp.StatusCode}
 	}
 	return nil
+}
+
+func (p *OpenAICompatible) ListModels(ctx context.Context) ([]Model, error) {
+	if strings.TrimSpace(p.BaseURL) == "" {
+		return nil, fmt.Errorf("base URL provider AI kosong")
+	}
+	url := strings.TrimRight(p.BaseURL, "/") + "/v1/models"
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return nil, fmt.Errorf("buat permintaan daftar model: %w", err)
+	}
+	if p.APIKey != "" {
+		req.Header.Set("Authorization", "Bearer "+p.APIKey)
+	}
+	client := p.Client
+	if client == nil {
+		client = &http.Client{Timeout: 10 * time.Second}
+	}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("hubungi provider AI: %w", err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return nil, providerHTTPError{status: resp.StatusCode}
+	}
+
+	body, err := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
+	if err != nil {
+		return nil, fmt.Errorf("baca daftar model: %w", err)
+	}
+	var decoded modelListResponse
+	if err := json.Unmarshal(body, &decoded); err != nil {
+		return nil, fmt.Errorf("decode daftar model: %w", err)
+	}
+	return decoded.Data, nil
 }
 
 func (p *OpenAICompatible) Chat(ctx context.Context, req ChatRequest) (ChatResponse, error) {
