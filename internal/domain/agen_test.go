@@ -12,31 +12,64 @@ func TestAgenValidate(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name:  "valid",
-			agent: Agen{ID: "agen-1", RuangID: "ruang-1", Name: "Peneliti"},
+			name: "valid",
+			agent: Agen{
+				ID:     "agen-1",
+				RuangID: "ruang-1",
+				Name:   "Peneliti",
+				Role:   "Peneliti produk",
+				Status: AgenStatusActive,
+			},
 		},
 		{
 			name:    "missing id",
-			agent:   Agen{RuangID: "ruang-1", Name: "Peneliti"},
+			agent:   Agen{RuangID: "ruang-1", Name: "Peneliti", Role: "Peneliti produk", Status: AgenStatusActive},
 			wantErr: true,
 		},
 		{
 			name:    "missing ruang",
-			agent:   Agen{ID: "agen-1", Name: "Peneliti"},
+			agent:   Agen{ID: "agen-1", Name: "Peneliti", Role: "Peneliti produk", Status: AgenStatusActive},
 			wantErr: true,
 		},
 		{
 			name:    "missing name",
-			agent:   Agen{ID: "agen-1", RuangID: "ruang-1"},
+			agent:   Agen{ID: "agen-1", RuangID: "ruang-1", Role: "Peneliti produk", Status: AgenStatusActive},
+			wantErr: true,
+		},
+		{
+			name:    "missing role",
+			agent:   Agen{ID: "agen-1", RuangID: "ruang-1", Name: "Peneliti", Status: AgenStatusActive},
+			wantErr: true,
+		},
+		{
+			name:    "unknown status",
+			agent:   Agen{ID: "agen-1", RuangID: "ruang-1", Name: "Peneliti", Role: "Peneliti produk", Status: "running"},
 			wantErr: true,
 		},
 		{
 			name: "self parent",
 			agent: func() Agen {
 				parent := ID("agen-1")
-				return Agen{ID: "agen-1", RuangID: "ruang-1", Name: "Peneliti", ParentID: &parent}
+				return Agen{
+					ID:       "agen-1",
+					RuangID:  "ruang-1",
+					Name:     "Peneliti",
+					Role:     "Peneliti produk",
+					Status:   AgenStatusActive,
+					ParentID: &parent,
+				}
 			}(),
 			wantErr: true,
+		},
+		{
+			name: "inactive is valid",
+			agent: Agen{
+				ID:       "agen-1",
+				RuangID:  "ruang-1",
+				Name:     "Peneliti",
+				Role:     "Peneliti produk",
+				Status:   AgenStatusInactive,
+			},
 		},
 	}
 
@@ -53,5 +86,17 @@ func TestAgenValidate(t *testing.T) {
 				t.Fatalf("Validate() error = %v", err)
 			}
 		})
+	}
+}
+
+func TestAgenStatusIsKnown(t *testing.T) {
+	if !AgenStatusActive.IsKnown() {
+		t.Fatal("AgenStatusActive should be known")
+	}
+	if !AgenStatusInactive.IsKnown() {
+		t.Fatal("AgenStatusInactive should be known")
+	}
+	if AgenStatus("running").IsKnown() {
+		t.Fatal("runtime status should not be an Agen lifecycle status")
 	}
 }
