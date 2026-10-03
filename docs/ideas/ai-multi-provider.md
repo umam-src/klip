@@ -10,6 +10,8 @@ Saat ini Klip menyimpan satu konfigurasi penyedia AI aktif dan dapat mengambil d
 
 Gagasan berikutnya adalah memungkinkan satu instalasi Klip menyimpan beberapa konfigurasi penyedia AI, lalu memilih akun/connection dan model sesuai kebutuhan.
 
+Draf visual rancangan Agen memperjelas arah pengalaman pengguna: **Penyedia AI → Akun AI → Model → Agen**. Hubungan tersebut dipakai sebagai model UX target, bukan sebagai keputusan skema database.
+
 Contoh penggunaan:
 
 - llama.cpp di komputer rumah untuk model lokal.
@@ -85,6 +87,40 @@ Penyedia
 ```
 
 Bentuk relasi ini **belum menjadi skema database final**.
+
+## Arah UX dari draf visual Agen
+
+Draf visual menunjukkan bahwa pengguna sebaiknya memahami konfigurasi AI sebelum membuat Agen, tetapi tetap tanpa harus berurusan dengan credential pada form Agen.
+
+```text
+Pengaturan AI
+    ↓
+Penyedia AI
+    ↓
+Akun AI
+    ↓
+Model
+    ↓
+Form Agen
+    ├── Nama
+    ├── Peran
+    ├── Deskripsi
+    ├── Atasan
+    ├── Akun AI
+    └── Model
+```
+
+Di daftar Agen, hubungan tersebut cukup diringkas. Di detail Agen, pengguna dapat melihat Penyedia, Akun, dan Model yang digunakan.
+
+Prinsip UX yang dipertahankan:
+
+- credential tidak menjadi field Agen;
+- satu Akun AI dapat dipakai banyak Agen;
+- satu Penyedia dapat memiliki banyak Akun AI;
+- pengguna memilih Model yang tersedia, bukan menulis credential atau endpoint berulang;
+- detail teknis tetap berada di Pengaturan.
+
+Rancangan ini tetap bersifat konseptual sampai ide multi-provider disetujui.
 
 ## Gagasan alur pengguna
 
