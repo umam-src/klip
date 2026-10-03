@@ -68,7 +68,6 @@ func (a *App) handleScheduler(w http.ResponseWriter, r *http.Request) {
 			writeError(w, http.StatusBadRequest, "jadwal tidak valid")
 			return
 		}
-		a.auditAction(r.Context(), schedule.ProyekID, schedule.TugasID, domain.EventScheduleCreated)
 		writeJSON(w, http.StatusCreated, toScheduleResponse(schedule))
 	default:
 		writeError(w, http.StatusMethodNotAllowed, "metode tidak didukung")
