@@ -70,6 +70,7 @@ func (a *App) Handler() http.Handler {
 	mux.HandleFunc("/api/v1/tugas/{id}/komentar", a.handleTugasKomentar)
 	mux.HandleFunc("/api/v1/tugas/{id}/approval", a.handleTugasApproval)
 	mux.HandleFunc("/api/v1/tugas/", a.handleTugasKomentar)
+	mux.HandleFunc("/api/v1/proyek/", a.handleProyekChild)
 	mux.HandleFunc("/api/v1/approval/{id}/{action}", a.handleApprovalDecision)
 	mux.HandleFunc("/api/v1/hasil/{id}/file", a.handleHasilFile)
 	return mux
@@ -254,7 +255,7 @@ func (a *App) updateSettings(w http.ResponseWriter, r *http.Request) {
 	a.provider = provider
 	writeJSON(w, http.StatusOK, settingsResponse{
 		DataDir:   updated.DataDir,
-		Listen:    updated.Listen,
+		Listen:     updated.Listen,
 		Locale:    updated.Locale,
 		Provider:  updated.AI.Provider,
 		BaseURL:   updated.AI.BaseURL,
