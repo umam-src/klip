@@ -26,6 +26,7 @@ Format mengikuti Keep a Changelog dan versi mengikuti Semantic Versioning.
 - Benchmark heap memori idle aplikasi untuk mendeteksi regresi penggunaan memori.
 - Penyimpanan pengaturan provider AI, alamat provider, dan model di SQLite.
 - Daftar Agen dalam Ruang kerja yang menampilkan nama, peran, deskripsi singkat, status, dan hierarki.
+- Detail Agen yang menampilkan ringkasan, AI yang digunakan, struktur agen, serta keadaan pekerjaan dan aktivitas yang tersedia.
 
 ### Changed
 - Konfigurasi sekarang menyimpan locale secara eksplisit dan menormalkan locale yang belum didukung ke `id-ID`.
