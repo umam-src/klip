@@ -123,12 +123,16 @@ func (r *Repository) CreateAgen(ctx context.Context, agen domain.Agen) error {
 	if err := validateAgen(agen); err != nil {
 		return fmt.Errorf("agen: %w", err)
 	}
+	role := strings.TrimSpace(agen.Role)
+	if role == "" {
+		role = "Agen"
+	}
 	created, updated := timestamps(agen.CreatedAt, agen.UpdatedAt)
 	status := agen.Status
 	if status == "" {
 		status = domain.AgenStatusActive
 	}
-	_, err := r.db.ExecContext(ctx, `INSERT INTO agen (id, ruang_id, name, role, description, provider_id, model_id, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, agen.ID, agen.RuangID, agen.Name, agen.Role, agen.Description, agen.ProviderID, agen.ModelID, status, created, updated)
+	_, err := r.db.ExecContext(ctx, `INSERT INTO agen (id, ruang_id, name, role, description, provider_id, model_id, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, agen.ID, agen.RuangID, agen.Name, role, agen.Description, agen.ProviderID, agen.ModelID, status, created, updated)
 	if err != nil {
 		return fmt.Errorf("buat agen: %w", err)
 	}
@@ -471,7 +475,7 @@ func (r *Repository) ListHasilByPekerjaan(ctx context.Context, pekerjaanID domai
 }
 
 func validateAgen(agen domain.Agen) error {
-	if strings.TrimSpace(string(agen.ID)) == "" || strings.TrimSpace(string(agen.RuangID)) == "" || strings.TrimSpace(agen.Name) == "" || strings.TrimSpace(agen.Role) == "" {
+	if strings.TrimSpace(string(agen.ID)) == "" || strings.TrimSpace(string(agen.RuangID)) == "" || strings.TrimSpace(agen.Name) == "" {
 		return ErrInvalid
 	}
 	if agen.Status != "" && !agen.Status.IsKnown() {
