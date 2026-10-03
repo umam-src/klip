@@ -64,16 +64,16 @@ func TestCreateScheduleAcceptsSameWorkspaceRelations(t *testing.T) {
 
 func validSchedule(id, ruangID, proyekID string, tugasID *domain.ID, agenID string) domain.Schedule {
 	return domain.Schedule{
-		ID:         domain.ID(id),
-		Name:       "uji",
-		RuangID:    domain.ID(ruangID),
-		ProyekID:   domain.ID(proyekID),
-		TugasID:    tugasID,
-		AgenID:     domain.ID(agenID),
-		Program:    "true",
-		Interval:   time.Minute,
-		NextRunAt:  time.Now().UTC().Add(time.Minute),
-		Status:     domain.ScheduleEnabled,
+		ID:        domain.ID(id),
+		Name:      "uji",
+		RuangID:   domain.ID(ruangID),
+		ProyekID:  domain.ID(proyekID),
+		TugasID:   tugasID,
+		AgenID:    domain.ID(agenID),
+		Program:   "true",
+		Interval:  time.Minute,
+		NextRunAt: time.Now().UTC().Add(time.Minute),
+		Status:    domain.ScheduleEnabled,
 	}
 }
 
