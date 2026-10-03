@@ -15,6 +15,36 @@ Catatan pengembangan dan aturan untuk menjaga arah proyek Klip.
 9. Perubahan besar harus dicatat di dokumentasi dan changelog.
 10. Jangan menambah fitur hanya karena tersedia di proyek sumber jika fitur tersebut memperbesar aplikasi tanpa manfaat inti.
 
+## Penamaan Bahasa Indonesia
+
+Prioritaskan Bahasa Indonesia untuk penamaan kode dan struktur proyek jika istilahnya jelas dan tidak bertentangan dengan standar ekosistem.
+
+* Gunakan Bahasa Indonesia untuk nama konsep domain, tipe, struktur, fungsi, metode, variabel, file, dan direktori jika memungkinkan.
+* Gunakan `snake_case` untuk nama skema atau kontrak data yang memang menggunakan bentuk tersebut.
+* Pertahankan istilah Inggris jika merupakan istilah standar bahasa pemrograman, pustaka, protokol, API eksternal, nama resmi pihak ketiga, atau istilah yang jauh lebih jelas dalam bahasa aslinya.
+* Jangan menerjemahkan istilah secara paksa jika hasilnya menjadi ambigu atau sulit dipahami.
+* Jangan membuat dua nama untuk satu konsep hanya karena sebagian kode lama menggunakan Bahasa Inggris.
+* Saat merombak kode lama, gunakan istilah Bahasa Indonesia yang sudah disepakati daripada menambah lapisan kompatibilitas permanen.
+* Nama domain harus mengikuti kosakata yang sudah dikunci dalam `docs/data-model.md`.
+
+Kosakata domain v1:
+
+* `ruang` — Ruang Kerja
+* `goal` — Goal
+* `proyek` — Proyek
+* `tugas` — Tugas
+* `penugasan` — Penugasan
+* `agen` — Agen
+* `eksekusi` — Eksekusi
+* `peristiwa` — Peristiwa
+* `hasil_kerja` — Hasil Kerja
+* `persetujuan` — Persetujuan
+* `komentar` — Komentar
+* `jadwal` — Jadwal
+* `jadwal_eksekusi` — Jadwal Eksekusi
+* `pengaturan_ai` — Pengaturan AI
+* `saran` — Saran
+
 ## Prinsip belajar dari kesalahan
 
 Setiap masalah yang berulang harus menghasilkan salah satu dari:
