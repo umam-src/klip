@@ -24,11 +24,11 @@ func TestAgenHierarchy(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if err := repo.CreateAgenWithParent(ctx, domain.Agen{ID: "agen-root", RuangID: "ruang-1", Name: "Root"}); err != nil {
+	if err := repo.CreateAgenWithParent(ctx, domain.Agen{ID: "agen-root", RuangID: "ruang-1", Name: "Root", Role: "Pemimpin", Status: domain.AgenStatusActive}); err != nil {
 		t.Fatalf("create root: %v", err)
 	}
 	parent := domain.ID("agen-root")
-	if err := repo.CreateAgenWithParent(ctx, domain.Agen{ID: "agen-child", RuangID: "ruang-1", ParentID: &parent, Name: "Child"}); err != nil {
+	if err := repo.CreateAgenWithParent(ctx, domain.Agen{ID: "agen-child", RuangID: "ruang-1", ParentID: &parent, Name: "Child", Role: "Pelaksana", Status: domain.AgenStatusInactive}); err != nil {
 		t.Fatalf("create child: %v", err)
 	}
 
@@ -36,8 +36,8 @@ func TestAgenHierarchy(t *testing.T) {
 	if err != nil {
 		t.Fatalf("get child: %v", err)
 	}
-	if child.ParentID == nil || *child.ParentID != parent {
-		t.Fatalf("child parent = %v, want %q", child.ParentID, parent)
+	if child.ParentID == nil || *child.ParentID != parent || child.Role != "Pelaksana" || child.Status != domain.AgenStatusInactive {
+		t.Fatalf("child = %+v, want parent, role, and status", child)
 	}
 
 	items, err := repo.ListAgenByRuangWithParent(ctx, "ruang-1")
@@ -49,19 +49,19 @@ func TestAgenHierarchy(t *testing.T) {
 	}
 
 	crossRoomParent := parent
-	err = repo.CreateAgenWithParent(ctx, domain.Agen{ID: "agen-cross", RuangID: "ruang-2", ParentID: &crossRoomParent, Name: "Cross"})
+	err = repo.CreateAgenWithParent(ctx, domain.Agen{ID: "agen-cross", RuangID: "ruang-2", ParentID: &crossRoomParent, Name: "Cross", Role: "Pelaksana"})
 	if !errors.Is(err, ErrInvalid) {
 		t.Fatalf("cross-room parent error = %v, want ErrInvalid", err)
 	}
 
 	missingParent := domain.ID("missing")
-	err = repo.CreateAgenWithParent(ctx, domain.Agen{ID: "agen-missing", RuangID: "ruang-1", ParentID: &missingParent, Name: "Missing"})
+	err = repo.CreateAgenWithParent(ctx, domain.Agen{ID: "agen-missing", RuangID: "ruang-1", ParentID: &missingParent, Name: "Missing", Role: "Pelaksana"})
 	if !errors.Is(err, ErrInvalid) {
 		t.Fatalf("missing parent error = %v, want ErrInvalid", err)
 	}
 
 	self := domain.ID("agen-root")
-	err = repo.CreateAgenWithParent(ctx, domain.Agen{ID: "agen-root", RuangID: "ruang-1", ParentID: &self, Name: "Duplicate"})
+	err = repo.CreateAgenWithParent(ctx, domain.Agen{ID: "agen-root", RuangID: "ruang-1", ParentID: &self, Name: "Duplicate", Role: "Pemimpin"})
 	if !errors.Is(err, ErrInvalid) {
 		t.Fatalf("self parent error = %v, want ErrInvalid", err)
 	}
@@ -83,11 +83,13 @@ func TestAgenHierarchySchema(t *testing.T) {
 		t.Fatalf("schema version = %d, want %d", version, schemaVersion)
 	}
 
-	var found int
-	if err := db.QueryRowContext(ctx, "SELECT COUNT(*) FROM pragma_table_info('agen') WHERE name = 'parent_id'").Scan(&found); err != nil {
-		t.Fatalf("parent column: %v", err)
-	}
-	if found != 1 {
-		t.Fatalf("parent_id column count = %d, want 1", found)
+	for _, column := range []string{"parent_id", "role", "status"} {
+		var found int
+		if err := db.QueryRowContext(ctx, "SELECT COUNT(*) FROM pragma_table_info('agen') WHERE name = ?", column).Scan(&found); err != nil {
+			t.Fatalf("%s column: %v", column, err)
+		}
+		if found != 1 {
+			t.Fatalf("%s column count = %d, want 1", column, found)
+		}
 	}
 }
