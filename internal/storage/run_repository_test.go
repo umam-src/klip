@@ -82,6 +82,70 @@ func TestRunRepositoryRoundTrip(t *testing.T) {
 	}
 }
 
+func TestRunRepositoryRejectsCrossWorkspaceAgent(t *testing.T) {
+	db, err := Open(context.Background(), ":memory:")
+	if err != nil {
+		t.Fatalf("Open() error = %v", err)
+	}
+	defer db.Close()
+
+	repo := NewRepository(db)
+	ctx := context.Background()
+	now := time.Now().UTC()
+	if err := repo.CreateRuang(ctx, domain.Ruang{ID: "ruang-run-a", Name: "A", CreatedAt: now, UpdatedAt: now}); err != nil {
+		t.Fatal(err)
+	}
+	if err := repo.CreateRuang(ctx, domain.Ruang{ID: "ruang-run-b", Name: "B", CreatedAt: now, UpdatedAt: now}); err != nil {
+		t.Fatal(err)
+	}
+	if err := repo.CreateAgen(ctx, domain.Agen{ID: "agen-run-b", RuangID: "ruang-run-b", Name: "Agen B", CreatedAt: now, UpdatedAt: now}); err != nil {
+		t.Fatal(err)
+	}
+	if err := repo.CreatePekerjaan(ctx, domain.Pekerjaan{ID: "pekerjaan-run-a", RuangID: "ruang-run-a", Title: "Pekerjaan A", Status: domain.StatusReady, CreatedAt: now, UpdatedAt: now}); err != nil {
+		t.Fatal(err)
+	}
+
+	err = repo.CreateRun(ctx, domain.Run{ID: "run-cross", PekerjaanID: "pekerjaan-run-a", AgenID: "agen-run-b", Status: domain.StatusRunning, Program: "printf", Arguments: []string{"x"}, StartedAt: now})
+	if !errors.Is(err, ErrInvalid) {
+		t.Fatalf("CreateRun() error = %v, want ErrInvalid", err)
+	}
+}
+
+func TestRunRepositoryRejectsCrossWorkspaceTask(t *testing.T) {
+	db, err := Open(context.Background(), ":memory:")
+	if err != nil {
+		t.Fatalf("Open() error = %v", err)
+	}
+	defer db.Close()
+
+	repo := NewRepository(db)
+	ctx := context.Background()
+	now := time.Now().UTC()
+	if err := repo.CreateRuang(ctx, domain.Ruang{ID: "ruang-run-task-a", Name: "A", CreatedAt: now, UpdatedAt: now}); err != nil {
+		t.Fatal(err)
+	}
+	if err := repo.CreateRuang(ctx, domain.Ruang{ID: "ruang-run-task-b", Name: "B", CreatedAt: now, UpdatedAt: now}); err != nil {
+		t.Fatal(err)
+	}
+	if err := repo.CreateAgen(ctx, domain.Agen{ID: "agen-run-task-a", RuangID: "ruang-run-task-a", Name: "Agen A", CreatedAt: now, UpdatedAt: now}); err != nil {
+		t.Fatal(err)
+	}
+	if err := repo.CreatePekerjaan(ctx, domain.Pekerjaan{ID: "pekerjaan-run-task-a", RuangID: "ruang-run-task-a", Title: "Pekerjaan A", Status: domain.StatusReady, CreatedAt: now, UpdatedAt: now}); err != nil {
+		t.Fatal(err)
+	}
+	if err := repo.CreatePekerjaan(ctx, domain.Pekerjaan{ID: "pekerjaan-run-task-b", RuangID: "ruang-run-task-b", Title: "Pekerjaan B", Status: domain.StatusReady, CreatedAt: now, UpdatedAt: now}); err != nil {
+		t.Fatal(err)
+	}
+	if err := repo.CreateTugas(ctx, domain.Tugas{ID: "tugas-run-task-b", PekerjaanID: "pekerjaan-run-task-b", Title: "Tugas B", Status: domain.StatusDraft, Position: 0, CreatedAt: now, UpdatedAt: now}); err != nil {
+		t.Fatal(err)
+	}
+
+	err = repo.CreateRun(ctx, domain.Run{ID: "run-task-cross", PekerjaanID: "pekerjaan-run-task-a", TugasID: func() *domain.ID { id := domain.ID("tugas-run-task-b"); return &id }(), AgenID: "agen-run-task-a", Status: domain.StatusRunning, Program: "printf", Arguments: []string{"x"}, StartedAt: now})
+	if !errors.Is(err, ErrInvalid) {
+		t.Fatalf("CreateRun() error = %v, want ErrInvalid", err)
+	}
+}
+
 func TestRunRepositoryRequiresRelations(t *testing.T) {
 	db, err := Open(context.Background(), ":memory:")
 	if err != nil {
