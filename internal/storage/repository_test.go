@@ -24,7 +24,7 @@ func TestRepositoryCoreEntities(t *testing.T) {
 	if err := repo.CreateRuang(ctx, domain.Ruang{ID: "ruang-1", Name: "Proyek", CreatedAt: created, UpdatedAt: updated}); err != nil {
 		t.Fatalf("CreateRuang() error = %v", err)
 	}
-	if err := repo.CreateAgen(ctx, domain.Agen{ID: "agen-1", RuangID: "ruang-1", Name: "Agen Lokal", ProviderID: "ollama", ModelID: "qwen", CreatedAt: created, UpdatedAt: updated}); err != nil {
+	if err := repo.CreateAgen(ctx, domain.Agen{ID: "agen-1", RuangID: "ruang-1", Name: "Agen Lokal", Role: "Pelaksana", ProviderID: "ollama", ModelID: "qwen", Status: domain.AgenStatusInactive, CreatedAt: created, UpdatedAt: updated}); err != nil {
 		t.Fatalf("CreateAgen() error = %v", err)
 	}
 	if err := repo.CreatePekerjaan(ctx, domain.Pekerjaan{ID: "pekerjaan-1", RuangID: "ruang-1", Title: "Bangun inti", Status: domain.StatusReady, CreatedAt: created, UpdatedAt: updated}); err != nil {
@@ -47,7 +47,7 @@ func TestRepositoryCoreEntities(t *testing.T) {
 	}
 
 	agent, err := repo.GetAgen(ctx, "agen-1")
-	if err != nil || agent.RuangID != "ruang-1" || agent.ProviderID != "ollama" {
+	if err != nil || agent.RuangID != "ruang-1" || agent.ProviderID != "ollama" || agent.Role != "Pelaksana" || agent.Status != domain.AgenStatusInactive {
 		t.Fatalf("GetAgen() = %+v, error = %v", agent, err)
 	}
 
@@ -82,8 +82,11 @@ func TestRepositoryNotFoundAndValidation(t *testing.T) {
 	if err := repo.CreateRuang(ctx, domain.Ruang{ID: "", Name: "tanpa id"}); !errors.Is(err, ErrInvalid) {
 		t.Fatalf("CreateRuang() error = %v, want ErrInvalid", err)
 	}
-	if err := repo.CreateAgen(ctx, domain.Agen{ID: "agen-1", Name: "tanpa ruang"}); !errors.Is(err, ErrInvalid) {
+	if err := repo.CreateAgen(ctx, domain.Agen{ID: "agen-1", RuangID: "ruang-1", Name: "tanpa peran"}); !errors.Is(err, ErrInvalid) {
 		t.Fatalf("CreateAgen() error = %v, want ErrInvalid", err)
+	}
+	if err := repo.CreateAgen(ctx, domain.Agen{ID: "agen-2", RuangID: "ruang-1", Name: "status salah", Role: "Pelaksana", Status: "unknown"}); !errors.Is(err, ErrInvalid) {
+		t.Fatalf("CreateAgen(status) error = %v, want ErrInvalid", err)
 	}
 	if err := repo.CreateTugas(ctx, domain.Tugas{ID: "tugas-1", PekerjaanID: "pekerjaan-1", Title: "negatif", Position: -1}); !errors.Is(err, ErrInvalid) {
 		t.Fatalf("CreateTugas() error = %v, want ErrInvalid", err)
@@ -102,7 +105,7 @@ func TestRepositoryForeignKeys(t *testing.T) {
 	defer db.Close()
 
 	repo := NewRepository(db)
-	err = repo.CreateAgen(ctx, domain.Agen{ID: "agen-1", RuangID: "missing", Name: "Agen"})
+	err = repo.CreateAgen(ctx, domain.Agen{ID: "agen-1", RuangID: "missing", Name: "Agen", Role: "Pelaksana"})
 	if err == nil {
 		t.Fatal("CreateAgen() error = nil, want foreign-key error")
 	}
