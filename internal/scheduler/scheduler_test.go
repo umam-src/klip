@@ -55,7 +55,8 @@ func (r *fakeRepo) FinishScheduleRun(_ context.Context, id domain.ID, status dom
 		if r.runs[i].ID == id {
 			r.runs[i].Status = status
 			r.runs[i].Error = errText
-			r.runs[i].FinishedAt = &finished
+			runsFinished := finished
+			r.runs[i].FinishedAt = &runsFinished
 		}
 	}
 	return nil
@@ -66,16 +67,18 @@ func (r *fakeRepo) ListScheduleRuns(context.Context, domain.ID, int) ([]domain.S
 }
 
 type fakeExecutor struct {
-	mu    sync.Mutex
-	calls int
-	fail  int
-	done  chan struct{}
+	mu      sync.Mutex
+	calls   int
+	fail    int
+	done    chan struct{}
+	request agent.ExecutionRequest
 }
 
-func (e *fakeExecutor) Execute(context.Context, agent.ExecutionRequest) (agent.ExecutionResult, error) {
+func (e *fakeExecutor) Execute(_ context.Context, request agent.ExecutionRequest) (agent.ExecutionResult, error) {
 	e.mu.Lock()
 	e.calls++
 	calls := e.calls
+	e.request = request
 	e.mu.Unlock()
 	if calls <= e.fail {
 		return agent.ExecutionResult{}, errors.New("gagal")
@@ -129,5 +132,47 @@ func TestSchedulerRetryAndHistory(t *testing.T) {
 		if run.Status != domain.ScheduleRunSucceeded && run.Status != domain.ScheduleRunFailed {
 			t.Fatalf("status = %q", run.Status)
 		}
+	}
+}
+
+func TestSchedulerPassesTaskAssignmentToExecutor(t *testing.T) {
+	tugasID := domain.ID("t1")
+	repo := &fakeRepo{schedule: domain.Schedule{
+		ID:          "s-assignment",
+		Name:        "uji assignment",
+		PekerjaanID: "p1",
+		TugasID:     &tugasID,
+		AgenID:      "a1",
+		Program:     "true",
+		Interval:    time.Hour,
+		NextRunAt:   time.Now().Add(-time.Second),
+		Status:      domain.ScheduleEnabled,
+	}}
+	exec := &fakeExecutor{done: make(chan struct{})}
+	s, err := New(repo, exec, Config{PollInterval: 5 * time.Millisecond})
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	s.Start(ctx)
+	select {
+	case <-exec.done:
+	case <-time.After(time.Second):
+		t.Fatal("scheduler tidak menjalankan tugas terjadwal")
+	}
+	s.Stop()
+
+	exec.mu.Lock()
+	request := exec.request
+	exec.mu.Unlock()
+	if request.PekerjaanID != "p1" {
+		t.Fatalf("pekerjaan_id = %q, want p1", request.PekerjaanID)
+	}
+	if request.TugasID == nil || *request.TugasID != tugasID {
+		t.Fatalf("tugas_id = %v, want %q", request.TugasID, tugasID)
+	}
+	if request.AgenID != "a1" {
+		t.Fatalf("agen_id = %q, want a1", request.AgenID)
 	}
 }
