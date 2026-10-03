@@ -49,6 +49,9 @@ Format mengikuti Keep a Changelog dan versi mengikuti Semantic Versioning.
 - Release build tidak lagi mengandalkan simbol versi linker yang tidak tersedia di binary CLI.
 - CI membatalkan run lama pada ref yang sama saat commit baru masuk dan menggunakan permission workflow minimum untuk mengurangi pemborosan runner tanpa melemahkan pemeriksaan utama.
 - UI Agen menggunakan bahasa pengguna yang lebih ringkas dan tidak menampilkan URL provider atau credential pada daftar Agen.
+- Domain kini menetapkan **Ruang Kerja** sebagai batas lingkungan kerja dan **Goal** sebagai pusat arah kerja.
+- Dokumentasi domain memisahkan peran Goal, Pekerjaan, Tugas, Agen, Runtime, Execution, dan Result/Evidence tanpa memaksa migrasi tabel hanya karena perubahan istilah pengguna.
+- TODO domain menambahkan pekerjaan pematangan isolasi Ruang Kerja, hubungan Pekerjaan ke Goal, dan penelusuran Execution serta Result/Evidence.
 
 ### Removed
 - Belum ada.
