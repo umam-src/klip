@@ -68,6 +68,7 @@ Format mengikuti Keep a Changelog dan versi mengikuti Semantic Versioning.
 - README.md ditulis ulang tanpa istilah teknis; panduan menjalankan, konfigurasi, dan target ukuran dipindahkan ke `docs/penggunaan.md`.
 - Pemegang hak cipta pada LICENSE MIT diubah menjadi "Kontributor Klip".
 - Dokumentasi dirapikan: batas ukuran, prinsip kompatibilitas database, lingkup jejak aktivitas (Peristiwa hanya untuk Eksekusi), dan istilah model v1 diselaraskan; CONTRIBUTING dilengkapi; indeks dokumentasi ditambahkan.
+- Kontrak sumber pengetahuan (Knowledge Base melalui Plugin) dicatat sebagai rencana di `docs/PLUGINS.md`.
 - Istilah UI "Ruang" diselaraskan menjadi "Ruang Kerja" pada beranda, daftar, detail, dan pesan kesalahan. Nama storage dan jalur API `ruang` tidak berubah.
 - CONTRIBUTING mewajibkan test berbasis berkas (tutup lalu buka ulang) untuk perubahan database, backup, restore, atau migrasi. `docs/storage.md` dan `docs/backup.md` menjelaskan perilaku buka ulang database v1, validasi restore, dan invarian Goal, Proyek, serta Hasil Kerja.
 

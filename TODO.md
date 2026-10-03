@@ -137,6 +137,14 @@ Catatan: `Sasaran` tidak lagi dipertahankan sebagai compatibility layer permanen
 - [ ] Jadikan Ruang Kerja sebagai unit backup/export yang eksplisit bila export/import diperluas.
 - [x] Sesuaikan backup/restore dengan schema v1 setelah remodel.
 
+## P1 — Setelah isu #28
+
+Dikerjakan setelah remodel v1 selesai dan CI hijau. Tetap ringan: tanpa komponen dan dependency baru.
+
+- [ ] Tambahkan deskripsi pada Tugas (satu kolom teks; prioritas tiga tingkat hanya bila terbukti perlu).
+- [ ] Susun konteks Runtime dari Goal, Proyek, Tugas, dan komentar terbaru dengan batas panjang (merinci butir konteks Goal di P0 Runtime agen).
+- [ ] Tambahkan layar Riwayat Eksekusi di UI: daftar dan detail Eksekusi, Peristiwa, dan Hasil Kerja per Proyek.
+
 ## P2 — Optimasi
 
 - [x] Audit dependency.
@@ -171,6 +179,7 @@ Catatan: belum ada Dockerfile. Butir ukuran Docker image di P0 Fondasi dan P2 Op
 - [ ] Connector tambahan berdasarkan kebutuhan nyata.
 - [ ] Import/export tambahan.
 - [ ] Integrasi chat.
+- [ ] Plugin sumber pengetahuan (folder Markdown, lalu DokuWiki baca-saja) setelah protokol Plugin ditetapkan; lihat docs/PLUGINS.md.
 
 ## Dokumentasi
 

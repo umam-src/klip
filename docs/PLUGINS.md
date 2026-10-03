@@ -131,6 +131,34 @@ Plugin nantinya dapat menyediakan kemampuan seperti:
 
 Contoh tersebut belum berarti bahwa kemampuan tersebut harus dibuat sebagai Plugin resmi Klip.
 
+## Contoh Kontrak: Sumber Pengetahuan
+
+Knowledge Base tidak menjadi bagian inti Klip. Kebutuhan ini dipenuhi Plugin yang menyediakan sumber pengetahuan: tempat teks rujukan yang dapat dicari dan dibaca Agen. Bagian ini hanya mencatat bentuk kemampuannya, bukan protokol atau format pesan, yang tetap mengikuti Batasan Rancangan Saat Ini.
+
+Kemampuan yang dibayangkan:
+
+- `cari`: mencari halaman dari kata kunci, mengembalikan judul, rujukan halaman, dan cuplikan;
+- `baca`: mengambil isi satu halaman sebagai teks polos dalam batas panjang tertentu;
+- `tulis`: membuat atau mengubah satu halaman (opsional).
+
+Sumber yang dipertimbangkan:
+
+- folder catatan Markdown lokal: tanpa server dan cocok untuk offline;
+- DokuWiki melalui API jarak jauhnya: tanpa database, hanya perlu PHP dan web server; API perlu diaktifkan dan dibatasi untuk satu pengguna;
+- MediaWiki melalui REST API atau Action API: hanya bila wiki tersebut sudah ada atau ada kebutuhan nyata, karena memerlukan PHP dan database.
+
+Daftar tersebut belum berarti semuanya harus menjadi Plugin resmi Klip.
+
+Aturan yang dipegang:
+
+1. **Baca-saja secara bawaan.** `tulis` hanya setelah Persetujuan, dan sebaiknya ke ruang draf agar manusia meninjau.
+2. **Isi halaman adalah data, bukan instruksi.** Klip memberi label sumber dan membatasi panjang yang disisipkan ke prompt.
+3. **Satu Ruang Kerja, satu pemisah sumber** (folder, namespace, atau wiki) agar data antar Ruang Kerja tidak tercampur.
+4. **Teks polos, bukan sintaks wiki.** Pemotongan per bagian mengikuti batas panjang prompt.
+5. **Gagal dengan anggun.** Bila sumber tidak tersedia, Klip tetap berjalan dengan batas waktu pendek dan Agen bekerja tanpa konteks tambahan.
+6. **Tanpa embedding atau vector database** pada tahap awal; pencarian memakai kata kunci dari sumbernya.
+7. **Kredensial** akun sumber (bila ada) tidak ditulis ke log atau Hasil Kerja.
+
 ## Keamanan
 
 Plugin yang memiliki akses ke komputer lokal perlu diperlakukan sebagai komponen yang memiliki hak akses tersendiri. Rancangan akhir perlu mempertimbangkan izin, batas lokasi berkas, operasi yang diperbolehkan, persetujuan untuk tindakan berisiko, serta isolasi kegagalan Plugin.
