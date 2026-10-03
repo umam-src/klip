@@ -1,266 +1,390 @@
 # Domain Klip
 
-Dokumen ini menetapkan bahasa domain Klip agar desain produk tetap mandiri dan tidak menjadi salinan struktur produk lain.
+Dokumen ini menetapkan bahasa dan batas domain Klip agar desain produk tetap mandiri, mudah dipahami, dan tidak menjadi salinan struktur produk lain.
 
 ## Prinsip
 
 1. Gunakan istilah yang mudah dipahami pengguna Indonesia.
 2. Pisahkan konsep produk dari detail implementasi.
 3. Hindari membuat entitas hanya karena produk lain memilikinya.
-4. Utamakan alur kerja lokal dan sederhana.
+4. Utamakan alur kerja lokal, sederhana, dan dapat ditelusuri.
 5. Setiap entitas harus punya alasan operasional yang jelas.
-6. Jangan mengunci Agen pada satu model, token, atau bentuk penyedia tertentu bila kebutuhan produk nantinya berkembang.
+6. Agen adalah pelaksana, bukan pemilik tujuan.
+7. Goal menjadi pusat arah kerja; runtime hanya menjadi mekanisme pelaksanaan.
+8. Batas Ruang Kerja harus dijaga pada seluruh hubungan domain.
+9. Jangan mengunci Agen pada satu model, token, atau bentuk penyedia tertentu bila kebutuhan produk berkembang.
 
-## Kosakata inti
+## Pusat domain
+
+Klip berangkat dari kebutuhan untuk mencapai hasil. Karena itu **Goal** menjadi pusat semantik pekerjaan, sedangkan **Ruang Kerja** menjadi batas lingkungan tempat pekerjaan tersebut berlangsung.
+
+```text
+Ruang Kerja
+    ↓
+  Goal
+    ↓
+Pekerjaan
+    ↓
+  Tugas
+    ↓
+  Agen
+    ↓
+ Runtime
+    ↓
+Execution
+    ↓
+Result / Evidence
+    ↓
+Progress Goal
+```
+
+Makna tiap lapisan:
 
 | Istilah | Arti di Klip |
 |---|---|
-| **Ruang** | Lingkup kerja mandiri yang menyimpan agen, pekerjaan, pengaturan, dan hasil. |
-| **Agen** | Pelaksana berbasis AI yang memiliki identitas kerja, peran, deskripsi, konteks, dan konfigurasi AI. Agen dapat berada di bawah agen induk dalam ruang yang sama. |
-| **Sasaran** | Hasil yang ingin dicapai oleh manusia atau agen. |
-| **Pekerjaan** | Unit kerja utama yang memiliki konteks dan hasil yang diharapkan. |
+| **Ruang Kerja** | Lingkungan mandiri tempat Goal, pekerjaan, tugas, agen, dan hasil kerja dikelola bersama. |
+| **Goal** | Hasil atau arah yang ingin dicapai dan menjadi pusat pengelolaan kemajuan. Goal dapat memiliki Goal turunan. |
+| **Pekerjaan** | Bagian pekerjaan yang dapat dikelola untuk membantu mencapai Goal. |
 | **Tugas** | Langkah konkret yang dapat dikerjakan dan dilacak secara terpisah. |
+| **Agen** | Pelaksana kerja berbasis AI yang memiliki identitas, peran, konteks, dan kemampuan. |
+| **Skill** | Paket kemampuan atau instruksi yang dapat digunakan Agen. |
+| **Alat** | Kemampuan yang dapat dipanggil Agen untuk melakukan pekerjaan di luar penalaran model. |
+| **Runtime** | Mekanisme yang menyediakan kemampuan eksekusi bagi Agen. Runtime bukan pemilik Goal atau konteks kerja. |
+| **Execution** | Satu kejadian pelaksanaan yang menjadi bukti bahwa pekerjaan dijalankan. |
+| **Result / Evidence** | Keluaran atau bukti kerja yang dapat digunakan untuk memahami dan memperbarui kemajuan Goal. |
+| **Progress** | Keadaan kemajuan Goal berdasarkan pekerjaan dan hasil yang tersedia. |
 | **Alur** | Urutan atau aturan yang menghubungkan beberapa tugas. |
-| **Sesi** | Konteks eksekusi percakapan atau proses kerja tertentu. |
-| **Hasil** | Keluaran kerja seperti teks, berkas, laporan, atau data. |
-| **Aktivitas** | Catatan kejadian dan perkembangan kerja yang membantu pengguna memahami apa yang baru terjadi. |
-| **Alat** | Kemampuan yang dapat dipanggil agen untuk melakukan pekerjaan di luar penalaran model. |
-| **Skill** | Paket kemampuan atau instruksi yang dapat dipasang pada agen. |
+| **Sesi** | Konteks percakapan atau proses kerja tertentu. Sesi bukan pengganti Pekerjaan. |
+| **Aktivitas** | Catatan kejadian dan perkembangan kerja. |
 | **Persetujuan** | Titik pengaman yang membutuhkan keputusan manusia sebelum langkah tertentu diteruskan. |
-| **Penyedia** | Layanan atau proses yang menyediakan model AI. |
-| **Akun AI** | Konfigurasi akses atau identitas untuk menggunakan Penyedia AI; konsep ini menjadi bagian dari rancangan AI berikutnya dan belum menjadi entitas implementasi wajib. |
-| **Model** | Model AI tertentu yang digunakan oleh penyedia. |
+| **Penyedia AI** | Layanan atau proses yang menyediakan kemampuan model AI. |
+| **Akun AI** | Konfigurasi akses atau identitas untuk menggunakan Penyedia AI; belum menjadi entitas implementasi wajib. |
+| **Model AI** | Model tertentu yang digunakan oleh penyedia. |
 | **Jadwal** | Aturan waktu untuk menjalankan pekerjaan atau alur secara otomatis. |
+
+## Ruang Kerja
+
+### Definisi
+
+**Ruang Kerja adalah lingkungan mandiri tempat Goal, pekerjaan, tugas, agen, dan hasil kerja dikelola bersama.**
+
+Ruang Kerja adalah batas, bukan tujuan. Ia memastikan data dan pekerjaan yang berbeda tidak tercampur, tetapi tidak mengambil peran Goal sebagai arah produk.
+
+Dalam kode dan penyimpanan, istilah tetap menggunakan `ruang` dan `ruang_id` agar perubahan istilah pengguna tidak memaksa migrasi teknis yang tidak diperlukan.
+
+### Tanggung jawab Ruang Kerja
+
+Ruang Kerja menjadi batas untuk:
+
+- data kerja;
+- Goal dan Goal turunan;
+- Pekerjaan dan Tugas;
+- Agen dan hierarki Agen;
+- konfigurasi yang memang khusus untuk ruang tersebut;
+- Execution dan jejak hasil kerja;
+- Aktivitas dan peristiwa lokal;
+- backup, export, dan restore pada tingkat ruang bila kemampuan tersebut tersedia.
+
+Ruang Kerja tidak menjadi tempat menumpuk semua konfigurasi global aplikasi.
+
+### Bentuk data inti
+
+```text
+Ruang Kerja
+├── id
+├── nama
+├── deskripsi
+├── status
+├── created_at
+└── updated_at
+```
+
+Status inti cukup:
+
+- `active`
+- `archived`
+
+Pengarsipan digunakan untuk menghentikan pekerjaan baru tanpa menghapus riwayat secara destruktif.
+
+### Hal yang tidak menjadi bagian inti Ruang Kerja
+
+Jangan menambahkan atribut atau entitas berikut hanya untuk memperluas makna Ruang Kerja:
+
+- organisasi;
+- perusahaan;
+- tim;
+- pengguna sebagai pemilik wajib;
+- proyek sebagai lapisan tambahan;
+- Goal default;
+- Agen default;
+- model default;
+- API key;
+- URL provider;
+- konfigurasi runtime besar berbentuk JSON.
+
+Kebutuhan tersebut dapat ditambahkan kemudian jika ada kebutuhan produk yang nyata.
+
+### Aturan isolasi
+
+Aturan berikut merupakan invariant domain dan harus dipertahankan oleh storage, service, API, serta runtime:
+
+1. Setiap Ruang Kerja memiliki ID unik.
+2. Objek yang terikat ruang tidak boleh diakses melalui ruang lain.
+3. Goal induk dan Goal turunan harus berada pada Ruang Kerja yang sama.
+4. Pekerjaan dan Goal yang dihubungkan harus berada pada Ruang Kerja yang sama.
+5. Pekerjaan dan Tugas yang dihubungkan harus berada pada Ruang Kerja yang sama.
+6. Tugas dan Agen yang dihubungkan harus berada pada Ruang Kerja yang sama.
+7. Agen induk dan Agen anak harus berada pada Ruang Kerja yang sama.
+8. Execution harus tetap dapat ditelusuri ke Ruang Kerja asalnya.
+9. Ruang Kerja yang diarsipkan tidak menerima pekerjaan baru kecuali diaktifkan kembali.
+10. API dan service tidak boleh mengabaikan batas `ruang_id` ketika mencari atau mengubah data domain.
+
+### Lifecycle
+
+Ruang Kerja boleh kosong. Pengguna tidak diwajibkan membuat Goal, Agen, atau Pekerjaan saat membuat ruang.
+
+Satu Ruang Kerja dapat memiliki banyak Goal. Goal tidak boleh berpindah Ruang Kerja melalui operasi biasa. Jika suatu saat migrasi antar-ruang diperlukan, migrasi harus menjadi operasi eksplisit dengan validasi seluruh relasi turunannya.
+
+Ruang Kerja yang sudah memiliki riwayat kerja sebaiknya diarsipkan daripada dihapus secara permanen.
+
+## Goal
+
+Goal adalah pusat arah kerja di dalam Ruang Kerja.
+
+```text
+Goal
+├── id
+├── ruang_id
+├── parent_goal_id (opsional)
+├── title
+├── description
+├── status
+├── priority
+├── progress
+├── target
+├── deadline
+├── created_at
+└── updated_at
+```
+
+Goal dapat memiliki Goal turunan. Goal induk dan seluruh turunannya harus berada pada Ruang Kerja yang sama.
+
+Agen tidak memiliki Goal. Agen menjalankan pekerjaan dan tugas yang membantu mencapai Goal.
+
+Progress Goal tidak harus menjadi angka manual saja. Pada rancangan matang, progress dapat diperbarui berdasarkan status pekerjaan, hasil, dan bukti eksekusi yang relevan.
 
 ## Hubungan inti
 
-Model domain dasar:
-
 ```text
-Ruang
- ├── Agen
- │    ├── Agen induk
- │    │    └── Agen anak
- │    ├── Skill
- │    └── Alat
- ├── Sasaran
- ├── Pekerjaan
- │    ├── Tugas
- │    ├── Sesi
- │    ├── Persetujuan
- │    └── Hasil
- ├── Aktivitas
- └── Alur
-      └── Tugas
+Ruang Kerja
+│
+├── Goal
+│    ├── Goal turunan
+│    └── Progress
+│
+├── Pekerjaan
+│    └── Tugas
+│         └── Assignment → Agen
+│                              ├── Skill
+│                              └── Runtime
+│                                   └── Execution
+│                                        └── Result / Evidence
+│
+├── Alur
+├── Jadwal
+├── Persetujuan
+└── Aktivitas / Peristiwa
 ```
 
-Model hubungan AI yang menjadi arah rancangan:
+Pekerjaan sebaiknya terhubung ke Goal ketika konteks Goal memang tersedia. Tugas dapat menjadi bagian dari Pekerjaan dan assignment menentukan Agen yang menjalankannya.
+
+## Pekerjaan dan Tugas
+
+**Pekerjaan** menjawab "bagian apa yang sedang diselesaikan untuk membantu Goal".
+
+**Tugas** menjawab "langkah konkret apa yang perlu dilakukan".
+
+Satu Pekerjaan dapat memiliki satu atau banyak Tugas. Jika `Pekerjaan` dan `Tugas` memiliki `ruang_id` tersendiri, service dan storage harus memastikan keduanya selalu sama.
+
+## Agen
+
+Agen adalah pelaksana kerja, bukan pusat domain.
+
+Data konseptual Agen:
+
+```text
+Agen
+├── id
+├── ruang_id
+├── nama
+├── peran
+├── deskripsi
+├── atasan_id (opsional)
+└── status
+```
+
+Satu Agen dapat memiliki paling banyak satu Agen induk. Agen induk dan Agen anak harus berada pada Ruang Kerja yang sama.
+
+Agen dapat menggunakan Skill, Alat, model, dan Runtime. Hubungan tersebut menjelaskan kemampuan dan mekanisme kerja Agen; hubungan tersebut tidak menjadikan Agen pemilik Goal.
+
+## Runtime dan Execution
+
+Runtime adalah mekanisme, bukan entitas yang menentukan arah kerja.
+
+Execution adalah kejadian pelaksanaan yang perlu dapat ditelusuri ke konteks kerja asalnya. Konteks tersebut secara konseptual mencakup Ruang Kerja, Pekerjaan, Tugas bila ada, dan Agen yang menjalankan.
+
+```text
+Goal
+  ↓
+Pekerjaan
+  ↓
+Tugas
+  ↓
+Agen
+  ↓
+Runtime
+  ↓
+Execution
+  ↓
+Result / Evidence
+  ↓
+Progress Goal
+```
+
+Desain ini memungkinkan Runtime AI berkembang tanpa mengubah Goal menjadi detail implementasi runtime.
+
+## Result / Evidence
+
+Result adalah keluaran kerja. Evidence adalah informasi yang membantu membuktikan atau memahami apa yang terjadi.
+
+Keduanya dapat berupa:
+
+- teks;
+- berkas;
+- laporan;
+- data;
+- status eksekusi;
+- referensi ke artefak lokal;
+- metadata pelaksanaan yang aman.
+
+Result/Evidence harus dapat ditelusuri ke Execution atau pekerjaan yang menghasilkannya. Jangan menjadikan hasil sebagai pengganti Activity log.
+
+## Aktivitas
+
+Aktivitas mencatat kejadian dan perkembangan kerja agar pengguna dapat memahami perubahan yang terjadi.
+
+Aktivitas berbeda dari Result:
+
+- **Result / Evidence** menjawab "apa yang dihasilkan atau dibuktikan".
+- **Aktivitas** menjawab "apa yang terjadi".
+
+## AI provider
+
+Hubungan AI tetap dipisahkan secara konseptual:
 
 ```text
 Penyedia AI
    ↓
 Akun AI
    ↓
-Model
+Model AI
    ↓
 Agen
 ```
 
-Hubungan AI di atas adalah **model target**, bukan skema SQLite final. Tahap Agen saat ini tidak mengharuskan implementasi multi-provider atau multi-account.
+Hubungan tersebut bukan berarti semua entitas harus langsung menjadi tabel. Implementasi hanya menambahkan entitas ketika kebutuhan nyata muncul.
 
-## Rancangan alur kerja Agen
+Kredensial bukan milik Agen dan tidak boleh dicatat di log aktivitas atau Execution.
 
-Pengalaman pengguna yang diinginkan mengikuti urutan sederhana:
+## Alur kerja produk
+
+Alur utama Klip sekarang dipahami sebagai:
 
 ```text
-Ruang kerja
+Ruang Kerja
    ↓
-Penyedia AI + Akun AI
-   ↓
-Model
-   ↓
-Agen
-   ↓
-Sasaran
+Goal
    ↓
 Pekerjaan
    ↓
 Tugas
    ↓
-Agen bekerja
+Assignment → Agen
    ↓
-Aktivitas + Hasil
+Runtime
+   ↓
+Execution
+   ↓
+Result / Evidence
+   ↓
+Progress Goal
 ```
 
-Urutan tersebut adalah mental model, bukan wizard wajib. Pekerjaan sederhana boleh langsung dimulai dari Agen atau Tugas tanpa memaksa pengguna membuat semua tingkat di atasnya.
-
-## Prinsip desain Agen
-
-### Agen adalah pelaksana kerja
-
-Agen bukan nama lain untuk Model. Agen memiliki identitas dan fungsi kerja sendiri.
-
-Data konseptual Agen:
-
-```text
-Agen
-├── nama
-├── peran
-├── deskripsi
-├── ruang_id
-├── atasan_id (opsional)
-├── akun_ai_id (arah rancangan)
-├── model_ai_id (arah rancangan)
-└── status
-```
-
-Model AI adalah kemampuan yang dipilih Agen, sedangkan peran dan konteks menjelaskan mengapa Agen tersebut ada.
-
-### Kredensial bukan milik Agen
-
-Kredensial AI tidak disimpan berulang pada setiap Agen. Dalam rancangan Akun AI, kredensial berada pada konfigurasi akses yang dapat digunakan oleh beberapa Agen.
-
-```text
-Akun AI
-   ├── credential
-   ├── Agen A
-   ├── Agen B
-   └── Agen C
-```
-
-Dengan demikian, desain Agen tidak mengunci hubungan **satu Agen = satu token**.
-
-### Hierarki Agen dibatasi oleh Ruang
-
-Satu agen dapat memiliki paling banyak satu agen induk. Agen induk harus sudah ada dan berada pada **Ruang** yang sama. Hubungan awal dibuat saat agen anak dibuat; belum ada operasi pemindahan atau perubahan induk agar aturan siklus tetap sederhana dan aman.
-
-Contoh:
-
-```text
-Pemimpin
-├── Peneliti Produk
-└── Pengembang
-```
-
-Tidak perlu membuat konsep organisasi atau tim baru hanya untuk merepresentasikan hubungan tersebut.
-
-## Prinsip halaman Agen
-
-Halaman Agen harus menjawab fungsi Agen sebelum detail teknis.
-
-### Daftar Agen
-
-Daftar menonjolkan:
-
-- nama;
-- peran;
-- deskripsi singkat;
-- status;
-- ringkasan AI seperlunya.
-
-URL penyedia, token, credential, dan parameter teknis tidak menjadi informasi utama.
-
-### Detail Agen
-
-Detail Agen secara konseptual dapat dibagi menjadi:
-
-- **Ringkasan** — identitas, peran, hubungan, AI yang digunakan, status, dan ringkasan aktivitas.
-- **Pekerjaan** — pekerjaan dan tugas yang berkaitan dengan Agen.
-- **Aktivitas** — kejadian dan perkembangan kerja.
-- **Pengaturan** — konfigurasi Agen yang memang relevan bagi pengguna.
-
-Pembagian ini merupakan arah UX, bukan kewajiban bahwa semua tab harus ada sejak versi pertama.
-
-### Form Agen
-
-Field inti yang dirancang:
-
-```text
-Nama
-Peran
-Deskripsi
-Atasan
-Akun AI
-Model
-```
-
-Form tidak meminta token/API key secara langsung. Validasi tetap dilakukan di server, termasuk validasi atasan, status akun, dan ketersediaan model bila data tersebut sudah tersedia.
+Urutan ini adalah mental model domain, bukan wizard yang wajib diikuti. Pengguna tetap boleh melakukan pekerjaan sederhana tanpa membuat seluruh lapisan secara manual bila konteksnya belum diperlukan.
 
 ## Keputusan desain
 
+### Ruang Kerja, bukan Proyek
+
+Istilah **Ruang Kerja** dipakai pada bahasa produk karena lebih jelas sebagai batas lingkungan kerja. Istilah **Proyek** tidak digunakan sebagai lapisan domain tambahan karena mudah bertabrakan dengan makna Goal dan Pekerjaan.
+
+### `ruang` tetap dipakai di kode
+
+Perubahan istilah pengguna menjadi Ruang Kerja tidak memerlukan rename tabel atau kolom hanya demi kosmetik. Penyimpanan dan kode tetap dapat menggunakan `ruang` serta `ruang_id`.
+
 ### Tidak ada organisasi sebagai konsep wajib
 
-Klip dimulai dari **Ruang**, bukan hierarki organisasi. Pengguna tunggal dapat menjalankan Klip tanpa membuat organisasi, tim, atau struktur administratif tambahan.
+Klip dapat digunakan tanpa organisasi, tim, atau struktur administratif. Jika kebutuhan multi-pengguna muncul, akses dapat ditambahkan sebagai lapisan terpisah tanpa menjadikan struktur organisasi syarat dasar Ruang Kerja.
 
-Jika kebutuhan multi-pengguna berkembang, akses dapat ditambahkan tanpa menjadikan struktur organisasi sebagai syarat penggunaan dasar.
+### Tidak ada hubungan Agen → Goal
 
-### Penyedia, Akun AI, dan Model dipisahkan secara konseptual
+Goal menentukan arah. Pekerjaan dan Tugas membawa arah tersebut ke pekerjaan konkret. Agen menerima tanggung jawab melalui assignment, bukan dengan memiliki Goal.
 
-Jangan menyamakan:
+### Tidak ada hard-delete sebagai lifecycle utama Ruang Kerja
 
-```text
-Penyedia AI = layanan AI
-Akun AI    = konfigurasi akses/identitas
-Kredensial = rahasia yang digunakan Akun AI
-Model      = model AI yang tersedia
-Agen       = pelaksana kerja yang menggunakan Akun AI + Model
-```
-
-Satu Penyedia dapat memiliki beberapa Akun AI. Satu Akun AI dapat digunakan oleh beberapa Agen. Rancangan ini belum menjadi skema database final.
-
-### Pekerjaan dan tugas berbeda
-
-**Pekerjaan** menjawab "apa yang sedang ingin diselesaikan". **Tugas** menjawab "langkah konkret apa yang perlu dilakukan". Satu pekerjaan dapat memiliki satu atau banyak tugas.
-
-### Sesi bukan pekerjaan
-
-Sesi hanya menyimpan konteks eksekusi. Pekerjaan tetap menjadi objek yang dapat dilacak meskipun memiliki beberapa sesi atau percobaan.
-
-### Hasil dan aktivitas berbeda
-
-**Hasil** adalah keluaran kerja seperti teks, berkas, laporan, atau data. **Aktivitas** adalah jejak kejadian dan perkembangan kerja. Aktivitas tidak menggantikan Hasil.
+Riwayat kerja perlu tetap dapat ditelusuri. Karena itu pengarsipan menjadi lifecycle utama; penghapusan permanen, jika dibutuhkan, harus menjadi operasi terkontrol dan mempertimbangkan seluruh data turunan.
 
 ## Bentuk data awal
 
-Implementasi awal cukup menggunakan entitas berikut:
+Entitas yang sudah ada atau menjadi fondasi dapat tetap dipertahankan selama belum ada alasan migrasi besar. Perubahan terminologi Ruang → Ruang Kerja tidak dengan sendirinya membutuhkan perubahan tabel.
+
+Entitas inti yang menjadi arah domain:
 
 - `ruang`
-- `agen`
-- `sasaran`
+- `goal` / sasaran
 - `pekerjaan`
 - `tugas`
+- `agen`
+- `execution` / riwayat eksekusi
+- `hasil`
+- `peristiwa`
+
+Entitas pendukung dapat berkembang berdasarkan kebutuhan:
+
 - `alur`
 - `sesi`
-- `hasil`
 - `skill`
 - `alat`
 - `persetujuan`
 - `penyedia_ai`
 - `model_ai`
 - `jadwal`
-- `peristiwa`
 
-`akun_ai` belum ditambahkan sebagai tabel hanya karena rancangan visual memperlihatkannya. Entitas tersebut baru dibuat ketika desain multi-provider/account disetujui dan kebutuhan implementasinya nyata.
+Nama tabel dan skema aktual tetap mengikuti implementasi yang sudah ada sampai rancangan migrasi disetujui.
 
-## Status awal
+## Batas v0.1 dan arah berikutnya
 
-Status umum pekerjaan dan tugas:
+Fondasi lama Klip sudah memiliki Ruang, Agen, Pekerjaan, Tugas, Sesi, dan Hasil. Tahap pematangan domain tidak dimaksudkan untuk menambah fitur sebanyak mungkin, tetapi untuk memperjelas hubungan antar-entitas sebelum Runtime AI diperluas.
 
-- `draft`
-- `ready`
-- `running`
-- `waiting`
-- `blocked`
-- `completed`
-- `failed`
-- `cancelled`
+Urutan pengembangan yang diutamakan:
 
-Status Agen masih dalam rancangan UX. Contoh label tampilan dapat berupa **Aktif**, **Menunggu**, **Berhenti**, atau **Bermasalah**, tetapi daftar status domain final belum ditetapkan.
+1. tetapkan Ruang Kerja sebagai batas domain;
+2. tetapkan Goal sebagai pusat arah kerja;
+3. pastikan Pekerjaan dan Tugas dapat ditelusuri ke Goal;
+4. pastikan assignment menghubungkan Tugas dengan Agen;
+5. pastikan Execution dan Result/Evidence dapat ditelusuri kembali ke konteks tersebut;
+6. baru perluas Runtime AI dengan konteks Goal yang jelas.
 
-Status Agen harus dibedakan dari status Pekerjaan dan Tugas.
+Prinsip akhirnya:
 
-## Batasan v0.1
-
-v0.1 hanya membutuhkan **Ruang, Agen, Pekerjaan, Tugas, Sesi, dan Hasil** sebagai fondasi. Sasaran, Alur, Persetujuan, Skill, Alat, dan Jadwal dapat hadir sebagai struktur data setelah fondasi stabil.
-
-Rancangan **Penyedia AI → Akun AI → Model → Agen** menjadi arah pengembangan berikutnya, tetapi multi-provider, multi-account, routing otomatis, dan pengelolaan credential per akun belum menjadi pekerjaan tahap Agen saat ini.
+> **Ruang Kerja membatasi sistem. Goal mengarahkan sistem. Agen menjalankan sistem. Runtime mengeksekusi sistem. Result/Evidence membantu mengukur kemajuan Goal.**
