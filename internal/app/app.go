@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
-	"path/filepath"
 	"strings"
 	"time"
 
@@ -216,6 +215,11 @@ func (a *App) handleSettings(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *App) updateSettings(w http.ResponseWriter, r *http.Request) {
+	if a.repo == nil {
+		writeError(w, http.StatusInternalServerError, "penyimpanan pengaturan belum siap")
+		return
+	}
+
 	var req settingsUpdateRequest
 	if !decodeJSON(w, r, &req) {
 		return
@@ -237,8 +241,11 @@ func (a *App) updateSettings(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, "konfigurasi penyedia AI tidak valid")
 		return
 	}
-	configPath := filepath.Join(updated.DataDir, "config.json")
-	if err := config.Save(configPath, updated); err != nil {
+	if err := a.repo.SaveAISettings(r.Context(), storage.AISettings{
+		Provider: updated.AI.Provider,
+		BaseURL:  updated.AI.BaseURL,
+		Model:    updated.AI.Model,
+	}); err != nil {
 		writeError(w, http.StatusInternalServerError, "gagal menyimpan pengaturan")
 		return
 	}
