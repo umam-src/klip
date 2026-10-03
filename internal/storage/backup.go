@@ -79,8 +79,50 @@ func RestoreDatabase(source, destination string) error {
 	if err := temp.Close(); err != nil {
 		return fmt.Errorf("restore: tutup file sementara: %w", err)
 	}
+	if err := validateRestoreSource(tempName); err != nil {
+		return err
+	}
 	if err := os.Rename(tempName, destination); err != nil {
 		return fmt.Errorf("restore: ganti database: %w", err)
+	}
+	// Sisa WAL/SHM milik database lama tidak boleh terbaca terhadap database hasil restore.
+	for _, suffix := range []string{"-wal", "-shm"} {
+		if err := os.Remove(destination + suffix); err != nil && !errors.Is(err, os.ErrNotExist) {
+			return fmt.Errorf("restore: bersihkan berkas %s: %w", suffix, err)
+		}
+	}
+	return nil
+}
+
+// validateRestoreSource memeriksa salinan sementara sebelum menimpa database tujuan:
+// harus berkas SQLite yang utuh dan berversi skema Klip saat ini tanpa tabel legacy.
+// Pemeriksaan dilakukan pada salinan, bukan pada berkas cadangan asli.
+func validateRestoreSource(path string) error {
+	ctx := context.Background()
+	db, err := sql.Open("sqlite", path)
+	if err != nil {
+		return fmt.Errorf("restore: buka sumber untuk diperiksa: %w", err)
+	}
+	defer func() {
+		_ = db.Close()
+		_ = os.Remove(path + "-wal")
+		_ = os.Remove(path + "-shm")
+	}()
+	db.SetMaxOpenConns(1)
+
+	var hasil string
+	if err := db.QueryRowContext(ctx, `PRAGMA quick_check`).Scan(&hasil); err != nil || hasil != "ok" {
+		return errors.New("restore: sumber bukan database SQLite yang utuh")
+	}
+	version, err := databaseSchemaVersion(ctx, db)
+	if err != nil {
+		return fmt.Errorf("restore: %w", err)
+	}
+	if version != schemaVersion {
+		return fmt.Errorf("restore: sumber bukan database Klip skema v%d (versi terbaca %d)", schemaVersion, version)
+	}
+	if err := rejectLegacySchema(ctx, db); err != nil {
+		return fmt.Errorf("restore: %w", err)
 	}
 	return nil
 }
