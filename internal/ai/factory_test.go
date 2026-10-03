@@ -33,13 +33,16 @@ func TestNewProvider(t *testing.T) {
 	}
 }
 
-func TestNewProviderRejectsMissingModel(t *testing.T) {
-	_, err := NewProvider(config.AIConfig{
+func TestNewProviderAllowsMissingModel(t *testing.T) {
+	provider, err := NewProvider(config.AIConfig{
 		Provider: "ollama",
 		BaseURL:  "http://127.0.0.1:11434",
 	})
-	if err == nil {
-		t.Fatal("NewProvider() seharusnya menolak model kosong")
+	if err != nil {
+		t.Fatalf("NewProvider() error = %v", err)
+	}
+	if provider.ID() != "ollama" {
+		t.Fatalf("ID() = %q, want %q", provider.ID(), "ollama")
 	}
 }
 
