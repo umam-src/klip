@@ -31,9 +31,14 @@ type createHasilKerjaRequest struct {
 	Path        string `json:"path"`
 }
 
-func (a *App) handleProyek(w http.ResponseWriter, r *http.Request, ruangID domain.ID) {
+func (a *App) handleProyek(w http.ResponseWriter, r *http.Request) {
 	if a.repo == nil {
 		writeError(w, http.StatusServiceUnavailable, "penyimpanan belum siap")
+		return
+	}
+	 ruangID := domain.ID(r.PathValue("id"))
+	if strings.TrimSpace(string(ruangID)) == "" {
+		writeError(w, http.StatusNotFound, "ruang tidak ditemukan")
 		return
 	}
 
