@@ -110,7 +110,36 @@ func (r *Repository) validateGoalParent(ctx context.Context, goal domain.Goal) e
 	if parent.RuangID != goal.RuangID {
 		return fmt.Errorf("goal: induk tidak sesuai dengan ruang: %w", ErrInvalid)
 	}
+	if err := r.validateGoalParentChain(ctx, goal.ID, parent.ID); err != nil {
+		return err
+	}
 	return nil
+}
+
+func (r *Repository) validateGoalParentChain(ctx context.Context, goalID, parentID domain.ID) error {
+	visited := make(map[domain.ID]struct{})
+	currentID := parentID
+	for {
+		if currentID == goalID {
+			return fmt.Errorf("goal: hierarki induk membentuk siklus: %w", ErrInvalid)
+		}
+		if _, ok := visited[currentID]; ok {
+			return fmt.Errorf("goal: hierarki induk sudah membentuk siklus: %w", ErrInvalid)
+		}
+		visited[currentID] = struct{}{}
+
+		parent, err := r.GetGoal(ctx, currentID)
+		if err != nil {
+			if errors.Is(err, ErrNotFound) {
+				return fmt.Errorf("goal: induk tidak ditemukan: %w", ErrInvalid)
+			}
+			return err
+		}
+		if parent.ParentGoalID == nil {
+			return nil
+		}
+		currentID = *parent.ParentGoalID
+	}
 }
 
 func validateGoal(goal domain.Goal) error {
