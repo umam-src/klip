@@ -20,6 +20,14 @@ Gunakan `storage.RestoreDatabase` setelah koneksi Klip ke database tujuan ditutu
 
 Setelah pemulihan selesai, buka kembali database melalui `storage.Open` agar konfigurasi SQLite dan migrasi dijalankan seperti biasa.
 
+Sebelum menimpa database tujuan, `RestoreDatabase` memeriksa salinan sementara dari berkas cadangan. Pemulihan ditolak, dan database tujuan tidak berubah, jika berkas cadangan:
+
+- bukan database SQLite yang utuh atau kosong;
+- bukan database Klip skema v1 (versi skema berbeda atau tidak ada);
+- masih mengandung tabel dari model lama.
+
+Setelah penggantian berhasil, berkas `-wal` dan `-shm` milik database lama dihapus agar tidak terbaca terhadap database hasil pemulihan.
+
 Pemulihan berkas hasil dari arsip dilakukan secara manual setelah memeriksa isi arsip dan lokasi tujuan. Jangan mengekstrak arsip ke direktori yang digunakan proses lain tanpa pemeriksaan.
 
 ## Praktik aman

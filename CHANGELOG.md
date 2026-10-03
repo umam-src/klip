@@ -75,6 +75,8 @@ Format mengikuti Keep a Changelog dan versi mengikuti Semantic Versioning.
 - Modul UI lama `sasaran.js`, `aktivitas.js`, dan `hasil.js` yang tidak dimuat dan memanggil endpoint `/sasaran` serta `/pekerjaan` yang sudah dihapus.
 
 ### Fixed
+- Database v1 yang sudah ada kini bisa dibuka ulang. Sebelumnya `Open` menolak versi skema 1 sebagai "tidak didukung", sehingga setiap restart aplikasi atau hasil pemulihan gagal; bug ini lolos karena tes lain memakai database di memori. Sisa tabel legacy pada database v1 tetap ditolak. Tes regresi memastikan data bertahan setelah dibuka ulang.
+- `RestoreDatabase` kini memeriksa berkas cadangan (utuh, skema v1, tanpa tabel legacy) sebelum menimpa database tujuan, sehingga cadangan rusak, kosong, atau berversi lain tidak lagi menghapus database yang sehat. Berkas `-wal` dan `-shm` milik database lama dibersihkan setelah pemulihan, dengan tes regresi.
 - Hierarki Goal kini menolak siklus (Goal tidak bisa menjadi induk dari leluhurnya sendiri) saat membuat atau mengubah Goal, dengan tes regresi. Tes regresi juga memastikan Proyek wajib mengacu ke satu Goal dan tidak boleh memakai Goal dari Ruang Kerja lain.
 - Pembuatan jadwal (`POST /api/v1/scheduler`) kini mengisi Ruang Kerja dari Proyek. Sebelumnya jadwal yang valid pun selalu ditolak setelah remodel v1. Respons jadwal kini menyertakan `ruang_id`, dan jadwal dengan agen atau tugas dari Ruang lain ditolak, dengan tes regresi.
 

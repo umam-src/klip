@@ -135,7 +135,7 @@ Catatan: `Sasaran` tidak lagi dipertahankan sebagai compatibility layer permanen
 - [ ] Audit aksi penting di luar Eksekusi (persetujuan dibuat/diputuskan dan jadwal dibuat); Peristiwa saat ini hanya mencatat Eksekusi.
 - [x] Dokumentasikan batas keamanan local-first.
 - [ ] Jadikan Ruang Kerja sebagai unit backup/export yang eksplisit bila export/import diperluas.
-- [ ] Sesuaikan backup/restore dengan schema v1 setelah remodel.
+- [x] Sesuaikan backup/restore dengan schema v1 setelah remodel.
 
 ## P2 — Optimasi
 
