@@ -56,6 +56,7 @@ func (a *App) Handler() http.Handler {
 	mux.HandleFunc("/health", a.handleHealth)
 	mux.HandleFunc("/api/v1/chat", a.handleChat)
 	mux.HandleFunc("/api/v1/provider/status", a.handleProviderStatus)
+	mux.HandleFunc("/api/v1/provider/models", a.handleProviderModels)
 	mux.HandleFunc("/api/v1/settings", a.handleSettings)
 	mux.HandleFunc("/api/v1/scheduler", a.handleScheduler)
 	mux.HandleFunc("/api/v1/scheduler/", a.handleSchedulerChild)
@@ -108,6 +109,34 @@ func (a *App) handleProviderStatus(w http.ResponseWriter, r *http.Request) {
 	}
 	status.Reachable = true
 	writeJSON(w, http.StatusOK, status)
+}
+
+type providerModelsResponse struct {
+	Models []ai.Model `json:"models"`
+}
+
+func (a *App) handleProviderModels(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		writeError(w, http.StatusMethodNotAllowed, "metode tidak didukung")
+		return
+	}
+	if a.provider == nil {
+		writeError(w, http.StatusServiceUnavailable, "penyedia AI belum siap")
+		return
+	}
+	lister, ok := a.provider.(ai.ModelLister)
+	if !ok {
+		writeError(w, http.StatusNotImplemented, "penyedia AI tidak mendukung daftar model")
+		return
+	}
+	listCtx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
+	defer cancel()
+	models, err := lister.ListModels(listCtx)
+	if err != nil {
+		writeError(w, http.StatusBadGateway, "gagal mengambil daftar model")
+		return
+	}
+	writeJSON(w, http.StatusOK, providerModelsResponse{Models: models})
 }
 
 type settingsResponse struct {
