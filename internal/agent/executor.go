@@ -15,18 +15,17 @@ import (
 )
 
 type ExecutionRequest struct {
-	PekerjaanID domain.ID
-	TugasID     *domain.ID
-	AgenID      domain.ID
-	Program     string
-	Arguments   []string
-	Dir         string
-	Env         []string
+	ProyekID  domain.ID
+	TugasID   *domain.ID
+	AgenID    domain.ID
+	Program   string
+	Arguments []string
+	Dir       string
+	Env       []string
 }
 
 type ExecutionResult struct {
-	Sesi domain.Sesi
-	Run  domain.Run
+	Eksekusi domain.Eksekusi
 }
 
 type Executor struct {
@@ -34,8 +33,8 @@ type Executor struct {
 	Repo   *storage.Repository
 }
 
-// Execute menghubungkan tugas dengan sesi agen dan riwayat run.
-// Riwayat run tetap disimpan walaupun proses gagal atau dibatalkan.
+// Execute menjalankan program dalam konteks Proyek, Tugas, dan Agen.
+// Riwayat Eksekusi tetap disimpan walaupun proses gagal atau dibatalkan.
 func (e Executor) Execute(ctx context.Context, request ExecutionRequest) (ExecutionResult, error) {
 	if e.Repo == nil {
 		return ExecutionResult{}, errors.New("executor: repository wajib diisi")
@@ -43,41 +42,48 @@ func (e Executor) Execute(ctx context.Context, request ExecutionRequest) (Execut
 	if err := validateExecutionRequest(request); err != nil {
 		return ExecutionResult{}, err
 	}
-	pekerjaan, err := e.Repo.GetPekerjaan(ctx, request.PekerjaanID)
+	proyek, err := e.Repo.GetProyek(ctx, request.ProyekID)
 	if err != nil {
-		return ExecutionResult{}, fmt.Errorf("executor: pekerjaan: %w", err)
+		return ExecutionResult{}, fmt.Errorf("executor: proyek: %w", err)
 	}
 	agen, err := e.Repo.GetAgen(ctx, request.AgenID)
 	if err != nil {
 		return ExecutionResult{}, fmt.Errorf("executor: agen: %w", err)
 	}
-	if agen.RuangID != pekerjaan.RuangID {
-		return ExecutionResult{}, fmt.Errorf("executor: agen tidak termasuk ruang pekerjaan: %w", storage.ErrInvalid)
+	if agen.RuangID != proyek.RuangID {
+		return ExecutionResult{}, fmt.Errorf("executor: agen tidak termasuk ruang proyek: %w", storage.ErrInvalid)
 	}
+
 	if request.TugasID != nil {
-		tugas, err := e.Repo.GetTugas(ctx, *request.TugasID)
+		tugas, err := e.Repo.GetTugasNative(ctx, *request.TugasID)
 		if err != nil {
 			return ExecutionResult{}, fmt.Errorf("executor: tugas: %w", err)
 		}
-		if tugas.PekerjaanID != request.PekerjaanID {
-			return ExecutionResult{}, fmt.Errorf("executor: tugas tidak termasuk pekerjaan: %w", storage.ErrInvalid)
+		if tugas.ProyekID != request.ProyekID || tugas.RuangID != proyek.RuangID {
+			return ExecutionResult{}, fmt.Errorf("executor: tugas tidak termasuk proyek: %w", storage.ErrInvalid)
 		}
 		if !tugas.Status.CanTransitionTo(domain.StatusRunning) {
 			return ExecutionResult{}, fmt.Errorf("executor: tugas berstatus %q tidak dapat dijalankan: %w", tugas.Status, storage.ErrInvalid)
 		}
-		assignment, assignmentErr := e.Repo.GetTugasAssignment(ctx, *request.TugasID)
-		switch {
-		case assignmentErr == nil && assignment.AgenID != request.AgenID:
-			return ExecutionResult{}, fmt.Errorf("executor: agen bukan pelaksana tugas: %w", storage.ErrInvalid)
-		case assignmentErr == nil:
-			// Agen yang diminta cocok dengan assignment tugas.
-		case errors.Is(assignmentErr, storage.ErrNotFound):
-			// Assignment belum ada; tetap dukung eksekusi eksplisit seperti sebelumnya.
-		default:
-			return ExecutionResult{}, fmt.Errorf("executor: assignment tugas: %w", assignmentErr)
+		assignments, assignmentErr := e.Repo.ListPenugasanByTugas(ctx, *request.TugasID)
+		if assignmentErr != nil {
+			return ExecutionResult{}, fmt.Errorf("executor: penugasan tugas: %w", assignmentErr)
+		}
+		if len(assignments) > 0 {
+			assigned := false
+			for _, assignment := range assignments {
+				if assignment.AgenID == request.AgenID {
+					assigned = true
+					break
+				}
+			}
+			if !assigned {
+				return ExecutionResult{}, fmt.Errorf("executor: agen bukan pelaksana tugas: %w", storage.ErrInvalid)
+			}
 		}
 	}
-	approvalStatus, hasApproval, err := e.Repo.ApprovalGate(ctx, request.PekerjaanID, request.TugasID)
+
+	approvalStatus, hasApproval, err := e.Repo.ApprovalGate(ctx, request.ProyekID, request.TugasID)
 	if err != nil {
 		return ExecutionResult{}, fmt.Errorf("executor: approval: %w", err)
 	}
@@ -95,29 +101,20 @@ func (e Executor) Execute(ctx context.Context, request ExecutionRequest) (Execut
 	}
 
 	now := time.Now().UTC()
-	sesi := domain.Sesi{
-		ID:          newID(),
-		PekerjaanID: request.PekerjaanID,
-		AgenID:      request.AgenID,
-		Status:      domain.StatusRunning,
-		StartedAt:   now,
+	eksekusi := domain.Eksekusi{
+		ID:        newID(),
+		RuangID:   proyek.RuangID,
+		ProyekID:  request.ProyekID,
+		TugasID:   request.TugasID,
+		AgenID:    request.AgenID,
+		Status:    domain.StatusRunning,
+		Program:   request.Program,
+		Arguments: append([]string(nil), request.Arguments...),
+		StartedAt: now,
 	}
-	run := domain.Run{
-		ID:          newID(),
-		PekerjaanID: request.PekerjaanID,
-		TugasID:     request.TugasID,
-		AgenID:      request.AgenID,
-		Status:      domain.StatusRunning,
-		Program:     request.Program,
-		Arguments:   append([]string(nil), request.Arguments...),
-		StartedAt:   now,
+	if err := e.Repo.CreateEksekusi(ctx, eksekusi); err != nil {
+		return ExecutionResult{}, fmt.Errorf("executor: mulai eksekusi: %w", err)
 	}
-	started, err := e.Repo.StartExecution(ctx, sesi, run)
-	if err != nil {
-		return ExecutionResult{}, fmt.Errorf("executor: mulai execution: %w", err)
-	}
-	sesi = started.Sesi
-	run = started.Run
 
 	result, runErr := e.Runner.Run(ctx, Command{
 		Program: request.Program,
@@ -141,22 +138,19 @@ func (e Executor) Execute(ctx context.Context, request ExecutionRequest) (Execut
 	if finished.IsZero() {
 		finished = time.Now().UTC()
 	}
+	persistErr := e.Repo.UpdateEksekusi(persistCtx, eksekusi.ID, status, exitCode, result.Stdout, result.Stderr, finished)
 
-	persistErr := e.Repo.FinalizeExecution(persistCtx, run.ID, sesi.ID, request.TugasID, status, exitCode, result.Stdout, result.Stderr, finished)
+	eksekusi.Status = status
+	eksekusi.ExitCode = exitCode
+	eksekusi.Stdout = result.Stdout
+	eksekusi.Stderr = result.Stderr
+	eksekusi.FinishedAt = &finished
 
-	run.Status = status
-	run.ExitCode = exitCode
-	run.Stdout = result.Stdout
-	run.Stderr = result.Stderr
-	run.FinishedAt = &finished
-	sesi.Status = status
-	sesi.FinishedAt = &finished
-
-	return ExecutionResult{Sesi: sesi, Run: run}, errors.Join(runErr, persistErr)
+	return ExecutionResult{Eksekusi: eksekusi}, errors.Join(runErr, persistErr)
 }
 
 func validateExecutionRequest(request ExecutionRequest) error {
-	if request.PekerjaanID == "" || request.AgenID == "" || strings.TrimSpace(request.Program) == "" {
+	if request.ProyekID == "" || request.AgenID == "" || strings.TrimSpace(request.Program) == "" {
 		return fmt.Errorf("executor: %w", storage.ErrInvalid)
 	}
 	if request.Dir != "" && !filepath.IsAbs(request.Dir) {
