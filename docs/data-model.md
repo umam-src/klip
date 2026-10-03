@@ -37,11 +37,20 @@ Entitas pendukung seperti Sesi, Run, Alur, Jadwal, Aktivitas, dan Persetujuan te
 
 ## Goal dan Sasaran
 
-Untuk bahasa produk, **Goal** adalah istilah yang dipakai sebagai pusat arah kerja. **Sasaran** adalah istilah lama yang mungkin masih muncul pada kode, storage, API, atau UI.
+Untuk bahasa produk, **Goal** adalah istilah yang dipakai sebagai pusat arah kerja. **Sasaran** adalah representasi lama yang tetap dipertahankan pada storage/API selama migrasi bertahap berlangsung.
 
-Kita tidak menganggap perubahan istilah sebagai alasan untuk langsung mengganti tabel atau migrasi database. Sebelum migrasi, perlu dipastikan bahwa model `Sasaran` yang ada memang memiliki semantik Goal yang sama.
+Keputusan pemetaan adalah:
 
-Kontrak Goal v1 yang dirancang:
+- `Sasaran.id` menjadi identitas Goal yang sama.
+- `Sasaran.ruang_id` tetap menjadi batas Ruang Kerja Goal.
+- `Sasaran.title` dipetakan ke `Goal.title`.
+- `Sasaran.created_at` dan `Sasaran.updated_at` dipertahankan.
+- `Sasaran` tidak mengarang `description` atau `parent_goal_id` karena data tersebut memang belum tersedia pada model lama.
+- Status lama dipetakan satu arah untuk kompatibilitas: `completed` → `GoalStatusCompleted`; status lama lainnya → `GoalStatusActive`. Status `failed` dan `cancelled` tidak dianggap sebagai Goal selesai.
+- Adapter domain `GoalFromSasaran` menjadi batas eksplisit pemetaan tersebut.
+- Tidak ada tabel `goal` baru hanya untuk mengganti nama. Migrasi persistence ditunda sampai kontrak storage Goal benar-benar membutuhkan field yang belum tersedia.
+
+Kontrak Goal v1:
 
 ```text
 Goal
@@ -59,17 +68,16 @@ Atribut seperti `priority`, `progress`, `target`, dan `deadline` belum menjadi a
 
 ### Hasil audit implementasi lama
 
-Audit kode saat ini menunjukkan bahwa `Sasaran` adalah kandidat langsung untuk menjadi representasi Goal, tetapi belum memenuhi seluruh kontrak Goal v1.
+Audit kode menunjukkan bahwa `Sasaran` adalah representasi lama yang paling dekat dengan Goal.
 
 - Model `domain.Sasaran` saat ini memiliki `id`, `ruang_id`, `title`, `status`, `created_at`, dan `updated_at`.
-- Model `Sasaran` saat ini belum memiliki `description` dan `parent_goal_id`, sehingga hierarki Goal belum tersedia pada model lama.
+- Model `Sasaran` belum memiliki `description` dan `parent_goal_id`, sehingga hierarki Goal belum tersedia pada model lama.
 - Storage `sasaran` sudah dibatasi oleh `ruang_id` dan menyediakan pembuatan serta daftar Sasaran per Ruang Kerja.
 - API lama masih menggunakan istilah `/sasaran` dan menerima `title` serta `status`.
 - `Pekerjaan` saat ini sudah memiliki `sasaran_id` opsional. Saat dibuat, storage memeriksa bahwa Sasaran ada dan berada pada Ruang Kerja yang sama.
-- Karena relasi tersebut sudah ada, fondasi Goal tidak perlu membuat relasi kedua hanya untuk mengganti nama. Relasi `sasaran_id` dapat menjadi jembatan kompatibilitas sampai kontrak Goal v1 benar-benar diterapkan.
-- `Pekerjaan` belum menjadikan relasi Sasaran sebagai kewajiban mutlak; ini perlu diputuskan bersama lifecycle data lama sebelum kolom atau validasi diperketat.
+- Relasi `sasaran_id` menjadi jembatan kompatibilitas; tidak dibuat `goal_id` kedua sebelum migration persistence diperlukan.
 
-Kesimpulan audit: **Sasaran dan Goal sangat mungkin merupakan entitas yang sama secara semantik, sedangkan perbedaan utama saat ini adalah kontrak model dan bahasa produk.** Karena itu langkah berikutnya adalah melengkapi kontrak Goal secara bertahap, bukan membuat tabel Goal baru.
+Kesimpulan: **Sasaran dan Goal diperlakukan sebagai entitas yang sama secara semantik, dengan `Sasaran` sebagai representasi legacy sementara.** Perubahan bahasa produk tidak memicu migrasi kosmetik.
 
 ## Hierarki Goal
 
@@ -195,8 +203,7 @@ Goal yang sudah memiliki riwayat tidak sebaiknya dihapus secara destruktif hanya
 
 Dokumen ini sengaja belum mengunci beberapa keputusan implementasi:
 
-- kapan `Sasaran` mulai diekspos sebagai Goal pada API dan UI;
-- bagaimana menambah `description` dan hierarki Goal tanpa merusak data lama;
+- bagaimana menambah `description` dan hierarki Goal pada persistence tanpa merusak data lama;
 - kapan relasi Sasaran/Goal pada Pekerjaan harus menjadi wajib;
 - bagaimana progress Goal dihitung dari Execution dan Result / Evidence;
 - kapan `priority`, `target`, dan `deadline` benar-benar diperlukan;
@@ -207,9 +214,10 @@ Keputusan tersebut harus didasarkan pada model yang sudah ada dan kebutuhan nyat
 ## Prinsip implementasi
 
 1. Matangkan semantik Goal sebelum migrasi schema.
-2. Pertahankan kompatibilitas dengan model `Sasaran` selama pemetaan belum selesai.
-3. Jangan membuat relasi yang tidak dibutuhkan.
-4. Setiap relasi baru harus memiliki pemeriksaan `ruang_id`.
-5. Tambahkan regression test untuk setiap invariant baru.
-6. Runtime hanya menerima konteks Goal; Runtime tidak memiliki Goal.
-7. Result / Evidence menjadi dasar yang dapat ditelusuri untuk progress, bukan sumber arah kerja.
+2. Pertahankan kompatibilitas dengan model `Sasaran` selama migrasi bertahap.
+3. Gunakan `GoalFromSasaran` sebagai batas mapping, bukan duplikasi relasi.
+4. Jangan membuat relasi yang tidak dibutuhkan.
+5. Setiap relasi baru harus memiliki pemeriksaan `ruang_id`.
+6. Tambahkan regression test untuk setiap invariant baru.
+7. Runtime hanya menerima konteks Goal; Runtime tidak memiliki Goal.
+8. Result / Evidence menjadi dasar yang dapat ditelusuri untuk progress, bukan sumber arah kerja.
