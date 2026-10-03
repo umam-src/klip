@@ -33,11 +33,11 @@ Jangan mengubah skema produksi hanya dengan mengandalkan `CREATE TABLE IF NOT EX
 
 Lapisan penyimpanan memvalidasi hubungan penting sebelum menulis data. Contohnya:
 
-- tugas induk harus berada pada pekerjaan yang sama;
-- agen yang menjalankan pekerjaan harus berasal dari ruang yang sama;
-- hasil yang ditautkan ke tugas harus berada pada pekerjaan yang sama;
+- tugas induk harus berada pada proyek yang sama;
+- agen yang menjalankan Eksekusi harus berasal dari Ruang Kerja yang sama;
+- hasil yang ditautkan ke tugas harus berada pada proyek yang sama;
 - perubahan status mengikuti aturan domain;
-- finalisasi sesi, run, dan tugas dilakukan sebagai satu transaksi.
+- konteks Eksekusi (Ruang Kerja, Proyek, Tugas, dan Agen) harus konsisten sebelum Eksekusi dibuat.
 
 Validasi di aplikasi melengkapi foreign key SQLite; keduanya tidak saling menggantikan.
 

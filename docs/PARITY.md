@@ -4,14 +4,14 @@ Dokumen ini menjaga agar Klip mengambil **kebutuhan produk**, bukan menyalin imp
 
 | Kebutuhan | Klip | Prinsip independensi |
 |---|---|---|
-| Lingkup kerja | Ruang | Tidak memakai hierarki organisasi sebagai syarat dasar |
+| Lingkup kerja | Ruang Kerja | Tidak memakai hierarki organisasi sebagai syarat dasar |
 | Pelaksana AI | Agen | Model dan perilaku dipisahkan dari pekerjaan |
-| Tujuan | Sasaran | Opsional pada fondasi awal |
-| Unit kerja | Pekerjaan | Menjadi objek utama pelacakan |
+| Tujuan | Goal | Pusat arah kerja; dapat berjenjang dalam satu Ruang Kerja |
+| Unit kerja | Proyek | Wadah kerja yang mengarah ke satu Goal |
 | Langkah | Tugas | Fokus pada tindakan konkret |
 | Urutan kerja | Alur | Model sederhana dan dapat diperluas |
-| Eksekusi | Sesi | Tidak disamakan dengan pekerjaan |
-| Keluaran | Hasil | Objek kelas satu |
+| Eksekusi | Eksekusi | Tidak disamakan dengan Proyek atau Tugas |
+| Keluaran | Hasil Kerja | Objek kelas satu
 | Kemampuan | Skill / Alat | Dipasang sesuai kebutuhan agen |
 | Pengaman | Persetujuan | Hanya digunakan pada titik yang memang membutuhkan manusia |
 | AI | Penyedia + Model | Provider-agnostic, lokal lebih dulu |

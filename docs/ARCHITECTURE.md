@@ -34,20 +34,16 @@ Ukuran sumber kode GitHub bukan metrik ukuran produk.
 
 ```text
 cmd/klip/             # pintu masuk program
-internal/app/          # perakitan aplikasi dan lifecycle
+internal/app/          # perakitan aplikasi, HTTP API, dan lifecycle
 internal/config/       # konfigurasi lokal
-internal/storage/      # SQLite dan repository
-internal/ai/           # kontrak AI dan routing
-internal/agent/        # identitas dan perilaku agen
-internal/work/         # pekerjaan dan tugas
-internal/runtime/      # eksekusi sesi agen
-internal/web/          # HTTP handler dan UI
+internal/domain/       # entity dan aturan domain v1
+internal/storage/      # SQLite, skema, dan repository
+internal/ai/           # kontrak AI dan provider
+internal/agent/        # runner proses dan executor Eksekusi
 internal/scheduler/    # jadwal lokal
-internal/artifact/     # hasil dan berkas keluaran
-web/templates/         # template UI
-web/static/            # aset lokal tanpa CDN wajib
-migrations/            # perubahan skema database
-scripts/               # pemeriksaan dan build
+internal/skill/        # skill lokal
+internal/i18n/         # bahasa antarmuka
+web/                   # UI statis yang dibundel ke binary
 
 docs/                  # keputusan dan detail teknis
 ```
@@ -64,7 +60,7 @@ type AIProvider interface {
 }
 ```
 
-Klip saat ini menyediakan adapter `ollama` dan `openai-compatible`. Routing menentukan provider dan model tanpa mengubah domain pekerjaan.
+Klip saat ini menyediakan adapter `ollama` dan `openai-compatible`. Routing menentukan provider dan model tanpa mengubah domain inti.
 
 ## Konfigurasi lokal
 
@@ -92,7 +88,7 @@ Mode dasar harus tetap dapat digunakan tanpa internet untuk:
 - membuka UI lokal;
 - membaca dan menulis data;
 - melihat riwayat;
-- mengelola agen dan pekerjaan;
+- mengelola agen, goal, proyek, dan tugas;
 - menjalankan operasi yang tidak membutuhkan AI eksternal.
 
 Koneksi internet hanya diperlukan jika pengguna memilih provider yang membutuhkannya. Provider lokal seperti Ollama tidak memerlukan koneksi internet setelah model tersedia di mesin pengguna.

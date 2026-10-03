@@ -42,7 +42,7 @@ Daftar kerja pengembangan. Prioritas: P0 wajib, P1 penting, P2 setelah inti stab
 - [ ] Remodel UI dan bahasa produk agar konsisten dengan Goal.
 - [x] Hapus entity `Sasaran`, `sasaran_id`, dan adapter `GoalFromSasaran` setelah persistence baru aktif.
 - [ ] Pastikan Goal parent/child satu Ruang Kerja dan tidak membentuk cycle.
-- [ ] Pastikan Goal → Pekerjaan satu Goal utama dan satu Ruang Kerja.
+- [ ] Pastikan setiap Proyek mengacu ke satu Goal utama dan satu Ruang Kerja.
 - [ ] Pastikan seluruh relasi domain mempertahankan batas `ruang_id`.
 - [ ] Pastikan Execution dan Result/Evidence dapat ditelusuri ke Ruang Kerja dan konteks Goal.
 - [ ] Reset/migrate database development setelah schema v1 siap.
@@ -77,7 +77,7 @@ Catatan: `Sasaran` tidak lagi dipertahankan sebagai compatibility layer permanen
 - [x] Event runtime.
 - [x] Error classification.
 - [ ] Bawa konteks Goal ke Runtime tanpa menjadikan Runtime pemilik Goal.
-- [ ] Hubungkan Execution dengan konteks Ruang Kerja, Pekerjaan, Tugas, dan Agen.
+- [x] Hubungkan Eksekusi dengan konteks Ruang Kerja, Proyek, Tugas, dan Agen.
 - [ ] Gunakan Result/Evidence sebagai input pembaruan progress Goal.
 
 ## P1 — UI
@@ -87,19 +87,19 @@ Catatan: `Sasaran` tidak lagi dipertahankan sebagai compatibility layer permanen
 - [x] Asset UI dibundel lokal.
 - [x] Daftar ruang dasar.
 - [x] Daftar agen.
-- [ ] Detail agen: modul `web/assets/agent-detail.js` belum dimuat `index.html`.
+- [x] Detail agen.
 - [x] Struktur ruang.
 - [x] Daftar goal.
-- [x] Daftar pekerjaan.
+- [x] Daftar proyek.
 - [x] Daftar tugas.
 - [x] Detail tugas.
 - [x] Thread tugas.
 - [x] Antrean persetujuan.
 - [x] Riwayat aktivitas.
-- [ ] Halaman provider/model: modul `web/assets/provider.js` belum dimuat `index.html`.
-- [ ] Halaman pengaturan: modul `web/assets/settings.js` belum dimuat `index.html`.
+- [x] Halaman provider/model (status AI dan pilihan model).
+- [x] Halaman pengaturan.
 - [ ] Selaraskan bahasa UI `Ruang` menjadi `Ruang Kerja` tanpa mengubah nama storage `ruang`.
-- [ ] Selaraskan istilah `Sasaran` menjadi Goal setelah model Goal final ditetapkan.
+- [x] Istilah `Sasaran` tidak lagi dipakai di UI; UI memakai Goal.
 
 ## P1 — Skills dan hasil
 
@@ -120,7 +120,7 @@ Catatan: `Sasaran` tidak lagi dipertahankan sebagai compatibility layer permanen
 - [x] Pencegahan duplicate run.
 - [x] Retry policy.
 - [x] Riwayat scheduler.
-- [ ] Pastikan scheduler tidak membuat eksekusi lintas Ruang Kerja.
+- [x] Pastikan scheduler tidak membuat eksekusi lintas Ruang Kerja.
 
 ## P1 — Data dan keamanan
 
@@ -174,7 +174,6 @@ Catatan: `Sasaran` tidak lagi dipertahankan sebagai compatibility layer permanen
 - [x] README.md Bahasa Indonesia.
 - [x] CHANGELOG.md Keep a Changelog + SemVer.
 - [x] CONTRIBUTING.md.
-- [x] AGENTS.md.
 - [x] LICENSE MIT.
 - [x] docs/ARCHITECTURE.md.
 - [x] docs/DOMAIN.md.

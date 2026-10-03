@@ -16,7 +16,7 @@ Terima kasih telah membantu mengembangkan Klip.
 
 Sebelum membuat perubahan besar:
 
-1. Periksa `ROADMAP.md` dan `TODO.md`.
+1. Periksa `docs/ROADMAP.md` dan `TODO.md`.
 2. Jelaskan masalah yang ingin diselesaikan.
 3. Pilih solusi dengan dependency dan kompleksitas serendah mungkin.
 4. Tambahkan test yang relevan.

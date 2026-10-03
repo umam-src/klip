@@ -7,6 +7,7 @@ Format mengikuti Keep a Changelog dan versi mengikuti Semantic Versioning.
 ## [Unreleased]
 
 ### Added
+- Tes yang memastikan setiap skrip UI dimuat `index.html` dan elemen yang dibutuhkannya tersedia.
 - CLI dasar untuk menjalankan server, melihat versi, dan membuka bantuan.
 - Fondasi i18n dengan `id-ID` sebagai locale default.
 - Endpoint status koneksi provider AI lokal.
@@ -35,6 +36,7 @@ Format mengikuti Keep a Changelog dan versi mengikuti Semantic Versioning.
 - `.gitignore` agar data lokal, konfigurasi pribadi, rahasia, database, dan hasil build tidak ikut masuk repository.
 
 ### Changed
+- Detail Agen, Status AI, dan Pengaturan kini dimuat di UI. Detail Agen memakai ID ruang aktif, bukan judul halaman, sehingga aman untuk ruang bernama sama.
 - Konfigurasi sekarang menyimpan locale secara eksplisit dan menormalkan locale yang belum didukung ke `id-ID`.
 - State `Run`, `Sesi`, dan `Tugas` beserta event runtime diperbarui secara atomik saat memulai dan menyelesaikan eksekusi.
 - Validasi nama skill digunakan bersama oleh parser skill dan penyimpanan relasi agen.
@@ -61,12 +63,19 @@ Format mengikuti Keep a Changelog dan versi mengikuti Semantic Versioning.
 - Penugasan Agen pada Tugas kini disimpan di tabel `penugasan` v1 dan tabel `tugas_agen` tidak lagi dipakai.
 - Penyimpanan hasil menolak path berawalan pemisah direktori atau nama drive di semua sistem operasi.
 - Test lama yang masih memakai Pekerjaan, Sasaran, dan Hasil dimigrasikan ke model v1; penolakan database legacy kini punya test sendiri.
-- CI menjalankan `go vet ./...` sebelum test agar sesuai aturan pengembangan di AGENTS.md.
+- CI menjalankan `go vet ./...` sebelum test.
+- `docs/DOMAIN.md` ditulis ulang mengikuti model v1 (Proyek, Penugasan, Eksekusi, Hasil Kerja) dan merujuk `docs/data-model.md` untuk schema, sehingga tidak lagi bertentangan dengan model data.
+- `docs/data-model.md` disesuaikan dengan nama tabel nyata (`penugasan`, `eksekusi`, `hasil`).
+- `ROADMAP.md` dipindahkan ke `docs/ROADMAP.md`.
 - README.md ditulis ulang tanpa istilah teknis; panduan menjalankan, konfigurasi, dan target ukuran dipindahkan ke `docs/penggunaan.md`.
 - Pemegang hak cipta pada LICENSE MIT diubah menjadi "Kontributor Klip".
 
 ### Removed
+- Skrip `web/assets/agent-form.js` lama yang menduplikasi form Agen dan tidak pernah dimuat UI.
 - Modul UI lama `sasaran.js`, `aktivitas.js`, dan `hasil.js` yang tidak dimuat dan memanggil endpoint `/sasaran` serta `/pekerjaan` yang sudah dihapus.
+
+### Fixed
+- Pembuatan jadwal (`POST /api/v1/scheduler`) kini mengisi Ruang Kerja dari Proyek. Sebelumnya jadwal yang valid pun selalu ditolak setelah remodel v1. Respons jadwal kini menyertakan `ruang_id`, dan jadwal dengan agen atau tugas dari Ruang lain ditolak, dengan tes regresi.
 
 ## [0.1.0] - 2026-10-02
 

@@ -16,7 +16,7 @@ Runtime internal tetap menerapkan batas berikut:
 - proses dapat dibatalkan melalui context;
 - keluaran proses memiliki batas ukuran;
 - jumlah proses bersamaan dibatasi runner;
-- status `Run`, `Sesi`, dan `Tugas` diselesaikan secara atomik;
+- status akhir Eksekusi (selesai, gagal, atau dibatalkan) disimpan dengan batas waktu sendiri agar tetap tercatat meski konteks permintaan sudah dibatalkan;
 - keluaran proses tidak dicatat sebagai `Hasil` secara otomatis.
 
 ## HTTP lokal
@@ -37,7 +37,7 @@ Jika autentikasi berbasis cookie atau mode bind non-localhost ditambahkan, CSRF 
 
 Aksi penting yang mengubah alur kerja dicatat sebagai event lokal tanpa memasukkan alasan, prompt, isi proses, atau data rahasia ke event audit. Saat ini cakupannya meliputi:
 
-- pembuatan approval pekerjaan atau tugas;
+- pembuatan approval proyek atau tugas;
 - keputusan approval (setujui atau tolak);
 - pembuatan jadwal.
 

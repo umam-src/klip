@@ -14,7 +14,7 @@ Klip mengutamakan **bekerja di komputer sendiri**. AI yang berjalan di komputer 
 - Bisa dipakai tanpa internet dan tanpa akun layanan online.
 - Data Anda tersimpan di komputer sendiri.
 - Bisa memakai AI lokal seperti Ollama dan llama.cpp.
-- Menyediakan ruang kerja, agen, goal, pekerjaan, tugas, dan hasil kerja.
+- Menyediakan ruang kerja, agen, goal, proyek, tugas, dan hasil kerja.
 - Mudah dipasang dan dipindahkan.
 - Memakai Bahasa Indonesia sejak awal.
 
@@ -32,11 +32,10 @@ Klip baru dirilis versi awal `0.1.0` dan masih terus dikembangkan. Tampilan dan 
 
 ## Dokumentasi
 
-- `ROADMAP.md` — arah pengembangan.
+- `docs/ROADMAP.md` — arah pengembangan.
 - `TODO.md` — pekerjaan yang direncanakan.
 - `CHANGELOG.md` — riwayat perubahan.
 - `CONTRIBUTING.md` — panduan berkontribusi.
-- `AGENTS.md` — aturan dan pelajaran pengembangan.
 - `docs/` — dokumentasi lengkap.
 
 ## Lisensi

@@ -45,10 +45,10 @@ Board mengarahkan Proyek/Tugas dan melakukan Penugasan. Agen dengan role pengara
 | Goal | Goal | `goal` / `goal_id` |
 | Project | Proyek | `proyek` / `proyek_id` |
 | Task | Tugas | `tugas` / `tugas_id` |
-| Assignment | Penugasan | `assignment` / `assignment_id` |
+| Assignment | Penugasan | `penugasan` |
 | Agent | Agen | `agen` / `agen_id` |
-| Execution | Eksekusi | `execution` / `execution_id` |
-| Result / Evidence | Hasil Kerja | `hasil` / `hasil_id` |
+| Execution | Eksekusi | `eksekusi`; kolom rujukan saat ini masih `execution_id` |
+| Result / Evidence | Hasil Kerja | `hasil` |
 | Event | Peristiwa | `peristiwa` / `peristiwa_id` |
 
 Istilah Inggris hanya dipertahankan pada nama kode jika membantu kestabilan implementasi atau merupakan istilah teknis yang sudah mapan. Bahasa produk menggunakan istilah pada kolom kedua.
@@ -248,7 +248,7 @@ Aturan:
 3. Agen harus berada pada Ruang Kerja yang sama.
 4. Eksekusi tidak menyimpan credential atau secret.
 5. Eksekusi adalah riwayat pelaksanaan, bukan pemilik Goal.
-6. Nama persistence `run` boleh diubah menjadi `execution` dalam remodel karena keduanya merepresentasikan satu konsep pelaksanaan.
+6. Nama persistence `run` diganti menjadi `eksekusi` dalam remodel karena keduanya merepresentasikan satu konsep pelaksanaan.
 
 ### Peristiwa
 
@@ -380,7 +380,7 @@ Yang dihapus/diganti:
 
 ### `Run` dan `Execution`
 
-`Run` merupakan nama lama untuk kejadian pelaksanaan. Persistence baru menggunakan `execution` dan kode domain menggunakan `Execution`/`Eksekusi` agar tidak ada dua konsep dengan makna sama.
+`Run` merupakan nama lama untuk kejadian pelaksanaan. Persistence menggunakan tabel `eksekusi` dan kode domain menggunakan `Eksekusi` agar tidak ada dua konsep dengan makna sama. Kolom rujukan pada `peristiwa` dan `hasil` saat ini masih bernama `execution_id`; penamaan ini tersisa dan dapat diganti menjadi `eksekusi_id` kapan saja karena Klip belum rilis.
 
 ## Batas v1
 

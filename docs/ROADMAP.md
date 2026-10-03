@@ -27,14 +27,14 @@ Klip adalah orkestrator AI yang ringan, offline-first, dan mengutamakan AI lokal
 - [x] Health check dan logging sederhana.
 - [x] CI dasar dengan cache dan pemeriksaan ukuran binary.
 
-### 0.2 — Inti ruang dan pekerjaan
+### 0.2 — Inti Ruang Kerja dan Proyek
 
 - [x] Ruang.
 - [x] Agen.
-- [x] Sasaran.
-- [x] Pekerjaan.
+- [x] Goal.
+- [x] Proyek.
 - [x] Tugas.
-- [x] Sesi.
+- [x] Eksekusi.
 - [x] Hasil.
 - [x] Thread/komentar tugas.
 - [x] Persetujuan.
@@ -78,8 +78,8 @@ Klip adalah orkestrator AI yang ringan, offline-first, dan mengutamakan AI lokal
 
 - [x] Dasbor.
 - [x] Manajemen agen.
-- [ ] Ruang dan sasaran.
-- [ ] Daftar dan detail pekerjaan.
+- [ ] Ruang Kerja dan Goal.
+- [ ] Daftar dan detail Proyek.
 - [x] Daftar dan detail tugas.
 - [x] Thread tugas.
 - [x] Antrean persetujuan.
