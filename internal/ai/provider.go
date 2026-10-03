@@ -20,6 +20,10 @@ type ChatResponse struct {
 	Content string
 }
 
+type Model struct {
+	ID string `json:"id"`
+}
+
 type AIProvider interface {
 	ID() string
 	Chat(ctx context.Context, req ChatRequest) (ChatResponse, error)
@@ -29,4 +33,9 @@ type AIProvider interface {
 // Providers that do not support streaming continue to use Chat.
 type Streamer interface {
 	Stream(ctx context.Context, req ChatRequest, emit func(ChatResponse) error) error
+}
+
+// ModelLister is an optional provider capability for discovering available models.
+type ModelLister interface {
+	ListModels(ctx context.Context) ([]Model, error)
 }
