@@ -14,7 +14,7 @@ import (
 
 func TestExecutorPersistsEksekusi(t *testing.T) {
 	ctx := context.Background()
-	db, repo := newNativeExecutionTestRepository(t, ctx)
+	_, repo := newNativeExecutionTestRepository(t, ctx)
 	program, args := testCommand("hello")
 
 	result, err := (Executor{Repo: repo}).Execute(ctx, ExecutionRequest{
@@ -92,9 +92,9 @@ func TestExecutorRejectsRelativeWorkingDirectoryBeforeStart(t *testing.T) {
 
 	program, args := testCommand("relative-dir")
 	_, err := (Executor{Repo: repo}).Execute(ctx, ExecutionRequest{
-		ProyekID:  "proyek-1",
-		AgenID:    "agen-1",
-		Program:   program,
+		ProyekID: "proyek-1",
+		AgenID:   "agen-1",
+		Program:  program,
 		Arguments: args,
 		Dir:       filepath.Join("workspace", "task"),
 	})
@@ -107,7 +107,7 @@ func TestExecutorRejectsRelativeWorkingDirectoryBeforeStart(t *testing.T) {
 		t.Fatalf("ListEksekusiByProyek() error = %v", err)
 	}
 	if len(eksekusi) != 0 {
-		t.Fatalf("eksekusi = %d, want 0", len(eksekusi))
+		t.Fatalf("eksekusi = %d, want 0", len(eksekusi)
 	}
 }
 
